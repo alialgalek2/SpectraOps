@@ -1,8 +1,10 @@
 name: Deploy SpectraOps
+
 on:
   push:
     branches:
       - main
+
 jobs:
   web-deploy:
     name: FTP Deploy
@@ -10,10 +12,11 @@ jobs:
     steps:
       - name: Get latest code
         uses: actions/checkout@v3
+
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ${{	ftpupload.net }}
-          username: ${{ if0_43386734 }}
-          password: ${{ Alialgale2 }}
-          folder: 'spectaops.algaletech.com/htdocs'
+          server: ftpupload.net
+          username: if0_43386734
+          password: ${{ Alialgale2 }} # Recommended to at least keep password secret
+          server-dir: spectaops.algaletech.com/htdocs
