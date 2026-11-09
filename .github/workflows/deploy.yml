@@ -16,3 +16,4 @@ jobs:
           server: ${{	ftpupload.net }}
           username: ${{ if0_43386734 }}
           password: ${{ Alialgale2 }}
+          folder: 'spectaops.algaletech.com/htdocs'
