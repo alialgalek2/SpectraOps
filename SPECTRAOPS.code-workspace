@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"name": "SPECTRAOPS",
+			"path": "."
+		}
+	],
+	"settings": {
+		"workbench.colorCustomizations": {
+			"titleBar.activeBackground": "#0f172a",
+			"titleBar.activeForeground": "#38bdf8",
+			"activityBar.background": "#090d16",
+			"activityBar.foreground": "#38bdf8",
+			"statusBar.background": "#0284c7",
+			"statusBar.foreground": "#ffffff"
+		},
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			"**/Thumbs.db": true
+		}
+	}
+}

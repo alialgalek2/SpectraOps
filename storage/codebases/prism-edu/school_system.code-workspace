@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"gradle.allowParallelRun": true,
+		"gradle.projectOpenBehaviour": "Interactive"
+	}
+}

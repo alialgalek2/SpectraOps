@@ -1,0 +1,5 @@
+{
+  "server_url": "http://192.168.1.30:8080/school_system",
+  "school_name": "PRISM EDU International School",
+  "app_version": "2.5.0"
+}

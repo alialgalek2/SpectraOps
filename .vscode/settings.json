@@ -1,0 +1,8 @@
+{
+    "intelephense.environment.includePaths": [
+        "src"
+    ],
+    "php.includePaths": [
+        "src"
+    ]
+}

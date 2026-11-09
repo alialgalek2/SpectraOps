@@ -1,0 +1,21 @@
+# SpectraOps Public Directory Configuration
+DirectoryIndex index.php dashboard.php index.html
+
+# Prevent Apache FastCGI / PHP from dropping Authorization headers
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+    # Clean URL routing for API v1 Orders Provisioning and Download Portal
+    RewriteRule ^api/v1/orders/provision/?$ api/v1/orders/provision.php [L,QSA]
+    RewriteRule ^portal/?$ portal/download.php [L,QSA]
+</IfModule>
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase ^Authorization$ "(.+)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+# Databases, backups, and local secrets must never be served from the web root.
+<FilesMatch "(?i:(^|\.)((sqlite|db|sqlite3|bak|backup|pem|key))$|central_fleet_db)">
+    Require all denied
+</FilesMatch>

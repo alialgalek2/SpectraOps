@@ -1,0 +1,78 @@
+# ==============================================================================
+# SpectraOps Central Hub - Git Ignore Configuration
+# ==============================================================================
+
+# Environment and sensitive credential files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+keys/*_private.pem
+
+# Session and cookie caches
+cookies.txt
+
+# Local databases and database caches
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-wal
+*.sqlite-shm
+database/*.sqlite
+central_fleet_db
+
+# Composer dependencies
+/vendor/
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Application storage & runtime artifacts
+/storage/logs/
+/storage/logs/*
+!/storage/logs/.gitkeep
+*.log
+
+# Hotfix generated sandbox, staging, and temp files
+/storage/hotfixes/*/sandbox/
+/storage/hotfixes/*/staging/
+/storage/hotfixes/*/*.zip
+
+# Generated release packages & download archives
+/public/downloads/updates/*.zip
+!/public/downloads/updates/.htaccess
+
+# Generated installer binaries
+/storage/installers/*/*.exe
+/storage/installers/*/*.msi
+/storage/installers/*/*.zip
+
+# Linked codebases / junctions / scratch
+/repos/*
+!/repos/.gitkeep
+/scratch/*
+!/scratch/.gitkeep
+
+# IDE and Operating System Artifacts
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# Temporary / testing scratch files
+*.tmp
+*.bak
+test_*.txt

@@ -1,0 +1,23 @@
+# Secrets and machine-specific state
+.env
+.env.*
+!.env.example
+cookie_*.txt
+ping_output.txt
+scratch_tail.jsonl
+
+# Runtime data and generated packages
+/uploads/support_spool/
+/uploads/support_attachments/
+/uploads/admissions/
+/uploads/hr_documents/
+!/uploads/hr_documents/
+!/uploads/hr_documents/.htaccess
+/storage/updates/
+/public/downloads/*.apk
+/downloads/*.apk
+
+# Android build output
+/android/.gradle/
+/android/build/
+/android/app/build/

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SpectraOps — Telemetry & Central Fleet Operations for enterprise software deployments.">
+    <title>SpectraOps — Fleet</title>
+    <link rel="icon" type="image/svg+xml" href="spectraops-icon.svg">
+    <link rel="alternate icon" type="image/png" href="spectraops-icon.png">
+    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <script>
+        (function() {
+            var t = localStorage.getItem('spectraops_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2.1">
+    <script src="spectra-popup.js?v=2.1"></script>
+</head>
+<body>
+
+<div class="shell">
+
+    <!-- ================= RAIL ================= -->
+    <nav class="rail">
+        <a href="#" class="brand" onclick="switchView('fleet'); return false;">
+            <svg width="22" height="22" viewBox="0 0 54 54">
+                <polygon points="6,46 22,10 31,10 15,46" fill="#4FA8E0"/>
+                <rect x="23" y="28" width="4.2" height="18" rx="1" fill="#2D5A78"/>
+                <rect x="31" y="20" width="4.2" height="26" rx="1" fill="#4FA8E0"/>
+                <rect x="39" y="12" width="4.2" height="34" rx="1" fill="#7FC4EE"/>
+            </svg>
+            <div class="brand-name">Spectra<span>Ops</span></div>
+        </a>
+
+        <div class="nav-group-label">Monitor</div>
+        <div class="nav-item active" id="nav-fleet-btn" onclick="switchView('fleet')">
+            <div class="nav-left">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
+                Fleet
+            </div>
+            <span class="nav-count" id="sidebar-fleet-count">0</span>
+        </div>
+        <div class="nav-item" id="nav-errors-btn" onclick="switchView('errors')">
+            <div class="nav-left">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+                Errors
+            </div>
+            <span class="nav-count crit" id="sidebar-error-badge">0</span>
+        </div>
+
+        <div class="nav-group-label">Integration</div>
+        <div class="nav-item" id="nav-sdk-btn" onclick="switchView('sdk')">
+            <div class="nav-left">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                Client SDK
+            </div>
+        </div>
+
+        <div class="rail-footer">
+            <div class="rail-footer-user">
+                <div class="avatar">SO</div>
+                <div class="rail-user">
+                    <strong id="hub-clock">Live Hub Active</strong>
+                    Client Operations
+                </div>
+            </div>
+            <button class="icon-btn" onclick="refreshCurrentView()" title="Refresh telemetry">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-title">
+                <h1 id="page-title">Fleet</h1>
+                <p id="page-subtitle">Every client deployment reporting to this hub, live.</p>
+            </div>
+            <div class="topbar-actions">
+                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light/Dark mode" aria-label="Switch Theme">
+                    <span class="theme-toggle-track">
+                        <span class="theme-toggle-icon sun-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        </span>
+                        <span class="theme-toggle-icon moon-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        </span>
+                        <span class="theme-toggle-thumb"></span>
+                    </span>
+                    <span class="theme-toggle-label">Dark</span>
+                </button>
+                <button class="btn" id="trigger-health-btn" onclick="triggerHealthSweep()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+                    Sweep stale nodes
+                </button>
+                <button class="btn btn-primary" id="open-register-modal-btn" onclick="openRegisterModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+                    Register deployment
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Strip / Metrics -->
+        <div class="status-strip" id="status-strip">
+            <div class="strip-item active" onclick="setStatusFilter('all')">
+                <div class="strip-label"><span class="dot dot-accent"></span>All nodes</div>
+                <div class="strip-value" id="kpi-total-val">0</div>
+            </div>
+            <div class="strip-item" onclick="setStatusFilter('healthy')">
+                <div class="strip-label"><span class="dot dot-ok"></span>Healthy</div>
+                <div class="strip-value ok" id="kpi-healthy-val">0</div>
+            </div>
+            <div class="strip-item" onclick="setStatusFilter('warning')">
+                <div class="strip-label"><span class="dot dot-warn"></span>Warning</div>
+                <div class="strip-value warn" id="kpi-warning-val">0</div>
+            </div>
+            <div class="strip-item" onclick="setStatusFilter('critical')">
+                <div class="strip-label"><span class="dot dot-crit"></span>Critical</div>
+                <div class="strip-value crit" id="kpi-critical-val">0</div>
+            </div>
+            <div class="strip-item" onclick="setStatusFilter('unreachable')">
+                <div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div>
+                <div class="strip-value dead" id="kpi-unreachable-sub">0</div>
+            </div>
+            <div class="strip-item" onclick="setStatusFilter('outdated')">
+                <div class="strip-label">Outdated builds</div>
+                <div class="strip-value" id="kpi-outdated-val">0</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar" id="filter-bar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="search-input" placeholder="Search client, domain, or IP" oninput="debounceSearch()" />
+            </div>
+            <div class="chip-row" id="product-chips">
+                <div class="chip active" onclick="setProductFilter('')">All products</div>
+            </div>
+            <select id="filter-product" onchange="loadDeployments()" class="hidden" title="Filter by product" aria-label="Filter by product">
+                <option value="">All Products</option>
+            </select>
+            <select id="filter-status" onchange="loadDeployments()" class="hidden" title="Filter by status" aria-label="Filter by status">
+                <option value="all">All Statuses</option>
+                <option value="healthy">Healthy</option>
+                <option value="warning">Warning</option>
+                <option value="critical">Critical</option>
+                <option value="unreachable">Unreachable</option>
+                <option value="outdated">Outdated</option>
+            </select>
+            <div class="filter-spacer"></div>
+            <div class="result-count" id="result-count-label">0 deployments</div>
+        </div>
+
+        <!-- Fleet Table View -->
+        <section id="view-fleet" class="content-view active">
+            <div class="table-wrap">
+                <table id="deployments-table">
+                    <thead>
+                        <tr>
+                            <th class="col-client">Client</th>
+                            <th>Product</th>
+                            <th>Status</th>
+                            <th>Version</th>
+                            <th class="num">DB latency</th>
+                            <th class="num">Disk free</th>
+                            <th class="num">Users 24h</th>
+                            <th>Errors</th>
+                            <th>Last heartbeat</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="deployments-tbody">
+                        <tr>
+                            <td colspan="10" class="table-empty-msg">Loading fleet deployments...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Error Incidents View -->
+        <section id="view-errors" class="content-view">
+            <div class="table-wrap">
+                <table id="errors-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Level</th>
+                            <th>Client / Domain</th>
+                            <th>Error Message &amp; Route</th>
+                            <th>Occurrences</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="errors-tbody">
+                        <tr>
+                            <td colspan="6" class="table-empty-msg">Loading error incidents...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Client SDK Guide View -->
+        <section id="view-sdk" class="content-view">
+            <div class="panel-card">
+                <div class="panel-header">
+                    <div class="panel-title">Integrating TelemetryReporter in Your Applications</div>
+                </div>
+                <p class="sdk-intro">
+                    Connect any client application (e.g. Prism EDU, POS Pro, ClinicCore) to this SpectraOps Central Hub with zero external dependencies.
+                </p>
+
+                <div class="step-card">
+                    <div class="step-num">1</div>
+                    <div class="step-content">
+                        <h3>Include the Telemetry Reporter SDK</h3>
+                        <p>Copy <code>client-sdk/TelemetryReporter.php</code> into your project's service layer:</p>
+                        <pre class="code-block"><code>require_once __DIR__ . '/services/TelemetryReporter.php';
+use App\Services\TelemetryReporter;</code></pre>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-num">2</div>
+                    <div class="step-content">
+                        <h3>Initialize &amp; Register Global Exception Handlers</h3>
+                        <p>Register during your application bootstrap to catch unhandled errors:</p>
+                        <pre class="code-block"><code>$reporter = TelemetryReporter::init(
+    'http://your-spectraops-hub.com', 
+    'flt_your_secret_token_here', 
+    '2.5.0' // Current software version
+);
+
+// Catches all uncaught exceptions & fatal shutdown errors
+TelemetryReporter::registerGlobalHandlers($reporter);</code></pre>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-num">3</div>
+                    <div class="step-content">
+                        <h3>Queue Periodic Heartbeats &amp; Metrics</h3>
+                        <p>Send non-blocking background telemetry with system health:</p>
+                        <pre class="code-block"><code>$reporter->queueHeartbeat([
+    'active_users_24h' => 1280,
+    'db_latency_ms'   => $reporter->measureDbLatency($pdo),
+    'storage_free_gb' => 310.5,
+]);</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Register Deployment Modal -->
+<div class="modal-bg" id="register-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 class="modal-title">Register Deployment</h3>
+            <button class="btn-close" onclick="closeRegisterModal()">&times;</button>
+        </div>
+        <p class="modal-desc">Onboard a new client node to receive telemetric heartbeats and error reports.</p>
+
+        <form id="register-form" onsubmit="handleRegisterSubmit(event)">
+            <div class="form-group">
+                <label for="reg-product">Product *</label>
+                <select id="reg-product" required>
+                    <option value="">Select a Product...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reg-client">Client / Organization Name *</label>
+                <input type="text" id="reg-client" placeholder="e.g. Grand Central Retail Flagship" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-domain">Deployment Host / Domain *</label>
+                <input type="text" id="reg-domain" placeholder="e.g. pos.grandcentral.store" required>
+            </div>
+            <div class="form-row-grid">
+                <div class="form-group">
+                    <label for="reg-env">Environment</label>
+                    <select id="reg-env">
+                        <option value="production">Production</option>
+                        <option value="staging">Staging</option>
+                        <option value="development">Development</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reg-version">Initial Version</label>
+                    <input type="text" id="reg-version" value="1.0.0">
+                </div>
+            </div>
+            <div class="form-actions-row">
+                <button type="button" class="btn" onclick="closeRegisterModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="submit-register-btn">Register Node</button>
+            </div>
+        </form>
+
+        <!-- Revealed Ingest Token Box -->
+        <div id="token-reveal-panel" class="hidden token-reveal-panel">
+            <div class="alert-strip success alert-compact">
+                <span>Deployment successfully registered!</span>
+            </div>
+            <p class="token-instructions">
+                Save your <strong>API Ingest Token</strong> now. The token is hashed with SHA-256 and cannot be viewed again:
+            </p>
+            <div class="token-box">
+                <input type="text" id="revealed-token" readonly placeholder="API Ingest Token" title="API Ingest Token" aria-label="API Ingest Token">
+                <button type="button" class="btn" onclick="copyToken()">Copy</button>
+            </div>
+            <button type="button" class="btn btn-primary btn-block-mt" onclick="closeRegisterModal(true)">Done</button>
+        </div>
+    </div>
+</div>
+
+<!-- Error Detail Stack Trace Modal -->
+<div class="modal-bg" id="error-modal">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <div>
+                <span id="err-modal-level" class="status-pill crit">CRITICAL</span>
+                <h3 id="err-modal-title" class="modal-title modal-title-mt">Error Trace</h3>
+            </div>
+            <button class="btn-close" onclick="closeErrorModal()">&times;</button>
+        </div>
+        <div class="modal-meta-grid">
+            <div><strong>Deployment:</strong> <span id="err-modal-deploy" class="text-accent">-</span></div>
+            <div><strong>Location:</strong> <span id="err-modal-location" class="mono">-</span></div>
+            <div><strong>Occurrences:</strong> <span id="err-modal-occurrences">-</span></div>
+            <div><strong>Last Seen:</strong> <span id="err-modal-time" class="mono">-</span></div>
+        </div>
+        <div class="form-group">
+            <label>Stack Trace</label>
+            <pre class="code-block trace-scroll" id="err-modal-trace">No trace available</pre>
+        </div>
+        <div class="modal-footer-actions">
+            <button type="button" class="btn" onclick="closeErrorModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<script src="app.js?v=2.1"></script>
+</body>
+</html>

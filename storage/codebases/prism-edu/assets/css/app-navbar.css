@@ -1,0 +1,507 @@
+/* ==========================================================================
+   PRISM EDU - Compact Top Navigation Bar & Action Sheet for Mobile App
+   Designed specifically for Android WebView, touch ergonomics, & compact viewports
+   ========================================================================== */
+
+:root {
+    --app-nav-bg: #091830;
+    --app-nav-text: #eefdff;
+    --app-nav-accent: #0dc0e7;
+    --app-nav-pill-bg: rgba(13, 192, 231, 0.12);
+    --app-nav-pill-border: rgba(13, 192, 231, 0.35);
+    --app-nav-pill-text: #bef6fd;
+    --app-sheet-bg: #ffffff;
+    --app-sheet-text: #0f172a;
+    --app-sheet-muted: #64748b;
+    --app-sheet-border: #e2e8f0;
+}
+
+/* 1. Sticky Compact Navigation Bar */
+.prism-app-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 12px;
+    background: var(--app-nav-bg);
+    color: var(--app-nav-text);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    box-shadow: 0 2px 12px rgba(9, 24, 48, 0.4);
+    border-bottom: 1px solid rgba(13, 192, 231, 0.2);
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.topbar-left, .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.app-brand-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.app-brand-svg {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(13, 192, 231, 0.25));
+}
+
+.compact-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #eefdff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--app-nav-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--app-nav-accent);
+}
+
+/* 2. Topbar Center Active Pill */
+.topbar-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+    padding: 0 6px;
+}
+
+.active-module-pill {
+    background: var(--app-nav-pill-bg);
+    color: var(--app-nav-pill-text);
+    border: 1px solid var(--app-nav-pill-border);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    text-align: center;
+}
+
+/* 3. Action Buttons */
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #92c6de;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover,
+.icon-btn:active {
+    background: rgba(255, 255, 255, 0.12);
+    color: #eefdff;
+}
+
+.badge-count {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--app-nav-accent);
+    color: #091830;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 1px 4px;
+    border-radius: 10px;
+    line-height: 1;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+[dir="rtl"] .badge-count {
+    right: auto;
+    left: 2px;
+}
+
+.user-avatar-btn {
+    background: transparent;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--app-nav-accent);
+    object-fit: cover;
+    box-shadow: 0 0 8px rgba(13, 192, 231, 0.3);
+}
+
+/* 4. Compact Expandable Search Overlay */
+.app-compact-search-box {
+    position: sticky;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: #0d2242;
+    padding: 8px 12px;
+    z-index: 1039;
+    border-bottom: 1px solid rgba(13, 192, 231, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    animation: searchSlideDown 0.2s ease-out;
+}
+
+@keyframes searchSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.app-search-inner-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #091830;
+    border: 1px solid rgba(13, 192, 231, 0.4);
+    border-radius: 8px;
+    padding: 4px 10px;
+}
+
+.search-box-icon {
+    color: var(--app-nav-accent);
+    flex-shrink: 0;
+}
+
+.app-search-inner-form input[type="search"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #eefdff;
+    font-size: 0.88rem;
+    padding: 4px 0;
+}
+
+.app-search-inner-form input[type="search"]::placeholder {
+    color: #6282a5;
+}
+
+.search-box-close {
+    background: transparent;
+    border: none;
+    color: #92c6de;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+/* 5. User Account Bottom Sheet */
+.app-bottom-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 1050;
+}
+
+.app-bottom-sheet-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.app-bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--app-sheet-bg);
+    color: var(--app-sheet-text);
+    border-radius: 20px 20px 0 0;
+    padding: 14px 18px 24px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    z-index: 1060;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.app-bottom-sheet.active {
+    transform: translateY(0);
+}
+
+.sheet-drag-handle {
+    width: 42px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 2px;
+    margin: 0 auto 14px;
+}
+
+.sheet-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--app-sheet-border);
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+}
+
+.sheet-avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--app-nav-accent);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #133f83;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-role {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: block;
+}
+
+.session-status-badge.active {
+    background: #ecfdf5;
+    color: #059669;
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* 6. Sheet Menu Grid */
+.sheet-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.sheet-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #334155;
+    gap: 4px;
+    padding: 8px 4px;
+    border-radius: 10px;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.sheet-item:hover,
+.sheet-item:focus {
+    background: #f1f5f9;
+    color: #0284c7;
+    transform: translateY(-2px);
+}
+
+.item-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.item-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 7. Sheet Logout Button */
+.btn-app-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 0;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.92rem;
+    border: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-app-logout:hover,
+.btn-app-logout:focus,
+.btn-app-logout:active {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+/* 8. Dark Mode Harmonization */
+[data-theme="dark"] .app-bottom-sheet,
+[data-bs-theme="dark"] .app-bottom-sheet,
+.dark .app-bottom-sheet {
+    background: #091830;
+    color: #eefdff;
+    border: 1px solid rgba(13, 192, 231, 0.25);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .sheet-drag-handle,
+[data-bs-theme="dark"] .sheet-drag-handle,
+.dark .sheet-drag-handle {
+    background: #334155;
+}
+
+[data-theme="dark"] .sheet-profile-header,
+[data-bs-theme="dark"] .sheet-profile-header,
+.dark .sheet-profile-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .profile-name,
+[data-bs-theme="dark"] .profile-name,
+.dark .profile-name {
+    color: #38bdf8;
+}
+
+[data-theme="dark"] .profile-role,
+[data-bs-theme="dark"] .profile-role,
+.dark .profile-role {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .sheet-item,
+[data-bs-theme="dark"] .sheet-item,
+.dark .sheet-item {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .sheet-item:hover,
+[data-theme="dark"] .sheet-item:focus,
+[data-bs-theme="dark"] .sheet-item:hover,
+[data-bs-theme="dark"] .sheet-item:focus {
+    background: rgba(13, 192, 231, 0.1);
+    color: #38bdf8;
+}
+
+[data-theme="dark"] .btn-app-logout,
+[data-bs-theme="dark"] .btn-app-logout,
+.dark .btn-app-logout {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+[data-theme="dark"] .btn-app-logout:hover,
+[data-bs-theme="dark"] .btn-app-logout:hover {
+    background: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+/* 9. Mobile App Viewport Adjustments (Sidebar & Topbar Harmonization) */
+body.is-native-app .main-sidebar,
+body.is-native-app .desktop-sidebar-wrapper,
+body.is-native-app .app-sidebar:not(.sidebar-compact):not(.sidebar-collapsed) {
+    display: none !important;
+}
+
+/* Enable class="app-sidebar sidebar-collapsed sidebar-compact" in Android app */
+body.is-native-app .app-sidebar.sidebar-collapsed,
+body.is-native-app .app-sidebar.sidebar-compact,
+.is-native-app ~ .app-sidebar.sidebar-collapsed,
+.is-native-app ~ .app-sidebar.sidebar-compact {
+    display: flex !important;
+    width: 60px !important;
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    z-index: 1045 !important;
+    background-color: var(--card, #ffffff) !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+body.is-native-app:not([dir="rtl"]) .app-sidebar.sidebar-collapsed,
+body.is-native-app:not([dir="rtl"]) .app-sidebar.sidebar-compact {
+    left: 0 !important;
+    right: auto !important;
+    border-right: 1px solid var(--border, #e2e8f0) !important;
+    border-left: none !important;
+}
+
+body.is-native-app[dir="rtl"] .app-sidebar.sidebar-collapsed,
+body.is-native-app[dir="rtl"] .app-sidebar.sidebar-compact {
+    right: 0 !important;
+    left: auto !important;
+    border-left: 1px solid var(--border, #e2e8f0) !important;
+    border-right: none !important;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Offset app content and topbar to prevent overlapping the 60px compact sidebar */
+body.is-native-app:not([dir="rtl"]) .prism-app-topbar,
+body.is-native-app:not([dir="rtl"]) .main-content-wrapper,
+body.is-native-app:not([dir="rtl"]) .content-wrapper,
+body.is-native-app:not([dir="rtl"]) main,
+body.is-native-app.has-compact-sidebar:not([dir="rtl"]) {
+    padding-left: 60px !important;
+}
+
+body.is-native-app[dir="rtl"] .prism-app-topbar,
+body.is-native-app[dir="rtl"] .main-content-wrapper,
+body.is-native-app[dir="rtl"] .content-wrapper,
+body.is-native-app[dir="rtl"] main,
+body.is-native-app.has-compact-sidebar[dir="rtl"] {
+    padding-right: 60px !important;
+    padding-left: 0 !important;
+}
