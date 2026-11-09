@@ -20,3 +20,10 @@ jobs:
           username: if0_43386734
           password: Alialgale2 # Recommended to at least keep password secret
           server-dir: spectaops.algaletech.com/htdocs/
+          timeout: 600000
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.github/**
+            README.md
