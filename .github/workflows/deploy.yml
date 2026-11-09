@@ -18,5 +18,5 @@ jobs:
         with:
           server: ftpupload.net
           username: if0_43386734
-          password: ${{ Alialgale2 }} # Recommended to at least keep password secret
+          password: Alialgale2 # Recommended to at least keep password secret
           server-dir: spectaops.algaletech.com/htdocs
