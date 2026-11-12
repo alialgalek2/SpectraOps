@@ -19,7 +19,7 @@ jobs:
           server: ftp.algaletech.com
           username: algalete@spectraops.algaletech.com
           password: Alialgale2@ # Recommended to at least keep password secret
-          server-dir: spectaops.algaletech.com/
+          server-dir: /home/algalete/spectraops.algaletech.com/
           timeout: 600000
           exclude: |
             **/.git*
