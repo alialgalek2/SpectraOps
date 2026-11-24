@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 // --- 1. CONFIGURATION & CORE INCLUDES ---
+define('SO_ASSET_DIR', __DIR__ . '/assets');
+require_once dirname(__DIR__) . '/src/so_helpers.php';
 require_once dirname(__DIR__) . '/src/Database.php';
 require_once dirname(__DIR__) . '/src/FleetService.php';
 require_once dirname(__DIR__) . '/src/RateLimiter.php';
@@ -110,291 +112,32 @@ if (empty($_SESSION['fleet_user_id']) && empty($_SESSION['fleet_admin_logged']))
         exit;
     }
     ?>
-    <!DOCTYPE html>
+    <!doctype html>
     <html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <title>SpectraOps — Operator Console Authentication</title>
-        <link rel="icon" type="image/svg+xml" href="spectraops-icon.svg">
-        <link rel="alternate icon" type="image/png" href="spectraops-icon.png">
-        <link rel="shortcut icon" href="favicon.ico">
-        <link rel="apple-touch-icon" href="apple-touch-icon.png">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script>
-            (function() {
-                var t = localStorage.getItem('spectraops_theme') || 'dark';
-                document.documentElement.setAttribute('data-theme', t);
-            })();
-        </script>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="style.css?v=<?= filemtime(__DIR__ . '/style.css') ?>">
-        <script src="spectra-popup.js?v=<?= filemtime(__DIR__ . '/spectra-popup.js') ?>"></script>
-        <style>
-            body {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                background-color: var(--ink);
-                background-image: 
-                    radial-gradient(circle at 50% 12%, rgba(79, 168, 224, 0.12) 0%, rgba(10, 14, 20, 0) 65%),
-                    linear-gradient(rgba(31, 39, 51, 0.28) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(31, 39, 51, 0.28) 1px, transparent 1px);
-                background-size: 100% 100%, 32px 32px, 32px 32px;
-                padding: 24px;
-            }
-            .login-card {
-                width: 100%;
-                max-width: 410px;
-                background: var(--panel);
-                border: 1px solid var(--line);
-                border-top: 2px solid var(--accent);
-                border-radius: var(--radius-lg);
-                padding: 36px 32px 28px;
-                box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7), 0 0 25px rgba(79, 168, 224, 0.08);
-                position: relative;
-            }
-            .login-card-header {
-                text-align: center;
-                margin-bottom: 26px;
-            }
-            .login-brand {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
-            .login-brand-name {
-                font-weight: 700;
-                font-size: 20px;
-                letter-spacing: 0.4px;
-                color: var(--text);
-            }
-            .login-brand-name span { color: var(--accent); }
-            .login-desc {
-                font-size: 11.5px;
-                color: var(--text-dim);
-                margin-bottom: 12px;
-                letter-spacing: 0.2px;
-            }
-            .login-status-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 3px 9px;
-                background: rgba(61, 214, 140, 0.08);
-                border: 1px solid var(--ok-dim);
-                border-radius: 999px;
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 10px;
-                font-weight: 600;
-                color: var(--ok-text);
-                letter-spacing: 0.5px;
-            }
-            .input-wrapper {
-                position: relative;
-                display: flex;
-                align-items: center;
-            }
-            .input-icon {
-                position: absolute;
-                left: 12px;
-                width: 15px;
-                height: 15px;
-                color: var(--text-faint);
-                pointer-events: none;
-                transition: color 0.15s;
-            }
-            .input-wrapper .form-control {
-                padding-left: 36px;
-                padding-right: 36px;
-                height: 38px;
-                font-size: 12.5px;
-            }
-            .input-wrapper .form-control:focus ~ .input-icon {
-                color: var(--accent);
-            }
-            .pwd-toggle-btn {
-                position: absolute;
-                right: 8px;
-                background: none;
-                border: none;
-                color: var(--text-faint);
-                cursor: pointer;
-                padding: 4px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: var(--radius);
-                transition: color 0.15s;
-            }
-            .pwd-toggle-btn:hover {
-                color: var(--text);
-            }
-            .pwd-toggle-btn svg {
-                width: 15px;
-                height: 15px;
-            }
-            .login-submit-btn {
-                width: 100%;
-                justify-content: center;
-                padding: 10px 16px;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: 0.2px;
-                margin-top: 8px;
-                gap: 8px;
-            }
-            .login-card-footer {
-                margin-top: 26px;
-                padding-top: 18px;
-                border-top: 1px solid var(--line-soft);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-size: 10.5px;
-                color: var(--text-faint);
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .security-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                color: var(--text-dim);
-            }
-        </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="dark">
+        <meta name="theme-color" content="#0A0E14">
+        <title>Sign in · SpectraOps</title>
+        <link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
+        <link rel="stylesheet" href="assets/css/spectraops.css">
     </head>
-    <body class="login-body">
-        <div class="login-theme-switch-wrap">
-            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light/Dark mode" aria-label="Switch Theme">
-                <span class="theme-toggle-track">
-                    <span class="theme-toggle-icon sun-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    </span>
-                    <span class="theme-toggle-icon moon-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                    </span>
-                    <span class="theme-toggle-thumb"></span>
-                </span>
-                <span class="theme-toggle-label">Dark</span>
-            </button>
-        </div>
-        <div class="login-card">
-            <div class="login-card-header">
-                <div class="login-brand">
-                    <svg width="30" height="30" viewBox="0 0 54 54">
-                        <polygon points="6,46 22,10 31,10 15,46" fill="#4FA8E0"/>
-                        <rect x="23" y="28" width="4.2" height="18" rx="1" fill="#2D5A78"/>
-                        <rect x="31" y="20" width="4.2" height="26" rx="1" fill="#4FA8E0"/>
-                        <rect x="39" y="12" width="4.2" height="34" rx="1" fill="#7FC4EE"/>
-                    </svg>
-                    <div class="login-brand-name">Spectra<span>Ops</span></div>
-                </div>
-                <div class="login-desc">Central Telemetry &amp; Fleet Operations Hub</div>
-                <div>
-                    <span class="login-status-badge">
-                        <span class="dot dot-ok"></span>OPERATOR GATEWAY &bull; LIVE
-                    </span>
-                </div>
-            </div>
-
-            <?php if (!empty($loginError)): ?>
-                <div class="alert-strip danger" style="border-radius: var(--radius); margin-bottom: 18px; padding: 10px 12px; font-size: 12px;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span><?= htmlspecialchars($loginError) ?></span>
-                </div>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        if (window.SpectraPopup) {
-                            window.SpectraPopup.show({
-                                title: 'Authentication Alert',
-                                message: <?= json_encode($loginError) ?>,
-                                type: 'error',
-                                confirmText: 'Dismiss'
-                            });
-                        }
-                    });
-                </script>
-            <?php endif; ?>
-
-            <form method="POST" action="<?= htmlspecialchars(strtok($_SERVER['REQUEST_URI'] ?? 'dashboard.php', '?')) ?>">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                
-                <div class="form-group">
-                    <label style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Operator Email</label>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        <input type="email" name="login_email" class="form-control" placeholder="admin@domain.com" required autofocus autocomplete="username">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 22px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <label style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0;">Access Key / Password</label>
-                    </div>
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <input type="password" id="loginPassInput" name="login_pass" class="form-control" placeholder="Enter operator password" required autocomplete="current-password">
-                        <button type="button" class="pwd-toggle-btn" onclick="togglePasswordVisibility()" title="Toggle password view" aria-label="Toggle password visibility">
-                            <svg id="pwdEyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary login-submit-btn">
-                    <span>Authenticate &amp; Access Console</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:14px; height:14px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-            </form>
-
-            <div class="login-card-footer">
-                <div class="security-pill">
-                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <span>bcrypt-60 / SHA-256</span>
-                </div>
-                <span>RATE LIMITED</span>
-            </div>
-        </div>
-
-        <script>
-        function togglePasswordVisibility() {
-            var input = document.getElementById('loginPassInput');
-            var icon = document.getElementById('pwdEyeIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-            } else {
-                input.type = 'password';
-                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-            }
-        }
-
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            try { localStorage.setItem('spectraops_theme', theme); } catch(e) {}
-            document.querySelectorAll('.theme-toggle-label').forEach(function(el) {
-                el.textContent = theme === 'light' ? 'Light' : 'Dark';
-            });
-            document.querySelectorAll('.theme-toggle-btn').forEach(function(btn) {
-                btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
-                btn.setAttribute('title', 'Switch to ' + (theme === 'light' ? 'Dark' : 'Light') + ' mode');
-            });
-        }
-
-        function toggleTheme() {
-            var current = document.documentElement.getAttribute('data-theme') || 'dark';
-            applyTheme(current === 'light' ? 'dark' : 'light');
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var saved = 'dark';
-            try { saved = localStorage.getItem('spectraops_theme') || 'dark'; } catch(e) {}
-            applyTheme(saved);
-        });
-        </script>
+    <body>
+    <?php so_icon_sprite(); ?>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <main class="auth" id="main"><div class="auth-card">
+    <div class="auth-brand"><svg class="brand-mark" viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs><linearGradient id="wedge-auth" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0DC0E7"/><stop offset="60%" stop-color="#2C88C1"/><stop offset="100%" stop-color="#133F83"/></linearGradient></defs><polygon points="6,46 22,10 31,10 15,46" fill="url(#wedge-auth)"/><rect x="23" y="28" width="4.5" height="18" rx="2" fill="#36527B"/><rect x="31" y="20" width="4.5" height="26" rx="2" fill="#2C88C1"/><rect x="39" y="12" width="4.5" height="34" rx="2" fill="#0DC0E7"/><rect x="47" y="22" width="4.5" height="24" rx="2" fill="#BEF6FD"/></svg><h1>SpectraOps</h1><p>Sign in to the fleet console.</p></div>
+    <form method="post" class="stack" style="gap:14px" action="<?= so_e(strtok($_SERVER['REQUEST_URI'] ?? 'dashboard.php', '?')) ?>">
+      <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+      <div class="field"><label for="login_email">Email</label><input class="input" id="login_email" name="login_email" type="email" autocomplete="username" required autofocus></div>
+      <div class="field"><label for="login_pass">Password</label><div class="pw"><input class="input" id="login_pass" name="login_pass" type="password" autocomplete="current-password" required><button type="button" class="btn btn-icon btn-sm" data-toggle-password="#login_pass" aria-pressed="false" aria-label="Show password"><?= so_icon('eye') ?></button></div></div>
+      <?php if (!empty($loginError)): ?>
+        <div class="alert alert-danger" role="alert"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-circle-x"/></svg><div><?= so_e($loginError) ?></div></div>
+      <?php endif; ?>
+      <button type="submit" class="btn btn-primary">Sign in</button>
+    </form></div></main>
+    <script src="assets/js/spectraops-ui.js"></script>
     </body>
     </html>
     <?php
@@ -2167,4624 +1910,1351 @@ if ($filterStatus !== 'all') {
     });
 }
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>SpectraOps — Fleet</title>
-<link rel="icon" type="image/svg+xml" href="spectraops-icon.svg">
-<link rel="alternate icon" type="image/png" href="spectraops-icon.png">
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script>
-(function() {
-  var t = localStorage.getItem('spectraops_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
-})();
-</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=<?= filemtime(__DIR__ . '/style.css') ?>">
-<script src="spectra-popup.js?v=<?= filemtime(__DIR__ . '/spectra-popup.js') ?>"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
-
-<!-- Dark and Light mode Diff2Html theme matching SpectraOps -->
-<style>
-    .d2h-wrapper { background: var(--ink) !important; color: var(--text) !important; font-family: 'JetBrains Mono', monospace !important; font-size: 0.78rem; border-radius: var(--radius); border: 1px solid var(--line); }
-    .d2h-file-header { background: var(--panel-2) !important; border-bottom: 1px solid var(--line) !important; padding: 6px 14px; }
-    .d2h-file-name { color: var(--accent) !important; font-weight: 600; }
-    .d2h-code-side-linenumber { background: var(--panel-2) !important; color: var(--text-faint) !important; border-color: var(--line) !important; font-size: 0.72rem; }
-    .d2h-del { background-color: rgba(229, 72, 77, 0.16) !important; border-color: rgba(229, 72, 77, 0.3) !important; color: var(--crit-text) !important; }
-    .d2h-ins { background-color: rgba(61, 214, 140, 0.16) !important; border-color: rgba(61, 214, 140, 0.3) !important; color: var(--ok-text) !important; }
-    .d2h-code-line del { background-color: rgba(229, 72, 77, 0.38) !important; border-radius: 2px; }
-    .d2h-code-line ins { background-color: rgba(61, 214, 140, 0.38) !important; border-radius: 2px; }
-    .d2h-code-side-emptyplaceholder { background: var(--ink) !important; border-color: var(--line) !important; }
-    .d2h-code-line-ctn { color: var(--text) !important; font-family: 'JetBrains Mono', monospace !important; }
-    .diff-container { max-height: 400px; overflow-y: auto; overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--line); background: var(--ink); }
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0E14">
+<title><?= so_e(ucfirst($activePage)) ?> · SpectraOps</title>
+<link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
+<link rel="stylesheet" href="assets/css/spectraops.css">
 </head>
 <body>
+<?php so_icon_sprite(); ?>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
 
-<div class="shell">
+<!-- ================= RAIL ================= -->
+<nav class="rail" aria-label="Primary">
+<a class="brand" href="?page=overview" aria-label="SpectraOps home">
+  <svg class="brand-mark" viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs><linearGradient id="wedge-rail" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0DC0E7"/><stop offset="60%" stop-color="#2C88C1"/><stop offset="100%" stop-color="#133F83"/></linearGradient></defs><polygon points="6,46 22,10 31,10 15,46" fill="url(#wedge-rail)"/><rect x="23" y="28" width="4.5" height="18" rx="2" fill="#36527B"/><rect x="31" y="20" width="4.5" height="26" rx="2" fill="#2C88C1"/><rect x="39" y="12" width="4.5" height="34" rx="2" fill="#0DC0E7"/><rect x="47" y="22" width="4.5" height="24" rx="2" fill="#BEF6FD"/></svg>
+  <span class="brand-name">Spectra<b>Ops</b></span>
+</a>
+<div class="rail-group">Monitor</div>
+<a class="rail-link" href="?page=overview" <?= so_current($activePage, 'overview') ?> title="Overview"><span class="rail-link-main"><?= so_icon('layout-dashboard') ?><span class="rail-label">Overview</span></span></a>
+<a class="rail-link" href="?page=deployments" <?= so_current($activePage, 'deployments', 'fleet') ?> title="Fleet"><span class="rail-link-main"><?= so_icon('server') ?><span class="rail-label">Fleet</span></span><span class="count <?= $criticalCount > 0 ? 'count-crit' : '' ?>"><?= (int)$totalDeployments ?></span></a>
+<a class="rail-link" href="?page=metrics" <?= so_current($activePage, 'metrics') ?> title="Metrics"><span class="rail-link-main"><?= so_icon('activity') ?><span class="rail-label">Metrics</span></span></a>
+<a class="rail-link" href="?page=errors" <?= so_current($activePage, 'errors') ?> title="Errors"><span class="rail-link-main"><?= so_icon('bug') ?><span class="rail-label">Errors</span></span><span class="count <?= count($recentErrors) > 0 ? 'count-crit' : '' ?>"><?= count($recentErrors) ?></span></a>
+<a class="rail-link" href="?page=tickets" <?= so_current($activePage, 'tickets') ?> title="Tickets"><span class="rail-link-main"><?= so_icon('life-buoy') ?><span class="rail-label">Tickets</span></span><span class="count <?= $openTicketsCount > 0 ? 'count-warn' : '' ?>"><?= (int)$openTicketsCount ?></span></a>
+<div class="rail-group">Distribute</div>
+<a class="rail-link" href="?page=releases" <?= so_current($activePage, 'releases', 'updates') ?> title="Releases"><span class="rail-link-main"><?= so_icon('package') ?><span class="rail-label">Releases</span></span><span class="count"><?= count($releases) ?></span></a>
+<a class="rail-link" href="?page=products" <?= so_current($activePage, 'products') ?> title="Products"><span class="rail-link-main"><?= so_icon('package') ?><span class="rail-label">Products</span></span><span class="count"><?= count($products) ?></span></a>
+<div class="rail-group">Licensing</div>
+<a class="rail-link" href="?page=licenses" <?= so_current($activePage, 'licenses') ?> title="Licenses"><span class="rail-link-main"><?= so_icon('key-round') ?><span class="rail-label">Licenses</span></span><span class="count"><?= count($licensesList) + (int)($vpStats['total'] ?? 0) ?></span></a>
+<a class="rail-link" href="?page=orders" <?= so_current($activePage, 'orders') ?> title="Orders"><span class="rail-link-main"><?= so_icon('hard-drive') ?><span class="rail-label">Orders</span></span><span class="count"><?= (int)$ordersCount ?></span></a>
+<?php if ($isAdmin): ?>
+<div class="rail-group">Admin</div>
+<a class="rail-link" href="?page=users" <?= so_current($activePage, 'users') ?> title="Users"><span class="rail-link-main"><?= so_icon('users') ?><span class="rail-label">Users</span></span><span class="count"><?= count($usersList) ?></span></a>
+<?php endif; ?>
+<div class="rail-foot">
+  <span class="avatar" aria-hidden="true"><?= so_e(strtoupper(substr($_SESSION['fleet_user_name'] ?? 'AM', 0, 2))) ?></span>
+  <div class="rail-user"><strong><?= so_e($_SESSION['fleet_user_name'] ?? 'Fleet admin') ?></strong><span><?= so_e(ucfirst($_SESSION['fleet_user_role'] ?? 'Administrator')) ?></span></div>
+  <a class="btn btn-icon btn-sm" href="?logout=1" aria-label="Sign out" title="Sign out"><?= so_icon('log-out') ?></a>
+</div>
+</nav>
 
-  <!-- ================= RAIL ================= -->
-  <nav class="rail">
-    <a href="?page=overview" class="brand">
-      <svg width="22" height="22" viewBox="0 0 54 54">
-        <polygon points="6,46 22,10 31,10 15,46" fill="#4FA8E0"/>
-        <rect x="23" y="28" width="4.2" height="18" rx="1" fill="#2D5A78"/>
-        <rect x="31" y="20" width="4.2" height="26" rx="1" fill="#4FA8E0"/>
-        <rect x="39" y="12" width="4.2" height="34" rx="1" fill="#7FC4EE"/>
-      </svg>
-      <div class="brand-name">Spectra<span>Ops</span></div>
-    </a>
-
-    <div class="nav-group-label">Monitor</div>
-    <a href="?page=overview" class="nav-item <?= in_array($activePage, ['overview', 'deployments', 'fleet', 'metrics']) ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
-        Fleet
-      </div>
-      <?php if ($criticalCount > 0): ?>
-        <span class="nav-count crit"><?= $criticalCount ?></span>
-      <?php else: ?>
-        <span class="nav-count"><?= $totalDeployments ?></span>
-      <?php endif; ?>
-    </a>
-    <a href="?page=errors" class="nav-item <?= $activePage === 'errors' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-        Errors
-      </div>
-      <span class="nav-count <?= count($recentErrors) > 0 ? 'crit' : '' ?>"><?= count($recentErrors) ?></span>
-    </a>
-    <a href="?page=tickets" class="nav-item <?= $activePage === 'tickets' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v12H7l-3 3V4Z"/></svg>
-        Tickets
-      </div>
-      <span class="nav-count <?= $openTicketsCount > 0 ? 'warn' : '' ?>"><?= $openTicketsCount ?></span>
-    </a>
-
-    <div class="nav-group-label">Licensing & Provisioning</div>
-    <a href="?page=licenses" class="nav-item <?= $activePage === 'licenses' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
-        Licenses
-      </div>
-      <span class="nav-count"><?= count($licensesList) + (int)($vpStats['total'] ?? 0) ?></span>
-    </a>
-    <a href="?page=orders" class="nav-item <?= $activePage === 'orders' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        Store Orders
-      </div>
-      <span class="nav-count"><?= $ordersCount ?></span>
-    </a>
-
-    <div class="nav-group-label">Catalog & Releases</div>
-    <a href="?page=releases" class="nav-item <?= in_array($activePage, ['releases', 'updates']) ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg>
-        Releases
-      </div>
-      <span class="nav-count"><?= count($releases) ?></span>
-    </a>
-    <a href="?page=products" class="nav-item <?= $activePage === 'products' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Products
-      </div>
-      <span class="nav-count"><?= count($products) ?></span>
-    </a>
-
-    <?php if ($isAdmin): ?>
-    <div class="nav-group-label">Admin</div>
-    <a href="?page=users" class="nav-item <?= $activePage === 'users' ? 'active' : '' ?>">
-      <div class="nav-left">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.2"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
-        Users
-      </div>
-      <span class="nav-count"><?= count($usersList) ?></span>
-    </a>
+<!-- ================= MAIN CONTAINER ================= -->
+<div class="main">
+<header class="topbar">
+  <button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-label="Open menu"><?= so_icon('menu') ?></button>
+  <div class="topbar-title">
+    <?php if ($activePage === 'overview'): ?>
+      <h1>Overview</h1><p>What needs you right now across every client system.</p>
+    <?php elseif (in_array($activePage, ['deployments', 'fleet'])): ?>
+      <h1>Fleet</h1><p>Every client deployment reporting to this hub.</p>
+    <?php elseif ($activePage === 'metrics'): ?>
+      <h1>Metrics</h1><p>How the fleet is performing, using the same thresholds as the status engine.</p>
+    <?php elseif ($activePage === 'errors'): ?>
+      <h1>Errors</h1><p>Crashes and exceptions, grouped by fingerprint across every client.</p>
+    <?php elseif ($activePage === 'tickets'): ?>
+      <h1>Tickets</h1><p>Support requests sent from client systems. Status changes sync back to the client.</p>
+    <?php elseif (in_array($activePage, ['releases', 'updates'])): ?>
+      <h1>Releases</h1><p>Update packages clients download from this hub.</p>
+    <?php elseif ($activePage === 'products'): ?>
+      <h1>Products</h1><p>Managed products and version catalog.</p>
+    <?php elseif ($activePage === 'licenses'): ?>
+      <h1>Licenses</h1><p>Cryptographic activation keys and offline license bundles.</p>
+    <?php elseif ($activePage === 'orders'): ?>
+      <h1>Orders</h1><p>Store purchase fulfillment and automated customer provisioning.</p>
+    <?php elseif ($activePage === 'users'): ?>
+      <h1>Users</h1><p>People who can sign in to this console.</p>
+    <?php else: ?>
+      <h1><?= so_e(ucfirst($activePage)) ?></h1><p>SpectraOps Central Operations</p>
     <?php endif; ?>
-
-    <div class="rail-footer">
-      <div class="rail-footer-user">
-        <div class="avatar"><?= strtoupper(substr($_SESSION['fleet_user_name'] ?? 'AM', 0, 2)) ?></div>
-        <div class="rail-user">
-          <strong><?= htmlspecialchars($_SESSION['fleet_user_name'] ?? 'Ali M.') ?></strong>
-          <?= htmlspecialchars(ucfirst($_SESSION['fleet_user_role'] ?? 'Admin')) ?>
-        </div>
-      </div>
-      <a href="?logout=1" class="icon-btn danger" title="Lock / Logout">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-      </a>
-    </div>
-  </nav>
-
-  <!-- ================= MAIN ================= -->
-  <main class="main">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-title">
-        <?php if ($activePage === 'errors'): ?>
-          <h1>Errors</h1>
-          <p>Real-time application exceptions and deduplicated error stream.</p>
-        <?php elseif ($activePage === 'tickets'): ?>
-          <h1>Tickets</h1>
-          <p>Client support tickets, diagnostic inquiries, and synchronization.</p>
-        <?php elseif ($activePage === 'releases'): ?>
-          <h1>Releases</h1>
-          <p>Cryptographically signed update packages and version rollouts.</p>
-        <?php elseif ($activePage === 'products'): ?>
-          <h1>Products</h1>
-          <p>Catalog of software products managed across the fleet.</p>
-        <?php elseif ($activePage === 'licenses'): ?>
-          <?php if (!empty($isVendPulseView)): ?>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <a href="?page=licenses" style="color:var(--text-dim); text-decoration:none; display:flex; align-items:center; gap:4px; font-size:13.5px; font-weight:500;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                Licenses
-              </a>
-              <span style="color:var(--text-faint);">/</span>
-              <h1 style="margin:0; font-size:1.55rem; display:inline-flex; align-items:center; gap:8px;">
-                <span>VendPulse Generator</span>
-                <span class="status-pill ok" style="font-size:11px; vertical-align:middle;"><span class="dot dot-ok"></span>Offline Cryptographic</span>
-              </h1>
-            </div>
-            <p>Provision tamper-proof RSA-2048 offline licenses with System Usage Mode binding for air-gapped POS deployments.</p>
-          <?php else: ?>
-            <h1>Licenses</h1>
-            <p>Dynamic product codes, multi-tier licenses, and deployment bindings.</p>
-          <?php endif; ?>
-        <?php elseif ($activePage === 'orders'): ?>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h1 style="margin:0; font-size:1.55rem; display:inline-flex; align-items:center; gap:8px;">
-              <span>Store Orders &amp; Deployments</span>
-              <span class="status-pill ok" style="font-size:11px; vertical-align:middle; background:rgba(14,165,233,0.1); border-color:rgba(14,165,233,0.3); color:#38bdf8;">
-                <span class="dot" style="background:#0ea5e9;"></span>Cloud &amp; POS Fleet
-              </span>
-            </h1>
-          </div>
-          <p>Real-time e-commerce ingress, license fulfillment &amp; live cloud instance telemetry.</p>
-        <?php elseif ($activePage === 'users'): ?>
-          <h1>Users</h1>
-          <p>Console administrator and operator accounts.</p>
-        <?php else: ?>
-          <h1>Fleet</h1>
-          <p>Every client deployment reporting to this hub, live.</p>
-        <?php endif; ?>
-      </div>
-      <div class="topbar-actions">
-        <!-- Light / Dark Mode Toggle Switch -->
-        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light/Dark mode" aria-label="Switch Theme">
-          <span class="theme-toggle-track">
-            <span class="theme-toggle-icon sun-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            </span>
-            <span class="theme-toggle-icon moon-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </span>
-            <span class="theme-toggle-thumb"></span>
-          </span>
-          <span class="theme-toggle-label">Dark</span>
-        </button>
-
-        <form method="POST" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-          <input type="hidden" name="action" value="sweep_nodes">
-          <input type="hidden" name="page" value="<?= htmlspecialchars($activePage) ?>">
-          <button type="submit" class="btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
-            Sweep stale nodes
-          </button>
-        </form>
-        <button type="button" class="btn btn-warn" onclick="openPatchModal()">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-          Publish Hotfix
-        </button>
-        <button type="button" class="btn btn-outline" style="border-color: #0dc0e7; color: #bef6fd;" onclick="document.getElementById('codebaseModal') ? document.getElementById('codebaseModal').classList.add('active') : openModal('codebaseModal')">
-          📦 Sync Codebase
-        </button>
-        <button class="btn" onclick="openModal('pairModal')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Pair client
-        </button>
-        <?php if ($activePage === 'releases'): ?>
-          <button class="btn btn-primary" onclick="openModal('releaseModal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Publish New Release / Hotfix
-          </button>
-        <?php elseif ($activePage === 'products'): ?>
-          <button class="btn btn-primary" onclick="openModal('regProductModal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            New product
-          </button>
-        <?php elseif ($activePage === 'licenses'): ?>
-          <?php if (!empty($isVendPulseView)): ?>
-            <a href="?page=licenses" class="btn btn-outline" style="text-decoration:none;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              Back to Licenses
-            </a>
-            <button type="button" class="btn btn-outline" style="border-color: #0dc0e7; color: #bef6fd;" onclick="openModal('vpPubKeyModal')">
-              🔑 Export Public Key
-            </button>
-            <button type="button" class="btn btn-outline" style="border-color: #3dd68c; color: #8fefc0;" onclick="openModal('vpVerifyModal')">
-              🛡️ Verify License
-            </button>
-            <button type="button" class="btn btn-primary" onclick="document.getElementById('vpGeneratorCard')?.scrollIntoView({behavior:'smooth'}); document.getElementById('vpClientName')?.focus();">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-              Generate License
-            </button>
-          <?php else: ?>
-            <button class="btn btn-primary" onclick="openModal('licenseModal')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-              Issue license
-            </button>
-          <?php endif; ?>
-        <?php elseif ($activePage === 'orders'): ?>
-          <a href="portal/download.php" target="_blank" class="btn btn-outline" style="text-decoration:none;">
-            🌐 Test Portal View
-          </a>
-          <button type="button" class="btn btn-outline" style="border-color:#0ea5e9; color:#38bdf8;" onclick="openModal('pairModal')">
-            🔗 Pair Cloud Node
-          </button>
-          <button type="button" class="btn btn-primary" onclick="openModal('orderWebhookModal')">
-            ⚡ Webhook Ingress Docs
-          </button>
-        <?php elseif ($activePage === 'users'): ?>
-          <button class="btn btn-primary" onclick="openModal('regUserModal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            New user
-          </button>
-        <?php else: ?>
-          <button class="btn btn-primary" onclick="openModal('linkDeployModal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-            Link New Deployment
-          </button>
-          <button class="btn" onclick="openModal('regModal')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            Register deployment
-          </button>
-        <?php endif; ?>
-      </div>
-    </div>
-
-    <!-- Status strip -->
-    <div class="status-strip">
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=all<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'all' ? 'active' : '' ?>">
-        <div class="strip-label"><span class="dot dot-accent"></span>All nodes</div>
-        <div class="strip-value"><?= $totalDeployments ?></div>
-      </a>
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=healthy<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'healthy' ? 'active' : '' ?>">
-        <div class="strip-label"><span class="dot dot-ok"></span>Healthy</div>
-        <div class="strip-value ok"><?= $healthyCount ?></div>
-      </a>
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=warning<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'warning' ? 'active' : '' ?>">
-        <div class="strip-label"><span class="dot dot-warn"></span>Warning</div>
-        <div class="strip-value warn"><?= $warningCount ?></div>
-      </a>
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=critical<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'critical' ? 'active' : '' ?>">
-        <div class="strip-label"><span class="dot dot-crit"></span>Critical</div>
-        <div class="strip-value crit"><?= $criticalCount ?></div>
-      </a>
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=unreachable<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'unreachable' ? 'active' : '' ?>">
-        <div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div>
-        <div class="strip-value dead"><?= $unreachableCount ?></div>
-      </a>
-      <a href="?page=<?= htmlspecialchars($activePage) ?>&status=outdated<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="strip-item <?= $filterStatus === 'outdated' ? 'active' : '' ?>">
-        <div class="strip-label">Outdated builds</div>
-        <div class="strip-value"><?= $outdatedCount ?></div>
-      </a>
-    </div>
-
-    <!-- Filter bar -->
-    <div class="filter-bar">
-      <form method="GET" class="search-box">
-        <input type="hidden" name="page" value="<?= htmlspecialchars($activePage) ?>">
-        <input type="hidden" name="status" value="<?= htmlspecialchars($filterStatus) ?>">
-        <?php if ($filterProduct > 0): ?>
-          <input type="hidden" name="product_id" value="<?= $filterProduct ?>">
-        <?php endif; ?>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" name="search" placeholder="Search client, domain, or IP" value="<?= htmlspecialchars($searchQuery) ?>" />
-      </form>
-      
-      <div class="chip-row">
-        <a href="?page=<?= htmlspecialchars($activePage) ?>&status=<?= htmlspecialchars($filterStatus) ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="chip <?= $filterProduct === 0 ? 'active' : '' ?>">All products</a>
-        <?php foreach ($products as $p): ?>
-          <a href="?page=<?= htmlspecialchars($activePage) ?>&status=<?= htmlspecialchars($filterStatus) ?>&product_id=<?= (int)$p['id'] ?><?= $searchQuery !== '' ? '&search=' . urlencode($searchQuery) : '' ?>" class="chip <?= $filterProduct === (int)$p['id'] ? 'active' : '' ?>">
-            <?= htmlspecialchars($p['product_name']) ?>
-          </a>
-        <?php endforeach; ?>
-      </div>
-
-      <div class="filter-spacer"></div>
-      
-      <?php if ($activePage === 'errors'): ?>
-        <a href="?purge_resolved_errors=1<?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?>" 
-           class="btn btn-sm btn-outline" 
-           style="color: #10b981; border-color: rgba(16, 185, 129, 0.4); text-decoration: none; margin-right: 12px; display: inline-flex; align-items: center; gap: 4px;"
-           onclick="return confirm('Purge all resolved errors from the database?');">
-            🧹 Purge Resolved
-        </a>
-        <div class="result-count"><?= count($recentErrors) ?> incidents</div>
-      <?php elseif ($activePage === 'tickets'): ?>
-        <div class="result-count"><?= count($openTickets) ?> tickets</div>
-      <?php elseif ($activePage === 'releases'): ?>
-        <div class="result-count"><?= count($releases) ?> releases</div>
-      <?php elseif ($activePage === 'orders'): ?>
-        <div class="result-count"><?= count($ordersList) ?> orders</div>
-      <?php else: ?>
-        <div class="result-count"><?= count($filteredDeployments) ?> deployments</div>
-      <?php endif; ?>
-    </div>
-
-    <?php if ($feedbackMsg): ?>
-      <div class="alert-strip <?= htmlspecialchars($feedbackType) ?>" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <span><?= strip_tags($feedbackMsg, '<strong><b><code><span><em>') ?></span>
-        <?php if (!empty($feedbackBundleUrl)): ?>
-          <a href="<?= htmlspecialchars($feedbackBundleUrl) ?>" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="flex-shrink:0;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </a>
-        <?php endif; ?>
-      </div>
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.SpectraPopup) {
-                window.SpectraPopup.show({
-                    title: <?= json_encode(
-                        in_array($feedbackType, ['crit', 'danger', 'error']) ? 'Action Failed' :
-                        ($feedbackType === 'success' ? 'Operation Completed' :
-                        (in_array($feedbackType, ['warn', 'warning']) ? 'Attention Required' : 'System Notification'))
-                    ) ?>,
-                    message: <?= json_encode($feedbackMsg) ?>,
-                    type: <?= json_encode(
-                        in_array($feedbackType, ['crit', 'danger', 'error']) ? 'error' :
-                        (in_array($feedbackType, ['warn', 'warning']) ? 'warning' :
-                        ($feedbackType === 'success' ? 'success' : 'info'))
-                    ) ?>,
-                    html: true,
-                    confirmText: 'Dismiss'
-                });
-            }
-        });
-      </script>
+  </div>
+  <div class="topbar-actions">
+    <?php if ($activePage === 'overview'): ?>
+      <span class="live" id="live-clock">live</span>
+      <button type="button" class="btn btn-primary" data-open="#dlg-link-deploy"><?= so_icon('plus') ?>Link deployment</button>
+      <button type="button" class="btn" data-open="#dlg-register"><?= so_icon('plus') ?>Register deployment</button>
+    <?php elseif (in_array($activePage, ['deployments', 'fleet'])): ?>
+      <button type="button" class="btn" data-open="#dlg-pair"><?= so_icon('key-round') ?>Pair client</button>
+      <button type="button" class="btn btn-primary" data-open="#dlg-link-deploy"><?= so_icon('plus') ?>Link deployment</button>
+    <?php elseif (in_array($activePage, ['releases', 'updates'])): ?>
+      <button type="button" class="btn" data-open="#dlg-product"><?= so_icon('plus') ?>New product</button>
+      <button type="button" class="btn btn-primary" data-open="#dlg-publish"><?= so_icon('upload') ?>Publish release</button>
+    <?php elseif ($activePage === 'products'): ?>
+      <button type="button" class="btn btn-primary" data-open="#dlg-product"><?= so_icon('plus') ?>New product</button>
+    <?php elseif ($activePage === 'licenses'): ?>
+      <button type="button" class="btn" data-open="#dlg-vp-pubkey"><?= so_icon('shield-check') ?>PKI Public Key</button>
+      <button type="button" class="btn btn-primary" data-open="#dlg-license"><?= so_icon('plus') ?>Issue license</button>
+    <?php elseif ($activePage === 'orders'): ?>
+      <button type="button" class="btn" data-open="#dlg-order-webhook"><?= so_icon('external-link') ?>Webhook info</button>
+    <?php elseif ($activePage === 'users'): ?>
+      <button type="button" class="btn btn-primary" data-open="#dlg-user"><?= so_icon('user-plus') ?>Add user</button>
     <?php endif; ?>
+  </div>
+</header>
 
-<?php if ($selectedProduct): ?>
-    <!-- Context Banner for Selected System -->
-    <div class="system-context-banner">
-        <div>
-            <div class="sub-label">
-                <span class="dot dot-accent"></span> Filtered Command View &bull; Active System
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <h2><?= htmlspecialchars($selectedProduct['product_name']) ?></h2>
-                <span class="product-badge" style="background: var(--accent-dim); color: #BFE0F7; border-color: var(--accent); font-weight: 600;">
-                    Prefix: <?= htmlspecialchars($selectedProduct['product_code']) ?>
-                </span>
-                <?php if (!empty($selectedProduct['latest_version'])): ?>
-                    <span class="version-tag" style="background: var(--panel-2); border: 1px solid var(--line); padding: 2px 7px; border-radius: 4px; font-size: 11px;">
-                        Latest: v<?= htmlspecialchars($selectedProduct['latest_version']) ?>
-                    </span>
-                <?php endif; ?>
-                <span style="font-size: 12px; color: var(--text-dim);">
-                    &bull; <?= count($filteredDeployments) ?> node<?= count($filteredDeployments) === 1 ? '' : 's' ?>
-                </span>
-                <?php if (count($openTickets) > 0): ?>
-                    <span class="nav-count warn"><?= count($openTickets) ?> open ticket<?= count($openTickets) === 1 ? '' : 's' ?></span>
-                <?php endif; ?>
-            </div>
-        </div>
-        <div class="system-context-actions">
-            <button type="button" class="btn btn-primary" onclick="openPatchModal(<?= $selectedProduct['id'] ?>)">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                Publish Patch (<?= htmlspecialchars($selectedProduct['product_code']) ?>)
-            </button>
-            <a href="dashboard.php" class="btn btn-outline" title="Clear filter and view all fleet nodes">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                View All Systems
-            </a>
-        </div>
-    </div>
+<main id="main">
 
-    <!-- System-Specific Active Support Tickets Panel -->
-    <div class="panel-card" style="margin: 0 24px 20px;">
-        <div class="panel-header">
-            <h4 class="panel-title">Active Tickets for <?= htmlspecialchars($selectedProduct['product_name']) ?> (<?= count($openTickets) ?>)</h4>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ref</th>
-                    <th>Client / Domain</th>
-                    <th>Requester</th>
-                    <th>Priority</th>
-                    <th>Subject &amp; Issue Details</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($openTickets)): ?>
-                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No open support tickets for this system.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($openTickets as $t): ?>
-                        <tr>
-                            <td><code><?= htmlspecialchars($t['ticket_reference']) ?></code></td>
-                            <td>
-                                <strong><?= htmlspecialchars($t['client_name']) ?></strong><br>
-                                <small style="color: var(--text-muted);"><?= htmlspecialchars($t['deployment_domain']) ?></small>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($t['requester_name']) ?><br>
-                                <small style="color: var(--cyan, #0dc0e7);"><?= htmlspecialchars($t['requester_email']) ?></small>
-                            </td>
-                            <td>
-                                <span class="badge badge-<?= in_array($t['priority'], ['urgent', 'high']) ? 'unreachable' : 'warning' ?>">
-                                    <?= htmlspecialchars($t['priority']) ?>
-                                </span>
-                            </td>
-                            <td>
-                                <strong><?= htmlspecialchars($t['subject']) ?></strong>
-                                <p style="margin: 4px 0 0; font-size: 0.8rem; color: #cbd5e1;"><?= nl2br(htmlspecialchars($t['message'])) ?></p>
-                                <?php if (!empty($t['system_snapshot'])): ?>
-                                    <details>
-                                        <summary style="cursor:pointer; color:#0dc0e7; font-size:11px;">Diagnostic Snapshot</summary>
-                                        <pre style="background:var(--ink, #091830); border:1px solid var(--line, rgba(13,192,231,0.2)); padding:8px; border-radius:4px; font-size:11px; max-height:140px; overflow:auto;"><?= htmlspecialchars(json_encode(json_decode($t['system_snapshot']), JSON_PRETTY_PRINT)) ?></pre>
-                                    </details>
-                                <?php endif; ?>
-                            </td>
-                            <td style="white-space: nowrap;">
-                                <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                                    <input type="hidden" name="action" value="resolve_ticket">
-                                    <input type="hidden" name="ticket_id" value="<?= (int)$t['id'] ?>">
-                                    <input type="hidden" name="status" value="resolved">
-                                    <input type="hidden" name="page" value="tickets">
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Resolve
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+<?php if (!empty($feedbackMsg)): ?>
+  <div class="alert alert-<?= $feedbackType === 'error' ? 'danger' : 'success' ?>" role="alert" style="margin: 16px 20px 0;">
+    <?= $feedbackType === 'error' ? so_icon('circle-x') : so_icon('circle-check') ?>
+    <div style="flex:1"><?= $feedbackMsg ?></div>
+    <?php if (!empty($feedbackBundleUrl)): ?>
+      <a href="<?= so_e($feedbackBundleUrl) ?>" download="spectraops.json" class="btn btn-sm btn-icon" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
+    <?php endif; ?>
+  </div>
 <?php endif; ?>
 
-    <!-- Table View -->
+<?php if ($activePage === 'overview'): ?>
+<!-- ================= VIEW: OVERVIEW ================= -->
+<div class="strip" role="group" aria-label="Filter by status">
+  <a class="strip-item" href="?page=deployments" aria-current="true"><div class="strip-label"><span class="dot dot-accent"></span>All systems</div><div class="strip-value"><?= (int)$totalDeployments ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=healthy"><div class="strip-label"><span class="dot dot-ok"></span>Healthy</div><div class="strip-value is-ok"><?= (int)$healthyCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=warning"><div class="strip-label"><span class="dot dot-warn"></span>Warning</div><div class="strip-value is-warn"><?= (int)$warningCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=critical"><div class="strip-label"><span class="dot dot-crit"></span>Critical</div><div class="strip-value is-crit"><?= (int)$criticalCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=unreachable"><div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div><div class="strip-value is-dead"><?= (int)$unreachableCount ?></div></a>
+  <a class="strip-item" href="?page=releases"><div class="strip-label"><?= so_icon('rotate-cw', 'icon-sm') ?>Outdated builds</div><div class="strip-value"><?= (int)$outdatedCount ?></div></a>
+</div>
+
+<div class="summary">
+  <span>Fleet health<b><?= (int)$fleetHealthPct ?>%</b></span>
+  <span>Avg database latency<b><?= so_fmt_ms($avgLatency) ?></b></span>
+  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers24h) ?></b></span>
+  <span>Version adoption<b><?= (int)$versionAdoptionPct ?>%</b></span>
+</div>
+
+<div class="content">
+<div class="grid-2">
+  <section class="panel" aria-labelledby="att-h">
+    <div class="panel-head">
+      <h2 id="att-h">Needs attention</h2>
+      <small><?= count(array_filter($deployments, fn($d) => ($d['computed_status'] ?? '') !== 'healthy')) ?> of <?= (int)$totalDeployments ?> systems</small>
+    </div>
     <div class="table-wrap">
-      <?php if (in_array($activePage, ['overview', 'deployments', 'fleet', 'metrics'])): ?>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:26%">Client</th>
-              <th>Product</th>
-              <th>Status</th>
-              <th>Version</th>
-              <th class="num">DB latency</th>
-              <th class="num">Disk free</th>
-              <th class="num">Users 24h</th>
-              <th>Errors</th>
-              <th>Last heartbeat</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($filteredDeployments)): ?>
-              <tr>
-                <td colspan="10" style="text-align: center; color: var(--text-faint); padding: 40px 16px;">
-                  No client deployments matching current filters.
-                </td>
-              </tr>
-            <?php else: ?>
-              <?php foreach ($filteredDeployments as $row): 
-                $jsonDep = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
-                $status = $row['computed_status'] ?? 'healthy';
-                $isCrit = ($status === 'critical');
-                
-                $latVal = $row['db_latency_ms'] !== null ? (float)$row['db_latency_ms'] : null;
-                $latClass = '';
-                $latText = '—';
-                if ($latVal !== null) {
-                  $latText = round($latVal) . ' ms';
-                  if ($latVal > 1500) $latClass = 'crit';
-                  elseif ($latVal > 500) $latClass = 'hot';
-                }
-
-                $diskVal = $row['storage_free_gb'] !== null ? (float)$row['storage_free_gb'] : null;
-                $diskClass = '';
-                $diskText = '—';
-                if ($diskVal !== null) {
-                  $diskText = round($diskVal, 1) . ' GB';
-                  if ($diskVal < 1.0) $diskClass = 'crit';
-                  elseif ($diskVal < 3.0) $diskClass = 'hot';
-                }
-
-                $usersVal = $row['active_users_24h'] !== null ? (int)$row['active_users_24h'] : null;
-                $usersText = $usersVal !== null ? number_format($usersVal) : '—';
-
-                $errCount = (int)($row['error_count'] ?? 0);
-
-                $hbText = 'Never';
-                $hbClass = 'hb-dead';
-                if ($row['last_heartbeat_at']) {
-                  $mins = (int)($row['minutes_since_heartbeat'] ?? 0);
-                  if ($mins < 2) {
-                    $hbText = 'Just now';
-                    $hbClass = 'hb-fresh';
-                  } elseif ($mins < 60) {
-                    $hbText = $mins . 'm ago';
-                    $hbClass = 'hb-fresh';
-                  } elseif ($mins < 1440) {
-                    $hbText = floor($mins / 60) . 'h ' . ($mins % 60) . 'm ago';
-                    $hbClass = 'hb-stale';
-                  } else {
-                    $hbText = floor($mins / 1440) . 'd ago';
-                    $hbClass = 'hb-dead';
-                  }
-                }
-              ?>
-                <tr class="<?= $isCrit ? 'flash-crit' : '' ?>" style="<?= (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']) ? 'background: rgba(13, 192, 231, 0.08); outline: 1px solid rgba(13, 192, 231, 0.35);' : '' ?>">
-                  <td>
-                    <div class="client-cell" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                      <div style="min-width:0;">
-                        <a href="?page=overview&product_id=<?= (int)$row['product_id'] ?>&deployment_id=<?= (int)$row['id'] ?>#deployment-feed" class="client-name" style="text-decoration:none; color:inherit;" title="Inspect Deployment Node Feed">
-                          <?= htmlspecialchars($row['client_name']) ?> &rarr;
-                          <?php if (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']): ?>
-                            <span class="badge badge-medium" style="font-size:10px; margin-left:6px; font-weight:700;">Active Feed</span>
-                          <?php endif; ?>
-                        </a>
-                        <span class="client-domain" style="display:block;"><?= htmlspecialchars($row['deployment_domain']) ?></span>
-                      </div>
-                      <a href="dashboard.php?action=download_bundle&id=<?= (int)$row['id'] ?>" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="flex-shrink:0;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      </a>
-                    </div>
-                  </td>
-                  <td>
-                    <a href="product_view.php?id=<?= (int)$row['product_id'] ?>" style="text-decoration:none;">
-                      <span class="product-badge"><?= htmlspecialchars($row['product_name']) ?></span>
-                    </a>
-                  </td>
-                  <td>
-                    <span class="status-pill <?= $status === 'unreachable' ? 'dead' : $status ?>">
-                      <span class="dot dot-<?= $status === 'unreachable' ? 'dead' : $status ?>"></span>
-                      <?= $status ?>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="version-tag <?= !empty($row['is_outdated']) ? 'outdated' : '' ?>">v<?= htmlspecialchars($row['current_version']) ?></span>
-                  </td>
-                  <td class="num"><span class="metric-num <?= $latClass ?>"><?= $latText ?></span></td>
-                  <td class="num"><span class="metric-num <?= $diskClass ?>"><?= $diskText ?></span></td>
-                  <td class="num"><span class="metric-num"><?= $usersText ?></span></td>
-                  <td>
-                    <span class="err-badge <?= $errCount === 0 ? 'zero' : '' ?>"><?= $errCount ?></span>
-                  </td>
-                  <td><span class="hb-cell <?= $hbClass ?>"><?= $hbText ?></span></td>
-                  <td>
-                    <div class="row-actions">
-                      <form method="POST" style="display:inline;">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                        <input type="hidden" name="action" value="sync_deploy">
-                        <input type="hidden" name="deployment_id" value="<?= (int)$row['id'] ?>">
-                        <input type="hidden" name="page" value="<?= htmlspecialchars($activePage) ?>">
-                        <input type="hidden" name="product_id" value="<?= (int)$row['product_id'] ?>">
-                        <button type="submit" class="btn btn-sm btn-outline" title="Reset unreachable state">Ping Sync</button>
-                      </form>
-                      <a href="dashboard.php?action=download_bundle&id=<?= (int)$row['id'] ?>" download="spectraops.json" class="icon-btn" aria-label="Download spectraops.json" title="Download spectraops.json">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                      </a>
-                      <button class="icon-btn" onclick='openSystemModal(<?= $jsonDep ?>)' aria-label="View diagnostics" title="View diagnostics">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      </button>
-                      <a href="?page=overview&product_id=<?= (int)$row['product_id'] ?>&deployment_id=<?= (int)$row['id'] ?>#deployment-feed" class="icon-btn <?= (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']) ? 'active' : '' ?>" aria-label="View Deployment Node & Feed" title="View Deployment Error & Ticket Feed">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                      </a>
-                      <a href="https://<?= htmlspecialchars($row['deployment_domain']) ?>" target="_blank" class="icon-btn" aria-label="Open site" title="Open site">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
-                      </a>
-                      <a href="?delete_deployment=<?= $row['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; text-decoration: none;"
-                         onclick="return confirm('Permanently remove this deployment and purge its heartbeat logs?');">
-                          Delete
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
-
-        <?php if (!empty($scopedDeployment) && in_array($activePage, ['overview', 'deployments', 'fleet', 'metrics'])): 
-          $deployment = $scopedDeployment;
-          $clientTickets = $scopedTickets;
-          $clientErrors = $scopedErrors;
-          $deploymentId = (int)$deployment['id'];
-          $licStatus = strtolower($deployment['license_status'] ?? 'unknown');
-        ?>
-          <!-- EMBEDDED DEPLOYMENT NODE FEED DIRECTLY IN FLEET OVERVIEW -->
-          <div id="deployment-feed" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); scroll-margin-top: 70px;">
-              
-              <!-- Top Meta Bar for the Client Deployment -->
-              <div class="system-context-banner" style="margin: 0 0 16px 0;">
-                  <div>
-                      <div class="sub-label">
-                          <span class="dot dot-accent"></span>
-                          Client Deployment Node &bull; Live Telemetry Feed
-                      </div>
-                      <h2>
-                          <?= htmlspecialchars($deployment['client_name']) ?>
-                          <small style="font-size: 13px; color: var(--text-dim); font-weight: normal; margin-left: 8px;" class="mono">(<?= htmlspecialchars($deployment['deployment_domain']) ?>)</small>
-                      </h2>
-                      <div style="margin-top: 6px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                          <span>Product: <span class="product-badge"><?= htmlspecialchars($deployment['product_name']) ?></span></span>
-                          <span style="color: var(--line);">|</span>
-                          <span>Running: <span class="version-tag <?= !empty($deployment['is_outdated']) ? 'outdated' : '' ?>">v<?= htmlspecialchars($deployment['current_version']) ?></span></span>
-                          <span style="color: var(--line);">|</span>
-                          <span>Status: <span class="status-pill <?= $deployment['status'] === 'unreachable' ? 'dead' : $deployment['status'] ?>"><span class="dot"></span><?= htmlspecialchars($deployment['status']) ?></span></span>
-                          <?php if (!empty($deployment['php_version'])): ?>
-                              <span style="color: var(--line);">|</span>
-                              <span class="mono">PHP <?= htmlspecialchars($deployment['php_version']) ?></span>
-                          <?php endif; ?>
-                          <?php if (!empty($deployment['license_key'])): ?>
-                              <span style="color: var(--line);">|</span>
-                              <span>License: <code class="mono" style="color: var(--accent);"><?= htmlspecialchars($deployment['license_key']) ?></code></span>
-                          <?php endif; ?>
-                      </div>
-                  </div>
-                  <div class="system-context-actions">
-                      <button type="button" class="btn btn-primary" onclick="openPatchModal(<?= (int)$deployment['product_id'] ?>)">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-                          Dispatch Hotfix
-                      </button>
-                      <button type="button" class="btn" onclick="openSystemModal(<?= htmlspecialchars(json_encode($deployment), ENT_QUOTES, 'UTF-8') ?>)">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                          Diagnostics
-                      </button>
-                      <a href="https://<?= htmlspecialchars($deployment['deployment_domain']) ?>" target="_blank" class="btn" style="text-decoration:none;">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
-                          Open Site
-                      </a>
-                      <a href="?page=<?= htmlspecialchars($activePage) ?><?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?>" class="btn" title="Close Scoped Feed">&times; Close Feed</a>
-                  </div>
-              </div>
-
-              <!-- DEDICATED LICENSE STATUS & CONTROLS CARD -->
-              <div class="panel-card" style="margin: 0 0 18px 0;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
-                      <div>
-                          <div style="font-size: 11px; text-transform: uppercase; color: var(--text-faint); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px;">
-                              Cryptographic License Authorization
-                          </div>
-                          
-                          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;">
-                              <code class="mono" style="font-size: 14px; font-weight: 600; color: var(--accent); background: var(--panel-2); padding: 5px 12px; border-radius: var(--radius); border: 1px solid var(--line);">
-                                  <?= htmlspecialchars($deployment['license_key'] ?? 'NO_LICENSE_BOUND') ?>
-                              </code>
-                              
-                              <?php 
-                                  $licStatus = strtolower($deployment['license_status'] ?? 'unknown');
-                                  $pillClass = ($licStatus === 'active') ? 'ok' : (($licStatus === 'suspended') ? 'warn' : 'crit');
-                              ?>
-                              <span class="status-pill <?= $pillClass ?>">
-                                  <span class="dot"></span>
-                                  <?= htmlspecialchars($licStatus) ?>
-                              </span>
-                          </div>
-
-                          <div style="display: flex; gap: 20px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap;">
-                              <div>
-                                  <span style="color: var(--text-faint);">Plan:</span> 
-                                  <strong style="color: var(--text);"><?= ucfirst(htmlspecialchars($deployment['license_type'] ?? 'Standard')) ?></strong>
-                              </div>
-                              <div>
-                                  <span style="color: var(--text-faint);">Holder:</span> 
-                                  <span style="color: var(--text);"><?= htmlspecialchars($deployment['license_client_name'] ?? $deployment['client_name']) ?></span>
-                              </div>
-                              <div>
-                                  <span style="color: var(--text-faint);">Contact:</span> 
-                                  <a href="mailto:<?= htmlspecialchars($deployment['license_client_email'] ?? '') ?>" style="color: var(--accent); text-decoration: none;">
-                                      <?= htmlspecialchars($deployment['license_client_email'] ?? 'N/A') ?>
-                                  </a>
-                              </div>
-                              <div>
-                                  <span style="color: var(--text-faint);">Validity:</span> 
-                                  <?php if (empty($deployment['expires_at'])): ?>
-                                      <strong style="color: var(--ok);">Perpetual (No Expiration)</strong>
-                                  <?php elseif (($deployment['days_remaining'] ?? 0) > 0): ?>
-                                      <span>Expires <span class="mono"><?= htmlspecialchars(substr($deployment['expires_at'], 0, 10)) ?></span> (<strong style="color:var(--text);"><?= $deployment['days_remaining'] ?> days left</strong>)</span>
-                                  <?php else: ?>
-                                      <strong style="color: var(--crit);">Expired on <span class="mono"><?= htmlspecialchars(substr($deployment['expires_at'], 0, 10)) ?></span></strong>
-                                  <?php endif; ?>
-                              </div>
-                          </div>
-                      </div>
-
-                      <!-- Right: Real-Time License Action Buttons -->
-                      <?php if (!empty($deployment['license_id'])): ?>
-                          <div style="display: flex; gap: 8px; align-items: center;">
-                              <?php if ($licStatus === 'active'): ?>
-                                  <a href="?page=<?= htmlspecialchars($activePage) ?><?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?>&deployment_id=<?= $deploymentId ?>&set_license_status=suspended" 
-                                     class="btn btn-sm btn-warn" 
-                                     onclick="return confirm('Suspend this license? Prism EDU will enforce lockout on the next lease check.');">
-                                      ⏸ Suspend License
-                                  </a>
-                              <?php else: ?>
-                                  <a href="?page=<?= htmlspecialchars($activePage) ?><?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?>&deployment_id=<?= $deploymentId ?>&set_license_status=active" 
-                                     class="btn btn-sm btn-success" 
-                                     onclick="return confirm('Reactivate this license? The client will immediately regain full access.');">
-                                      ▶ Reactivate License
-                                  </a>
-                              <?php endif; ?>
-
-                              <a href="?page=<?= htmlspecialchars($activePage) ?><?= $filterProduct > 0 ? '&product_id=' . $filterProduct : '' ?>&deployment_id=<?= $deploymentId ?>&set_license_status=revoked" 
-                                 class="btn btn-sm btn-danger" 
-                                 onclick="return confirm('Revoke this license permanently?');">
-                                  ✕ Revoke
-                              </a>
-                          </div>
-                      <?php endif; ?>
-                  </div>
-              </div>
-
-              <!-- 2-Column Split: Tickets (Left) & Telemetry Error Logs (Right) -->
-              <div class="split-grid" style="margin: 0 0 16px 0;">
-                  
-                  <!-- LEFT PANEL: IT Support Tickets -->
-                  <div class="panel">
-                      <div class="panel-header">
-                          <div class="panel-title">Client Support Tickets (<?= count($clientTickets) ?>)</div>
-                          <span style="font-size: 11px; color: var(--text-faint);">Human-submitted issues</span>
-                      </div>
-                      <div class="table-scroll">
-                          <table>
-                              <thead>
-                                  <tr>
-                                      <th>Ref</th>
-                                      <th>Priority</th>
-                                      <th>Subject &amp; Message</th>
-                                      <th>Status</th>
-                                      <th class="num">Action</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  <?php if (empty($clientTickets)): ?>
-                                      <tr><td colspan="5" style="text-align: center; color: var(--text-faint); padding: 36px 16px;">No support tickets logged by this deployment.</td></tr>
-                                  <?php else: ?>
-                                      <?php foreach ($clientTickets as $t): ?>
-                                          <tr>
-                                              <td style="white-space: nowrap;">
-                                                  <code class="mono" style="font-size:11.5px; color:var(--accent);"><?= htmlspecialchars($t['ticket_reference']) ?></code><br>
-                                                  <small class="mono" style="color: var(--text-faint); font-size:11px;"><?= htmlspecialchars(substr($t['created_at'], 0, 10)) ?></small>
-                                              </td>
-                                              <td>
-                                                  <?php
-                                                      $prio = strtolower($t['priority'] ?? 'medium');
-                                                      $prioClass = ($prio === 'urgent' || $prio === 'high') ? 'crit' : (($prio === 'medium') ? 'warn' : 'ok');
-                                                  ?>
-                                                  <span class="status-pill <?= $prioClass ?>">
-                                                      <span class="dot"></span>
-                                                      <?= htmlspecialchars($t['priority'] ?? 'normal') ?>
-                                                  </span>
-                                              </td>
-                                              <td>
-                                                  <strong style="color: var(--text); font-size: 13px;"><?= htmlspecialchars($t['subject']) ?></strong>
-                                                  <p style="margin: 4px 0 0 0; color: var(--text-dim); font-size: 12px; line-height: 1.4;"><?= nl2br(htmlspecialchars($t['message'])) ?></p>
-                                              </td>
-                                              <td>
-                                                  <span class="status-pill <?= ($t['status'] === 'resolved') ? 'ok' : 'warn' ?>">
-                                                      <span class="dot"></span>
-                                                      <?= htmlspecialchars($t['status']) ?>
-                                                  </span>
-                                              </td>
-                                              <td class="num" style="white-space: nowrap;">
-                                                  <?php if ($t['status'] !== 'resolved'): ?>
-                                                      <form method="POST" style="display:inline;">
-                                                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                                                          <input type="hidden" name="action" value="resolve_ticket">
-                                                          <input type="hidden" name="ticket_id" value="<?= (int)$t['id'] ?>">
-                                                          <input type="hidden" name="status" value="resolved">
-                                                          <input type="hidden" name="page" value="<?= htmlspecialchars($activePage) ?>">
-                                                          <input type="hidden" name="product_id" value="<?= (int)$deployment['product_id'] ?>">
-                                                          <input type="hidden" name="deployment_id" value="<?= (int)$deployment['id'] ?>">
-                                                          <button type="submit" class="btn btn-sm btn-success">
-                                                              Resolve
-                                                          </button>
-                                                      </form>
-                                                  <?php else: ?>
-                                                      <span class="status-pill ok">Closed</span>
-                                                  <?php endif; ?>
-                                              </td>
-                                          </tr>
-                                      <?php endforeach; ?>
-                                  <?php endif; ?>
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-
-                  <!-- RIGHT PANEL: Telemetry Error Logs for THIS Specific Deployment -->
-                  <div class="panel">
-                      <div class="panel-header">
-                          <div class="panel-title">Telemetry Error Stream (<?= count($clientErrors) ?>)</div>
-                          <span style="font-size: 11px; color: var(--text-faint);">Runtime traces &amp; exceptions</span>
-                      </div>
-                      <div class="table-scroll">
-                          <table>
-                              <thead>
-                                  <tr>
-                                      <th>Occurred</th>
-                                      <th>Error Details &amp; Location</th>
-                                      <th>Resolution</th>
-                                      <th class="num">Action</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  <?php if (empty($clientErrors)): ?>
-                                      <tr><td colspan="4" style="text-align: center; color: var(--text-faint); padding: 36px 16px;">Zero errors recorded. This deployment is running clean.</td></tr>
-                                  <?php else: ?>
-                                      <?php foreach ($clientErrors as $err): ?>
-                                          <tr>
-                                              <td style="white-space: nowrap;">
-                                                  <span class="mono" style="color: var(--text-faint); font-size: 11.5px;"><?= htmlspecialchars($err['occurred_at'] ?? $err['last_seen_at'] ?? 'Recent') ?></span><br>
-                                                  <span class="status-pill warn" style="margin-top: 3px; font-size: 10px;">
-                                                      <?= htmlspecialchars($err['error_level']) ?>
-                                                  </span>
-                                              </td>
-                                              <td>
-                                                  <div style="font-weight: 500; color: var(--crit); font-size: 12.5px;"><?= htmlspecialchars($err['error_message']) ?></div>
-                                                  <small class="mono" style="color: var(--text-faint); font-size: 11px;">
-                                                      <?= htmlspecialchars(basename($err['file_path'] ?? '')) ?>:<?= (int)($err['line_number'] ?? 0) ?>
-                                                  </small>
-                                                  <?php if (!empty($err['stack_trace'])): ?>
-                                                      <details style="margin-top: 4px;">
-                                                          <summary style="cursor:pointer; color:var(--accent); font-size:11px;">View Stack Trace</summary>
-                                                          <pre class="mono" style="background:var(--ink); border:1px solid var(--line); padding:8px; border-radius:var(--radius); font-size:11px; max-height:140px; overflow:auto; color:var(--text-dim); margin-top:4px;"><?= htmlspecialchars($err['stack_trace']) ?></pre>
-                                                      </details>
-                                                  <?php endif; ?>
-                                              </td>
-                                              <td style="white-space: nowrap;">
-                                                  <?php if (($err['status'] ?? 'open') === 'resolved'): ?>
-                                                      <span class="status-pill ok">✓ Resolved <?= !empty($err['resolved_by_version']) ? '(v' . htmlspecialchars($err['resolved_by_version']) . ')' : '' ?></span>
-                                                  <?php elseif (($err['status'] ?? 'open') === 'patch_pending'): ?>
-                                                      <span class="status-pill warn">⏳ Patching</span>
-                                                  <?php else: ?>
-                                                      <span class="status-pill crit">● Open</span>
-                                                  <?php endif; ?>
-                                              </td>
-                                              <td class="num" style="white-space: nowrap;">
-                                                  <button type="button" class="btn btn-sm btn-ai" onclick="triggerAiFix(<?= (int)$err['id'] ?>)">
-                                                      ✨ Fix
-                                                  </button>
-                                              </td>
-                                          </tr>
-                                      <?php endforeach; ?>
-                                  <?php endif; ?>
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-
-              </div>
-          </div>
-        <?php endif; ?>
-
-      <?php elseif ($activePage === 'deployment'): ?>
-        <?php if (!$scopedDeployment): ?>
-          <div style="padding: 40px; text-align: center; color: var(--text-dim);">
-            <h3 style="color: var(--text); font-size: 16px;">Deployment Node Not Found</h3>
-            <p style="margin-top: 8px; font-size: 13px; color: var(--text-dim);">The requested deployment could not be loaded or the ID is invalid.</p>
-            <a href="dashboard.php" class="btn" style="margin-top: 16px;">&larr; Return to Fleet Overview</a>
-          </div>
-        <?php else: 
-          $deployment = $scopedDeployment;
-          $clientTickets = $scopedTickets;
-          $clientErrors = $scopedErrors;
-          $deploymentId = (int)$deployment['id'];
-          $licStatus = strtolower($deployment['license_status'] ?? 'unknown');
-        ?>
-          <!-- Top Meta Bar for the Client Deployment -->
-          <div class="system-context-banner" style="margin: 0 0 16px 0;">
-              <div>
-                  <div class="sub-label">
-                      <span class="dot dot-accent"></span>
-                      Client Deployment Node &bull; Dedicated View
-                  </div>
-                  <h2>
-                      <?= htmlspecialchars($deployment['client_name']) ?>
-                      <small style="font-size: 13px; color: var(--text-dim); font-weight: normal; margin-left: 8px;" class="mono">(<?= htmlspecialchars($deployment['deployment_domain']) ?>)</small>
-                  </h2>
-                  <div style="margin-top: 6px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                      <span>Product: <span class="product-badge"><?= htmlspecialchars($deployment['product_name']) ?></span></span>
-                      <span style="color: var(--line);">|</span>
-                      <span>Running: <span class="version-tag <?= !empty($deployment['is_outdated']) ? 'outdated' : '' ?>">v<?= htmlspecialchars($deployment['current_version']) ?></span></span>
-                      <span style="color: var(--line);">|</span>
-                      <span>Status: <span class="status-pill <?= $deployment['status'] === 'unreachable' ? 'dead' : $deployment['status'] ?>"><span class="dot"></span><?= htmlspecialchars($deployment['status']) ?></span></span>
-                      <?php if (!empty($deployment['php_version'])): ?>
-                          <span style="color: var(--line);">|</span>
-                          <span class="mono">PHP <?= htmlspecialchars($deployment['php_version']) ?></span>
-                      <?php endif; ?>
-                      <?php if (!empty($deployment['license_key'])): ?>
-                          <span style="color: var(--line);">|</span>
-                          <span>License: <code class="mono" style="color: var(--accent);"><?= htmlspecialchars($deployment['license_key']) ?></code></span>
-                      <?php endif; ?>
-                  </div>
-              </div>
-              <div class="system-context-actions">
-                  <button type="button" class="btn btn-primary" onclick="openPatchModal(<?= (int)$deployment['product_id'] ?>)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-                      Dispatch Hotfix
-                  </button>
-                  <button type="button" class="btn" onclick="openSystemModal(<?= htmlspecialchars(json_encode($deployment), ENT_QUOTES, 'UTF-8') ?>)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                      Diagnostics
-                  </button>
-                  <a href="https://<?= htmlspecialchars($deployment['deployment_domain']) ?>" target="_blank" class="btn" style="text-decoration:none;">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
-                      Open Site
-                  </a>
-                  <a href="dashboard.php?page=overview<?= !empty($deployment['product_id']) ? '&product_id=' . (int)$deployment['product_id'] : '' ?>" class="btn">&larr; Back to Fleet</a>
-              </div>
-          </div>
-
-          <!-- DEDICATED LICENSE STATUS & CONTROLS CARD -->
-          <div class="panel-card" style="margin: 0 0 18px 0;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;">
-                  <div>
-                      <div style="font-size: 11px; text-transform: uppercase; color: var(--text-faint); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px;">
-                          Cryptographic License Authorization
-                      </div>
-                      
-                      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;">
-                          <code class="mono" style="font-size: 14px; font-weight: 600; color: var(--accent); background: var(--panel-2); padding: 5px 12px; border-radius: var(--radius); border: 1px solid var(--line);">
-                              <?= htmlspecialchars($deployment['license_key'] ?? 'NO_LICENSE_BOUND') ?>
-                          </code>
-                          
-                          <?php 
-                              $licStatus = strtolower($deployment['license_status'] ?? 'unknown');
-                              $pillClass = ($licStatus === 'active') ? 'ok' : (($licStatus === 'suspended') ? 'warn' : 'crit');
-                          ?>
-                          <span class="status-pill <?= $pillClass ?>">
-                              <span class="dot"></span>
-                              <?= htmlspecialchars($licStatus) ?>
-                          </span>
-                      </div>
-
-                      <div style="display: flex; gap: 20px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap;">
-                          <div>
-                              <span style="color: var(--text-faint);">Plan:</span> 
-                              <strong style="color: var(--text);"><?= ucfirst(htmlspecialchars($deployment['license_type'] ?? 'Standard')) ?></strong>
-                          </div>
-                          <div>
-                              <span style="color: var(--text-faint);">Holder:</span> 
-                              <span style="color: var(--text);"><?= htmlspecialchars($deployment['license_client_name'] ?? $deployment['client_name']) ?></span>
-                          </div>
-                          <div>
-                              <span style="color: var(--text-faint);">Contact:</span> 
-                              <a href="mailto:<?= htmlspecialchars($deployment['license_client_email'] ?? '') ?>" style="color: var(--accent); text-decoration: none;">
-                                  <?= htmlspecialchars($deployment['license_client_email'] ?? 'N/A') ?>
-                              </a>
-                          </div>
-                          <div>
-                              <span style="color: var(--text-faint);">Validity:</span> 
-                              <?php if (empty($deployment['expires_at'])): ?>
-                                  <strong style="color: var(--ok);">Perpetual (No Expiration)</strong>
-                              <?php elseif (($deployment['days_remaining'] ?? 0) > 0): ?>
-                                  <span>Expires <span class="mono"><?= htmlspecialchars(substr($deployment['expires_at'], 0, 10)) ?></span> (<strong style="color:var(--text);"><?= $deployment['days_remaining'] ?> days left</strong>)</span>
-                              <?php else: ?>
-                                  <strong style="color: var(--crit);">Expired on <span class="mono"><?= htmlspecialchars(substr($deployment['expires_at'], 0, 10)) ?></span></strong>
-                              <?php endif; ?>
-                          </div>
-                      </div>
-                  </div>
-
-                  <!-- Right: Real-Time License Action Buttons -->
-                  <?php if (!empty($deployment['license_id'])): ?>
-                      <div style="display: flex; gap: 8px; align-items: center;">
-                          <?php if ($licStatus === 'active'): ?>
-                              <a href="?page=deployment&id=<?= $deploymentId ?>&set_license_status=suspended" 
-                                 class="btn btn-sm btn-warn" 
-                                 onclick="return confirm('Suspend this license? Prism EDU will enforce lockout on the next lease check.');">
-                                  ⏸ Suspend License
-                              </a>
-                          <?php else: ?>
-                              <a href="?page=deployment&id=<?= $deploymentId ?>&set_license_status=active" 
-                                 class="btn btn-sm btn-success" 
-                                 onclick="return confirm('Reactivate this license? The client will immediately regain full access.');">
-                                  ▶ Reactivate License
-                              </a>
-                          <?php endif; ?>
-
-                          <a href="?page=deployment&id=<?= $deploymentId ?>&set_license_status=revoked" 
-                             class="btn btn-sm btn-danger" 
-                             onclick="return confirm('Revoke this license permanently?');">
-                              ✕ Revoke
-                          </a>
-                      </div>
-                  <?php endif; ?>
-
-              </div>
-          </div>
-
-          <!-- 2-Column Split: Tickets (Left) & Telemetry Error Logs (Right) -->
-          <div class="split-grid" style="margin: 0 0 16px 0;">
-              
-              <!-- LEFT PANEL: IT Support Tickets -->
-              <div class="panel">
-                  <div class="panel-header">
-                      <div class="panel-title">Client Support Tickets (<?= count($clientTickets) ?>)</div>
-                      <span style="font-size: 11px; color: var(--text-faint);">Human-submitted issues</span>
-                  </div>
-                  <div class="table-scroll">
-                      <table>
-                          <thead>
-                              <tr>
-                                  <th>Ref</th>
-                                  <th>Priority</th>
-                                  <th>Subject &amp; Message</th>
-                                  <th>Status</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <?php if (empty($clientTickets)): ?>
-                                  <tr><td colspan="4" style="text-align: center; color: var(--text-faint); padding: 36px 16px;">No support tickets logged by this deployment.</td></tr>
-                              <?php else: ?>
-                                  <?php foreach ($clientTickets as $t): ?>
-                                      <tr>
-                                          <td style="white-space: nowrap;">
-                                              <code class="mono" style="font-size:11.5px; color:var(--accent);"><?= htmlspecialchars($t['ticket_reference']) ?></code><br>
-                                              <small class="mono" style="color: var(--text-faint); font-size:11px;"><?= htmlspecialchars(substr($t['created_at'], 0, 10)) ?></small>
-                                          </td>
-                                          <td>
-                                              <?php
-                                                  $prio = strtolower($t['priority'] ?? 'medium');
-                                                  $prioClass = ($prio === 'high' || $prio === 'critical') ? 'crit' : (($prio === 'urgent' || $prio === 'medium') ? 'warn' : 'info');
-                                              ?>
-                                              <span class="status-pill <?= $prioClass ?>"><?= htmlspecialchars($t['priority'] ?? 'normal') ?></span>
-                                          </td>
-                                          <td>
-                                              <strong style="color: var(--text); font-size: 13px;"><?= htmlspecialchars($t['subject']) ?></strong>
-                                              <p style="margin: 4px 0 0 0; color: var(--text-dim); font-size: 12px; line-height: 1.4;"><?= nl2br(htmlspecialchars($t['message'])) ?></p>
-                                          </td>
-                                          <td>
-                                              <span class="status-pill <?= ($t['status'] === 'resolved') ? 'ok' : 'warn' ?>">
-                                                  <span class="dot"></span>
-                                                  <?= htmlspecialchars($t['status']) ?>
-                                              </span>
-                                          </td>
-                                      </tr>
-                                  <?php endforeach; ?>
-                              <?php endif; ?>
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-
-              <!-- RIGHT PANEL: Telemetry Error Logs for THIS Specific Deployment -->
-              <div class="panel">
-                  <div class="panel-header">
-                      <div class="panel-title">Telemetry Error Stream (<?= count($clientErrors) ?>)</div>
-                      <span style="font-size: 11px; color: var(--text-faint);">Runtime traces &amp; exceptions</span>
-                  </div>
-                  <div class="table-scroll">
-                      <table>
-                          <thead>
-                              <tr>
-                                  <th>Occurred</th>
-                                  <th>Error Details &amp; Location</th>
-                                  <th>Resolution</th>
-                                  <th class="num">Action</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <?php if (empty($clientErrors)): ?>
-                                  <tr><td colspan="4" style="text-align: center; color: var(--text-faint); padding: 36px 16px;">Zero errors recorded. This deployment is running clean.</td></tr>
-                              <?php else: ?>
-                                  <?php foreach ($clientErrors as $err): ?>
-                                      <tr>
-                                          <td style="white-space: nowrap;">
-                                              <small class="mono" style="color: var(--text-faint); font-size:11px;"><?= htmlspecialchars($err['occurred_at'] ?? $err['last_seen_at'] ?? '') ?></small><br>
-                                              <span class="status-pill warn" style="margin-top: 3px; font-size: 10px;"><?= htmlspecialchars($err['error_level']) ?></span>
-                                          </td>
-                                          <td>
-                                              <div style="font-weight: 500; color: var(--crit); font-size: 12.5px;"><?= htmlspecialchars($err['error_message']) ?></div>
-                                              <small class="mono" style="color: var(--text-dim); font-size: 11px;">
-                                                  <?= htmlspecialchars(basename($err['file_path'] ?? '')) ?>:<?= (int)($err['line_number'] ?? 0) ?>
-                                              </small>
-                                              <?php if (!empty($err['stack_trace'])): ?>
-                                                  <details style="margin-top: 4px;">
-                                                      <summary style="cursor:pointer; color:var(--accent); font-size:11px;">View Stack Trace</summary>
-                                                      <pre class="mono" style="background:var(--ink); border:1px solid var(--line); padding:8px; border-radius:var(--radius); font-size:11px; max-height:140px; overflow:auto; color:var(--text-dim); margin-top:4px;"><?= htmlspecialchars($err['stack_trace']) ?></pre>
-                                                  </details>
-                                              <?php endif; ?>
-                                          </td>
-                                          <td style="white-space: nowrap;">
-                                              <?php if (($err['status'] ?? 'open') === 'resolved'): ?>
-                                                  <span class="status-pill ok">✓ Resolved <?= !empty($err['resolved_by_version']) ? '(v' . htmlspecialchars($err['resolved_by_version']) . ')' : '' ?></span>
-                                              <?php elseif (($err['status'] ?? 'open') === 'patch_pending'): ?>
-                                                  <span class="status-pill warn">⏳ Patching</span>
-                                              <?php else: ?>
-                                                  <span class="status-pill crit">● Open</span>
-                                              <?php endif; ?>
-                                          </td>
-                                          <td class="num" style="white-space: nowrap;">
-                                              <button type="button" class="btn btn-sm btn-ai" onclick="triggerAiFix(<?= (int)$err['id'] ?>)">
-                                                  ✨ Fix
-                                              </button>
-                                          </td>
-                                      </tr>
-                                  <?php endforeach; ?>
-                              <?php endif; ?>
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-
-          </div>
-        <?php endif; ?>
-
-      <?php elseif ($activePage === 'errors'): ?>
-        <div style="background: rgba(13, 192, 231, 0.05); border: 1px solid rgba(13, 192, 231, 0.2); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 18px; color: #0dc0e7;">🛡️</span>
-            <div>
-              <strong style="color: var(--text); font-size: 13px;">Error Log Retention Policy</strong>
-              <div style="font-size: 11px; color: var(--text-dim);">Resolved incidents are automatically archived after <strong>30 days</strong> and permanently purged after <strong>60 days</strong>.</div>
-            </div>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <!-- Filter Pills -->
-            <div style="display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 11px;">
-              <a href="?page=errors&error_status=all" style="padding: 4px 10px; text-decoration: none; <?= ($filterErrorStatus === 'all') ? 'background: #0dc0e7; color: #000; font-weight: 600;' : 'color: var(--text-dim); background: var(--surface);' ?>">All</a>
-              <a href="?page=errors&error_status=open" style="padding: 4px 10px; text-decoration: none; <?= ($filterErrorStatus === 'open') ? 'background: #ef4444; color: #fff; font-weight: 600;' : 'color: var(--text-dim); background: var(--surface);' ?>">Unresolved</a>
-              <a href="?page=errors&error_status=patch_pending" style="padding: 4px 10px; text-decoration: none; <?= ($filterErrorStatus === 'patch_pending') ? 'background: #f59e0b; color: #000; font-weight: 600;' : 'color: var(--text-dim); background: var(--surface);' ?>">Patch Pending</a>
-              <a href="?page=errors&error_status=resolved" style="padding: 4px 10px; text-decoration: none; <?= ($filterErrorStatus === 'resolved') ? 'background: #10b981; color: #000; font-weight: 600;' : 'color: var(--text-dim); background: var(--surface);' ?>">Resolved</a>
-              <a href="?page=errors&error_status=archived" style="padding: 4px 10px; text-decoration: none; <?= ($filterErrorStatus === 'archived') ? 'background: #94a3b8; color: #000; font-weight: 600;' : 'color: var(--text-dim); background: var(--surface);' ?>">Archived (>30d)</a>
-            </div>
-            <!-- Manual Sweep Button -->
-            <form method="POST" style="margin: 0;">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-              <input type="hidden" name="action" value="run_error_lifecycle">
-              <button type="submit" class="btn btn-sm" style="border-color: #0dc0e7; color: #0dc0e7; font-size: 11px; padding: 4px 10px;" title="Execute 30d/60d retention sweep now">
-                🧹 Run Retention Sweep
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Level</th>
-              <th>Status</th>
-              <th>Client / Domain</th>
-              <th>Error Message &amp; Route</th>
-              <th style="width:140px; text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($recentErrors)): ?>
-              <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-faint);">No crash events or unhandled exceptions logged for this view.</td></tr>
-            <?php else: ?>
-              <?php foreach ($recentErrors as $err): $e = $err; ?>
-                <tr>
-                  <td style="white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim);">
-                    <?= htmlspecialchars($err['last_seen_at'] ?? 'Just now') ?>
-                    <?php if (($err['occurrences'] ?? 1) > 1): ?>
-                      <span class="nav-count crit" style="margin-left:4px; font-size:10px;"><?= $err['occurrences'] ?>x</span>
-                    <?php endif; ?>
-                  </td>
-                  <td>
-                    <span class="status-pill crit"><span class="dot dot-crit"></span><?= htmlspecialchars($err['error_level'] ?? 'ERROR') ?></span>
-                  </td>
-                  <td>
-                    <?php if (($e['status'] ?? '') === 'resolved' || !empty($e['resolved'])): ?>
-                        <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block;">
-                            ✓ RESOLVED (v<?= htmlspecialchars((string)($e['resolved_by_version'] ?? '')) ?>)
-                        </span>
-                        <br><small style="color: var(--text-muted, var(--text-faint)); font-size: 0.7rem;">Verified on server</small>
-
-                    <?php elseif (($e['status'] ?? '') === 'archived'): ?>
-                        <span class="badge" style="background: rgba(148, 163, 184, 0.2); color: #94a3b8; border: 1px solid #94a3b8; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block;">
-                            📦 ARCHIVED (v<?= htmlspecialchars((string)($e['resolved_by_version'] ?? '')) ?>)
-                        </span>
-                        <br><small style="color: var(--text-muted, var(--text-faint)); font-size: 0.7rem;">Resolved &gt; 30d (Purges at 60d)</small>
-
-                    <?php elseif (($e['status'] ?? '') === 'patch_pending'): ?>
-                        <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block;">
-                            ⏳ PATCH DEPLOYING (v<?= htmlspecialchars((string)($e['resolved_by_version'] ?? '')) ?>)
-                        </span>
-                        <br><small style="color: var(--text-muted, var(--text-faint)); font-size: 0.7rem;">Awaiting client OTA sync</small>
-
-                    <?php else: ?>
-                        <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block;">
-                            ● UNRESOLVED
-                        </span>
-                    <?php endif; ?>
-                  </td>
-                  <td>
-                    <div class="client-cell">
-                      <span class="client-name"><?= htmlspecialchars($err['client_name']) ?></span>
-                      <span class="client-domain"><?= htmlspecialchars($err['deployment_domain']) ?></span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style="font-weight:600; color:var(--crit-text); margin-bottom:2px;"><?= htmlspecialchars($err['error_message']) ?></div>
-                    <div style="font-size:11px; color:var(--text-faint); font-family:'JetBrains Mono',monospace;">
-                      <?= htmlspecialchars($err['file_path'] ?? '') ?><?= isset($err['line_number']) ? ':' . $err['line_number'] : '' ?>
-                      <?php if (!empty($err['request_uri'])): ?> &bull; <?= htmlspecialchars($err['request_uri']) ?><?php endif; ?>
-                    </div>
-                    <?php if (!empty($err['stack_trace'])): ?>
-                      <details style="margin-top:6px;">
-                        <summary style="cursor:pointer; color:var(--accent); font-size:11px;">Inspect Trace</summary>
-                        <pre style="background:var(--ink); border:1px solid var(--line); padding:8px; border-radius:var(--radius); font-size:11px; color:var(--text-dim); margin-top:4px; max-height:160px; overflow:auto;"><?= htmlspecialchars($err['stack_trace']) ?></pre>
-                      </details>
-                    <?php endif; ?>
-                  </td>
-                  <td style="text-align:right; white-space:nowrap;">
-                    <div style="display:inline-flex; gap:6px; align-items:center; justify-content:flex-end;">
-                      <button type="button" class="btn btn-sm btn-ai" title="AI Diagnosis &amp; Auto-Patch (Gemini 3.8 Flash)" aria-label="AI Diagnosis &amp; Auto-Patch" style="padding:6px 9px;" onclick="triggerAiFix(<?= $e['id'] ?>)">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>
-                      </button>
-                      <?php if (($e['status'] ?? '') !== 'resolved' && empty($err['resolved'])): ?>
-                        <form method="POST" style="display:inline; margin:0;">
-                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                          <input type="hidden" name="action" value="resolve_error">
-                          <input type="hidden" name="error_id" value="<?= (int)$err['id'] ?>">
-                          <button type="submit" class="btn btn-sm btn-success" title="Mark error as resolved" aria-label="Resolve error" style="padding:6px 9px;">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                        </form>
-                      <?php endif; ?>
-                      <button type="button" class="btn btn-sm btn-warn" title="Deploy manual patch package" aria-label="Hotfix patch" style="padding:6px 9px;" onclick="openPatchModal(<?= $err['product_id'] ?? 1 ?>)">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                      </button>
-                      <a href="?delete_error=<?= $err['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding:6px 9px; text-decoration:none;"
-                         onclick="return confirm('Permanently delete this error trace?');"
-                         title="Permanently delete this error trace" aria-label="Delete error">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
-
-      <?php elseif ($activePage === 'tickets'): ?>
-        <table>
-          <thead>
-            <tr>
-              <th>Ref</th>
-              <th>Client</th>
-              <th>Requester</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Subject &amp; Message</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($openTickets)): ?>
-              <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-faint);">No support tickets matching filters.</td></tr>
-            <?php else: ?>
-              <?php foreach ($openTickets as $t): 
-                $tStatus = $t['status'] ?? 'open';
-                $pillClass = match($tStatus) {
-                  'resolved' => 'ok',
-                  'closed' => 'dead',
-                  'in_progress' => 'warn',
-                  default => 'crit'
-                };
-              ?>
-                <tr>
-                  <td><span class="mono" style="font-size:11px; color:var(--accent);"><?= htmlspecialchars($t['ticket_reference']) ?></span></td>
-                  <td><strong><?= htmlspecialchars($t['client_name']) ?></strong></td>
-                  <td>
-                    <?= htmlspecialchars($t['requester_name']) ?>
-                    <div style="font-size:11px; color:var(--text-faint);"><?= htmlspecialchars($t['requester_email']) ?></div>
-                  </td>
-                  <td>
-                    <span class="status-pill <?= ($t['priority'] === 'urgent' || $t['priority'] === 'high') ? 'crit' : 'warn' ?>">
-                      <?= strtoupper(htmlspecialchars($t['priority'])) ?>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="status-pill <?= $pillClass ?>"><span class="dot dot-<?= $pillClass ?>"></span><?= strtoupper($tStatus) ?></span>
-                  </td>
-                  <td>
-                    <strong style="color:var(--text);"><?= htmlspecialchars($t['subject']) ?></strong>
-                    <div style="font-size:12px; color:var(--text-dim); margin-top:2px; max-width:400px;"><?= nl2br(htmlspecialchars($t['message'])) ?></div>
-                  </td>
-                  <td>
-                    <div style="display:flex; gap:6px;">
-                      <?php if ($tStatus !== 'resolved'): ?>
-                        <form method="POST" style="display:inline;">
-                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                          <input type="hidden" name="action" value="resolve_ticket">
-                          <input type="hidden" name="ticket_id" value="<?= (int)$t['id'] ?>">
-                          <input type="hidden" name="status" value="resolved">
-                          <button type="submit" class="btn btn-sm" style="color:var(--ok-text); border-color:var(--ok-dim);">Resolve</button>
-                        </form>
-                      <?php endif; ?>
-                      <?php if ($tStatus !== 'closed'): ?>
-                        <form method="POST" style="display:inline;">
-                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                          <input type="hidden" name="action" value="resolve_ticket">
-                          <input type="hidden" name="ticket_id" value="<?= (int)$t['id'] ?>">
-                          <input type="hidden" name="status" value="closed">
-                          <button type="submit" class="btn btn-sm">Close</button>
-                        </form>
-                      <?php else: ?>
-                        <form method="POST" style="display:inline;">
-                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                          <input type="hidden" name="action" value="resolve_ticket">
-                          <input type="hidden" name="ticket_id" value="<?= (int)$t['id'] ?>">
-                          <input type="hidden" name="status" value="open">
-                          <button type="submit" class="btn btn-sm">Reopen</button>
-                        </form>
-                      <?php endif; ?>
-                      <a href="?delete_ticket=<?= $t['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; text-decoration: none;"
-                         onclick="return confirm('Delete this support ticket permanently?');">
-                          Delete
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
-
-      <?php elseif ($activePage === 'releases'): ?>
-        <table>
-          <thead>
-            <tr>
-              <th>Target Product</th>
-              <th>Version</th>
-              <th>SHA-256 Checksum</th>
-              <th>Signing Status</th>
-              <th>Released At</th>
-              <th style="width:100px">Download</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($releases)): ?>
-              <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-faint);">No update packages published yet. Use "Publish release" to distribute an update.</td></tr>
-            <?php else: ?>
-              <?php foreach ($releases as $rel): 
-                $checksum = (string)($rel['package_checksum'] ?? $rel['checksum_sha256'] ?? '');
-                $releasedAt = (string)($rel['released_at'] ?? $rel['created_at'] ?? '—');
-                $packageFile = (string)($rel['package_filename'] ?? $rel['package_file'] ?? '');
-              ?>
-                <tr>
-                  <td><strong><?= htmlspecialchars((string)($rel['product_name'] ?? 'Product')) ?></strong></td>
-                  <td><span class="version-tag">v<?= htmlspecialchars((string)($rel['version'] ?? '0.0.0')) ?></span></td>
-                  <td>
-                    <span class="mono" style="font-size:11px; color:var(--text-dim);" title="<?= htmlspecialchars($checksum) ?>">
-                      <?= htmlspecialchars(substr($checksum, 0, 16)) ?><?= strlen($checksum) > 16 ? '...' : '' ?>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="status-pill ok"><span class="dot dot-ok"></span>RSA-2048 Signed</span>
-                  </td>
-                  <td><span class="mono" style="font-size:11px; color:var(--text-faint);"><?= htmlspecialchars($releasedAt) ?></span></td>
-                  <td>
-                    <div style="display:flex; gap:6px; align-items:center;">
-                      <?php if (!empty($packageFile)): ?>
-                      <a href="downloads/updates/<?= urlencode($packageFile) ?>" class="btn btn-sm">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                        Get ZIP
-                      </a>
-                      <?php else: ?>
-                      <span style="color:var(--text-faint); font-size:12px;">No ZIP</span>
-                      <?php endif; ?>
-                      <a href="?delete_release=<?= $rel['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; text-decoration: none;"
-                         onclick="return confirm('Delete this release and erase the ZIP file from disk?');">
-                          Delete
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
-
-      <?php elseif ($activePage === 'products'): ?>
-        <table>
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Prefix Code</th>
-              <th>Slug</th>
-              <th>Latest Version</th>
-              <th>Description</th>
-              <th>Active Deployments</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($products as $p): 
-              $depCount = 0;
-              foreach ($deployments as $d) {
-                if ((int)$d['product_id'] === (int)$p['id']) $depCount++;
-              }
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Client</th>
+            <th scope="col">Status</th>
+            <th scope="col">Why</th>
+            <th scope="col">Last heartbeat</th>
+            <th scope="col"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php 
+          $attentionItems = array_filter($deployments, fn($d) => ($d['computed_status'] ?? '') !== 'healthy');
+          if (empty($attentionItems)): 
+          ?>
+            <tr><td colspan="5" class="dim" style="text-align:center; padding:24px;">All client deployments are healthy and reporting on schedule.</td></tr>
+          <?php else: ?>
+            <?php foreach ($attentionItems as $d): 
+              $s = strtolower((string)($d['computed_status'] ?? 'unknown'));
+              $rCls = so_row_class($s);
+              $rel = so_rel_time($d['last_heartbeat_at'] ?? null);
+              $payload = so_dep_payload($d);
             ?>
-              <tr>
-                <td><strong><?= htmlspecialchars($p['product_name']) ?></strong></td>
+              <tr class="<?= $rCls ?>">
                 <td>
-                  <span class="mono" style="font-size:11px; font-weight:700; color:var(--accent); background:rgba(79,168,224,0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(79,168,224,0.25);">
-                    <?= htmlspecialchars($p['product_code'] ?? '—') ?>
-                  </span>
+                  <div class="cell-main">
+                    <button type="button" class="link-btn" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments"><?= so_e($d['client_name']) ?></button>
+                    <span class="cell-sub"><?= so_e($d['deployment_domain']) ?></span>
+                  </div>
                 </td>
-                <td><span class="mono" style="font-size:11px; color:var(--accent);"><?= htmlspecialchars($p['product_slug']) ?></span></td>
-                <td><span class="version-tag">v<?= htmlspecialchars($p['latest_version'] ?? '1.0.0') ?></span></td>
-                <td style="color:var(--text-dim);"><?= htmlspecialchars($p['description'] ?? '—') ?></td>
-                <td><span class="product-badge"><?= $depCount ?> nodes</span></td>
-                <td style="text-align:right;">
-                  <div style="display:inline-flex; gap:6px; align-items:center;">
-                    <button type="button" class="btn btn-sm btn-outline" style="border-color: #0dc0e7; color: #bef6fd; font-size:11px; padding:3px 8px;" onclick="openModal('codebaseModal'); var sel = document.getElementById('codebaseProductSelect'); if(sel) sel.value = '<?= (int)$p['id'] ?>'; var ver = document.getElementById('codebaseVersionInput'); if(ver) ver.value = '<?= htmlspecialchars($p['latest_version'] ?? '1.0.0') ?>';">
-                      📦 Sync Codebase
-                    </button>
-                    <a href="?delete_product=<?= $p['id'] ?>" 
-                       class="btn btn-sm" 
-                       style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; font-size:11px; padding:3px 8px; text-decoration:none;"
-                       onclick="return confirm('WARNING: Deleting this product will remove its source codebase from disk and remove all associated releases, licenses, and deployments. Proceed?');">
-                        Delete Product
-                    </a>
+                <td><?= so_status_pill($s, $d['status_reason'] ?? null) ?></td>
+                <td class="dim"><?= so_e($d['status_reason'] ?? '—') ?></td>
+                <td class="nowrap num <?= so_rel_class($rel['level']) ?>"><?= so_e($rel['text']) ?></td>
+                <td class="col-actions">
+                  <div class="row-actions">
+                    <a class="btn btn-icon btn-sm" href="dashboard.php?action=download_bundle&id=<?= (int)$d['id'] ?>" download="spectraops.json" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
+                    <button type="button" class="btn btn-icon btn-sm" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments" aria-label="Open diagnostics for <?= so_e($d['client_name']) ?>"><?= so_icon('eye') ?></button>
+                    <a class="btn btn-icon btn-sm" href="https://<?= so_e($d['deployment_domain']) ?>" target="_blank" rel="noopener" aria-label="Open <?= so_e($d['client_name']) ?> site"><?= so_icon('external-link') ?></a>
                   </div>
                 </td>
               </tr>
             <?php endforeach; ?>
-          </tbody>
-        </table>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-foot"><a href="?page=deployments">View the whole fleet</a></div>
+  </section>
 
-      <?php elseif ($activePage === 'licenses'): ?>
-        <?php if (empty($isVendPulseView)): ?>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 2px;">
-            <div style="font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:8px;">
-              <span>Active Client Deployments &amp; Software Licenses</span>
-              <span class="product-badge" style="background:var(--panel-2);"><?= count($licensesList) ?> Active / Tracked</span>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button type="button" class="btn btn-sm btn-outline" style="border-color:#3dd68c; color:#8fefc0;" onclick="openIssueLicenseForProduct('vendpulse')" title="Issue VendPulse Offline Cryptographic License">
-                ⚡ Issue VendPulse License
-              </button>
-              <button type="button" class="btn btn-sm btn-primary" onclick="openModal('licenseModal')">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-                Issue license
-              </button>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>License Key</th>
-              <th>Product</th>
-              <th>Client / Email</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Expiration</th>
-              <th>Bound Domain</th>
-              <th>Created</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($licensesList)): ?>
-              <tr>
-                <td colspan="9" style="text-align:center; padding:32px; color:var(--text-dim);">
-                  No software licenses have been issued yet. Click <strong>Issue license</strong> above to generate a client key.
-                </td>
-              </tr>
-            <?php else: ?>
-              <?php foreach ($licensesList as $lic): ?>
-                <tr>
-                  <td>
-                    <code class="mono" style="font-size:12px; font-weight:700; color:var(--accent); background:var(--panel-2); padding:3px 7px; border-radius:4px; border:1px solid var(--line);"><?= htmlspecialchars($lic['license_key']) ?></code>
-                  </td>
-                  <td>
-                    <strong><?= htmlspecialchars($lic['product_name']) ?></strong>
-                    <span class="mono" style="font-size:10px; color:var(--accent); margin-left:4px;">(<?= htmlspecialchars($lic['product_code'] ?? '—') ?>)</span>
-                  </td>
-                  <td>
-                    <strong><?= htmlspecialchars($lic['client_name']) ?></strong>
-                    <div style="font-size:11px; color:var(--text-dim);"><?= htmlspecialchars($lic['client_email']) ?></div>
-                  </td>
-                  <td>
-                    <span class="product-badge" style="text-transform:capitalize;"><?= htmlspecialchars($lic['license_type']) ?></span>
-                  </td>
-                  <td>
-                    <?php
-                      $licStatus = $lic['status'] ?? 'unactivated';
-                      $statusClass = 'dead';
-                      if ($licStatus === 'active') $statusClass = 'ok';
-                      elseif ($licStatus === 'unactivated') $statusClass = 'mono';
-                      elseif ($licStatus === 'suspended') $statusClass = 'warn';
-                    ?>
-                    <span class="status-pill <?= $statusClass ?>">
-                      <span class="dot dot-<?= $statusClass === 'mono' ? 'warn' : $statusClass ?>"></span>
-                      <?= strtoupper(htmlspecialchars($licStatus)) ?>
-                    </span>
-                  </td>
-                  <td>
-                    <?php if (!empty($lic['expires_at'])): ?>
-                      <span class="mono" style="font-size:11px; <?= strtotime($lic['expires_at']) < time() ? 'color:var(--crit); font-weight:600;' : '' ?>">
-                        <?= htmlspecialchars(date('Y-m-d', strtotime($lic['expires_at']))) ?>
-                      </span>
-                    <?php else: ?>
-                      <span style="color:var(--ok); font-size:12px; font-weight:500;">Perpetual</span>
-                    <?php endif; ?>
-                  </td>
-                  <td>
-                    <?php if (!empty($lic['deployment_domain'])): ?>
-                      <div class="client-cell">
-                        <span class="mono" style="font-size:11px; color:var(--text); font-weight:600;"><?= htmlspecialchars($lic['deployment_domain']) ?></span>
-                        <span style="font-size:10px; color:<?= !empty($lic['deployment_is_active']) ? 'var(--ok)' : 'var(--crit)' ?>;">
-                          <?= !empty($lic['deployment_is_active']) ? '● Deployment Active' : '○ Deployment Inactive' ?>
-                        </span>
-                      </div>
-                    <?php else: ?>
-                      <span style="color:var(--text-faint); font-size:11px; font-style:italic;">Unbound</span>
-                    <?php endif; ?>
-                  </td>
-                  <td>
-                    <span class="mono" style="font-size:11px; color:var(--text-faint);"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($lic['created_at']))) ?></span>
-                  </td>
-                  <td style="text-align:right;">
-                    <div style="display:inline-flex; gap:6px; align-items:center; justify-content:flex-end;">
-                      <!-- Renew Button -->
-                      <button type="button" class="btn btn-sm btn-primary" onclick='openRenewModal(<?= json_encode($lic) ?>)' title="Renew License & Deployment">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                        Renew
-                      </button>
-
-                      <?php if ($licStatus === 'suspended'): ?>
-                        <!-- Reactivate / Resume -->
-                        <form method="POST" style="display:inline;" onsubmit="return confirm('Reactivate license \'<?= htmlspecialchars(addslashes($lic['license_key'])) ?>\' and its bound deployment?');">
-                          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                          <input type="hidden" name="action" value="reactivate_license">
-                          <input type="hidden" name="license_id" value="<?= (int)$lic['id'] ?>">
-                          <input type="hidden" name="page" value="licenses">
-                          <button type="submit" class="btn btn-sm" style="border-color:var(--ok); color:var(--ok);" title="Resume / Unsuspend License">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                            Resume
-                          </button>
-                        </form>
-                      <?php elseif ($licStatus !== 'revoked'): ?>
-                        <!-- Suspend Button -->
-                        <button type="button" class="btn btn-sm" style="border-color:var(--warn); color:var(--warn);" onclick='openSuspendModal(<?= json_encode($lic) ?>)' title="Suspend License & Deployment">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                          Suspend
-                        </button>
-                      <?php endif; ?>
-
-                      <?php if ($licStatus !== 'revoked'): ?>
-                        <!-- Revoke Button -->
-                        <button type="button" class="btn btn-sm btn-danger" onclick='openRevokeModal(<?= json_encode($lic) ?>)' title="Permanently Revoke License">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                          Revoke
-                        </button>
-                      <?php endif; ?>
-                      <a href="?delete_license=<?= $lic['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; text-decoration: none;"
-                         onclick="return confirm('Permanently remove this client license? Deployed instances with this key will be locked out.');">
-                          Delete
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
-
+  <div class="stack">
+    <section class="panel" aria-labelledby="tk-h">
+      <div class="panel-head"><h2 id="tk-h">Open tickets</h2><small><?= (int)$openTicketsCount ?> open</small></div>
+      <ul class="list">
+        <?php 
+        $openTickets = array_filter($tickets ?? [], fn($t) => in_array($t['status'] ?? '', ['open', 'in_progress'], true));
+        $openTicketsSlice = array_slice($openTickets, 0, 5);
+        if (empty($openTicketsSlice)): 
+        ?>
+          <li class="dim" style="padding:16px;">No unresolved support tickets.</li>
         <?php else: ?>
-          <!-- Return to licenses banner -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-            <a href="?page=licenses" class="btn btn-outline btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              ← Return to Software Licenses Ledger
-            </a>
-            <div style="font-size:12px; color:var(--text-dim);">
-              Environment: <strong style="color:var(--ok);">VendPulse Air-Gapped POS Cryptographic Engine</strong>
-            </div>
-          </div>
-        <?php if (!empty($freshVpLicense)): ?>
-          <!-- Freshly Generated License Alert Card -->
-          <div class="vp-card mb-4" style="border-color:var(--ok); background:linear-gradient(135deg, rgba(61,214,140,0.08) 0%, rgba(79,168,224,0.06) 100%); margin-bottom:24px;">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
-              <div>
-                <span class="status-pill ok" style="margin-bottom:8px;"><span class="dot dot-ok"></span>OFFLINE LICENSE ISSUED & SIGNED</span>
-                <h2 style="font-size:1.3rem; margin:6px 0 2px; color:var(--text); display:flex; align-items:center; gap:10px;">
-                  <span><?= htmlspecialchars($freshVpLicense['client_name']) ?></span>
-                  <code class="mono" style="font-size:13px; color:var(--accent); background:var(--ink); padding:2px 8px; border-radius:4px; border:1px solid var(--line);"><?= htmlspecialchars($freshVpLicense['license_id']) ?></code>
-                </h2>
-                <div style="font-size:12px; color:var(--text-dim);">
-                  Operating Tier: <strong><?= htmlspecialchars($freshVpLicense['tier']) ?></strong> &bull;
-                  Max Counters: <strong><?= (int)$freshVpLicense['max_counters'] ?></strong> &bull;
-                  Validity: <strong><?= !empty($freshVpLicense['expires_at']) ? date('Y-m-d', $freshVpLicense['expires_at']) : 'Perpetual (Lifetime)' ?></strong> &bull;
-                  Lock: <strong><?= !empty($freshVpLicense['machine_hwid']) ? htmlspecialchars($freshVpLicense['machine_hwid']) : 'Unconstrained' ?></strong>
-                </div>
+          <?php foreach ($openTicketsSlice as $t): 
+            $prCls = ($t['priority'] ?? '') === 'urgent' ? 'pill-crit' : ((($t['priority'] ?? '') === 'high') ? 'pill-warn' : 'pill-info');
+          ?>
+            <li>
+              <div class="list-main">
+                <strong class="truncate"><?= so_e($t['subject'] ?? 'Support Request') ?></strong>
+                <span class="cell-sub"><?= so_e($t['reference'] ?? '') ?> · <?= so_e($t['client_name'] ?? 'Client') ?></span>
               </div>
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-outline" onclick="copyVpRawText(<?= htmlspecialchars(json_encode($freshVpLicense['license_bundle'])) ?>, this)">
-                  📋 Copy License String
-                </button>
-                <a href="?download_vp_license=<?= (int)$freshVpLicense['id'] ?>" class="btn btn-primary">
-                  📥 Download <?= htmlspecialchars($freshVpLicense['filename'] ?? 'license.vpl') ?>
-                </a>
-              </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px;">
-              <div>
-                <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px;">Canonical Normalized Payload (JSON)</div>
-                <div class="vp-code-box"><?= htmlspecialchars(json_encode($freshVpLicense['payload'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></div>
-              </div>
-              <div>
-                <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px;">Cryptographic Signature (SHA256withRSA)</div>
-                <div class="vp-code-box" style="word-break:break-all; font-size:11px;"><?= htmlspecialchars($freshVpLicense['signature']) ?></div>
-                <div style="margin-top:10px; font-size:11px; color:var(--text-dim); line-height:1.4;">
-                  💡 <strong>Deployment Note:</strong> Save this bundle as <code class="mono">license.vpl</code> in your offline client's VendPulse directory. The client verifies the signature using your exported public key.
-                </div>
-              </div>
-            </div>
-          </div>
+              <span class="pill <?= $prCls ?> pill-plain"><?= so_e($t['priority'] ?? 'medium') ?></span>
+            </li>
+          <?php endforeach; ?>
         <?php endif; ?>
+      </ul>
+      <div class="panel-foot"><a href="?page=tickets">Open the support desk</a></div>
+    </section>
 
-        <!-- Quick Stats Strip -->
-        <div class="status-strip" style="margin-bottom:20px;">
-          <div class="strip-item">
-            <div class="strip-label"><span class="dot dot-accent"></span>Total Offline Licenses</div>
-            <div class="strip-value"><?= (int)($vpStats['total'] ?? 0) ?></div>
-          </div>
-          <div class="strip-item">
-            <div class="strip-label"><span class="dot dot-ok"></span>Supermarket POS</div>
-            <div class="strip-value ok"><?= (int)($vpStats['tiers']['SUPERMARKET'] ?? 0) ?></div>
-          </div>
-          <div class="strip-item">
-            <div class="strip-label"><span class="dot dot-warn"></span>Retail Basic</div>
-            <div class="strip-value warn"><?= (int)($vpStats['tiers']['RETAIL_BASIC'] ?? 0) ?></div>
-          </div>
-          <div class="strip-item">
-            <div class="strip-label"><span class="dot" style="background:#a855f7;"></span>Wholesale & B2B</div>
-            <div class="strip-value" style="color:#c084fc;"><?= (int)($vpStats['tiers']['ENTERPRISE_WHOLESALE'] ?? 0) ?></div>
-          </div>
-          <div class="strip-item">
-            <div class="strip-label"><span class="dot dot-ok"></span>Perpetual Deployments</div>
-            <div class="strip-value"><?= (int)($vpStats['perpetual'] ?? 0) ?></div>
-          </div>
-        </div>
-
-        <!-- 2-Column Generator Grid -->
-        <div class="vp-grid">
-          <!-- Left: Provisioning Form -->
-          <div class="vp-card" id="vpGeneratorCard">
-            <div class="vp-card-header">
-              <div>
-                <h3 class="vp-card-title">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1"/></svg>
-                  VendPulse License Generator
-                </h3>
-                <div class="vp-card-subtitle">Issue tamper-proof, cryptographically signed offline licenses for air-gapped environments.</div>
+    <section class="panel" aria-labelledby="er-h">
+      <div class="panel-head"><h2 id="er-h">Recent errors</h2><small>last 24 hours</small></div>
+      <ul class="list">
+        <?php if (empty($recentErrors)): ?>
+          <li class="dim" style="padding:16px;">Zero exception incidents recorded recently.</li>
+        <?php else: ?>
+          <?php foreach (array_slice($recentErrors, 0, 5) as $err): 
+            $lvl = strtoupper((string)($err['error_level'] ?? 'ERROR'));
+            $lvlCls = in_array($lvl, ['FATAL', 'CRITICAL']) ? 'pill-crit' : 'pill-warn';
+          ?>
+            <li>
+              <div class="list-main">
+                <strong class="truncate"><?= so_e($err['error_message'] ?? '') ?></strong>
+                <span class="cell-sub"><?= so_e($err['client_name'] ?? 'Unknown client') ?> · <?= (int)($err['occurrences'] ?? 1) ?>×</span>
               </div>
-              <span class="status-pill ok"><span class="dot dot-ok"></span>RSA-2048 Asymmetric</span>
-            </div>
-
-            <form method="POST">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-              <input type="hidden" name="action" value="generate_vp_license">
-              <input type="hidden" name="page" value="licenses">
-              <input type="hidden" name="view" value="vendpulse_generator">
-
-              <!-- Section 1: Client / Deployment Identity -->
-              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
-                1. Client / Deployment Identity
-              </div>
-
-              <div class="form-group">
-                <label for="vpClientName">Client Name / Company Name <span style="color:var(--crit)">*</span></label>
-                <input type="text" id="vpClientName" name="client_name" value="<?= htmlspecialchars($_GET['vp_client'] ?? '') ?>" placeholder="e.g. Al-Amana Supermarket - Branch 1" required style="font-size:14px; font-weight:500;">
-              </div>
-
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                <div class="form-group">
-                  <label for="vpLicenseId">License Reference Code (Auto-generated unique ID)</label>
-                  <div style="display:flex; gap:6px;">
-                    <input type="text" id="vpLicenseId" name="license_id" value="<?= htmlspecialchars($vpService->generateUniqueLicenseId()) ?>" class="mono" required style="font-weight:700; color:var(--accent); letter-spacing:0.5px;">
-                    <button type="button" class="btn btn-outline" onclick="regenerateVpLicenseId()" title="Generate new random ID" style="padding:0 10px;">↻</button>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label for="vpHwid">Machine / Hardware Fingerprint <span style="color:var(--text-faint); font-weight:normal;">(Optional)</span></label>
-                  <input type="text" id="vpHwid" name="machine_hwid" placeholder="Device UUID or leave blank for unconstrained" class="mono" style="font-size:12px;">
-                </div>
-              </div>
-
-              <!-- Section 2: Operating Tier Selection -->
-              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent); margin-top:20px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
-                2. Operating Tier Selection (3 Operating Modes)
-              </div>
-
-              <div class="vp-tier-options">
-                <!-- Tier 1: Retail Shop -->
-                <div class="vp-tier-option" id="cardTierRetail" onclick="selectVpTier('RETAIL_BASIC')">
-                  <input type="radio" name="tier" id="tierRetail" value="RETAIL_BASIC">
-                  <span class="vp-tier-tag vp-tag-retail">Retail Basic</span>
-                  <div class="vp-tier-name">Retail Shop</div>
-                  <div class="vp-tier-desc">Standard counter checkout, touch-grid POS, basic inventory, receipt printing.</div>
-                </div>
-
-                <!-- Tier 2: Supermarket POS -->
-                <div class="vp-tier-option selected" id="cardTierSupermarket" onclick="selectVpTier('SUPERMARKET')">
-                  <input type="radio" name="tier" id="tierSupermarket" value="SUPERMARKET" checked>
-                  <span class="vp-tier-tag vp-tag-supermarket">Supermarket</span>
-                  <div class="vp-tier-name">Supermarket POS</div>
-                  <div class="vp-tier-desc">High-speed barcode stream scanning, digital weighing scale integration, multi-till cash drawer balances, cashier shifts.</div>
-                </div>
-
-                <!-- Tier 3: Wholesale & Distribution -->
-                <div class="vp-tier-option" id="cardTierWholesale" onclick="selectVpTier('ENTERPRISE_WHOLESALE')">
-                  <input type="radio" name="tier" id="tierWholesale" value="ENTERPRISE_WHOLESALE">
-                  <span class="vp-tier-tag vp-tag-wholesale">Wholesale B2B</span>
-                  <div class="vp-tier-name">Wholesale & Dist.</div>
-                  <div class="vp-tier-desc">Multi-warehouse management, customer credit limits, B2B tax invoices, institutional document seals.</div>
-                </div>
-              </div>
-
-              <!-- Allowed Modules Checklist Display -->
-              <div class="vp-modules-box">
-                <div class="vp-modules-title">Automatically Flagged Allowed Modules for Selected Tier</div>
-                <div class="vp-modules-chips" id="vpModulesContainer">
-                  <!-- Dynamically populated via JS, with fallbacks -->
-                  <label class="vp-module-chip active" id="chip_barcode_rapid_stream">
-                    <input type="checkbox" name="allowed_modules[]" value="barcode_rapid_stream" checked style="accent-color:var(--accent);"> barcode_rapid_stream
-                  </label>
-                  <label class="vp-module-chip active" id="chip_scale_comm">
-                    <input type="checkbox" name="allowed_modules[]" value="scale_comm" checked style="accent-color:var(--accent);"> scale_comm
-                  </label>
-                  <label class="vp-module-chip active" id="chip_multi_till">
-                    <input type="checkbox" name="allowed_modules[]" value="multi_till" checked style="accent-color:var(--accent);"> multi_till
-                  </label>
-                  <label class="vp-module-chip active" id="chip_cashier_shifts">
-                    <input type="checkbox" name="allowed_modules[]" value="cashier_shifts" checked style="accent-color:var(--accent);"> cashier_shifts
-                  </label>
-                  <label class="vp-module-chip" id="chip_catalog_grid">
-                    <input type="checkbox" name="allowed_modules[]" value="catalog_grid" style="accent-color:var(--accent);"> catalog_grid
-                  </label>
-                  <label class="vp-module-chip" id="chip_standard_pos">
-                    <input type="checkbox" name="allowed_modules[]" value="standard_pos" style="accent-color:var(--accent);"> standard_pos
-                  </label>
-                  <label class="vp-module-chip" id="chip_basic_receipt">
-                    <input type="checkbox" name="allowed_modules[]" value="basic_receipt" style="accent-color:var(--accent);"> basic_receipt
-                  </label>
-                  <label class="vp-module-chip" id="chip_multi_warehouse">
-                    <input type="checkbox" name="allowed_modules[]" value="multi_warehouse" style="accent-color:var(--accent);"> multi_warehouse
-                  </label>
-                  <label class="vp-module-chip" id="chip_b2b_invoices">
-                    <input type="checkbox" name="allowed_modules[]" value="b2b_invoices" style="accent-color:var(--accent);"> b2b_invoices
-                  </label>
-                  <label class="vp-module-chip" id="chip_credit_accounts">
-                    <input type="checkbox" name="allowed_modules[]" value="credit_accounts" style="accent-color:var(--accent);"> credit_accounts
-                  </label>
-                  <label class="vp-module-chip" id="chip_institutional_branding">
-                    <input type="checkbox" name="allowed_modules[]" value="institutional_branding" style="accent-color:var(--accent);"> institutional_branding
-                  </label>
-                </div>
-              </div>
-
-              <!-- Section 3: System Usage Mode Selection -->
-              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent); margin-top:20px; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
-                3. System Usage Mode (Deployment Environment Lock) <span style="color:var(--crit)">*</span>
-              </div>
-              <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">
-                Enforces the operational business environment for the VendPulse deployment. Air-gapped terminals strictly bind active workflows to this authorized mode.
-              </div>
-
-              <div class="vp-tier-options">
-                <!-- Mode 1: Retail Shop -->
-                <div class="vp-tier-option selected" id="cardModeRetail" onclick="selectVpMode('RETAIL_SHOP')">
-                  <input type="radio" name="usage_mode" id="modeRetail" value="RETAIL_SHOP" checked>
-                  <span class="vp-tier-tag vp-tag-retail">🛍️ RETAIL_SHOP</span>
-                  <div class="vp-tier-name" style="margin-top:6px;">Retail Shop</div>
-                  <div class="vp-tier-desc">Standard counter sales, barcode lookup, product variants (size, color, brand), standard receipt printing.</div>
-                </div>
-
-                <!-- Mode 2: Supermarket -->
-                <div class="vp-tier-option" id="cardModeSupermarket" onclick="selectVpMode('SUPERMARKET')">
-                  <input type="radio" name="usage_mode" id="modeSupermarket" value="SUPERMARKET">
-                  <span class="vp-tier-tag vp-tag-supermarket">🛒 SUPERMARKET</span>
-                  <div class="vp-tier-name" style="margin-top:6px;">Supermarket POS</div>
-                  <div class="vp-tier-desc">High-throughput barcode continuous stream scanning, digital weighing scale interface, multi-till cash drawers, cashier shift balancing.</div>
-                </div>
-
-                <!-- Mode 3: Restaurant & Hospitality -->
-                <div class="vp-tier-option" id="cardModeRestaurant" onclick="selectVpMode('RESTAURANT')">
-                  <input type="radio" name="usage_mode" id="modeRestaurant" value="RESTAURANT">
-                  <span class="vp-tier-tag vp-tag-restaurant">🍽️ RESTAURANT</span>
-                  <div class="vp-tier-name" style="margin-top:6px;">Restaurant &amp; Hospitality</div>
-                  <div class="vp-tier-desc">Dining table floor plan management, kitchen order tickets (KOT), course management, split bills, and table reservations.</div>
-                </div>
-              </div>
-
-              <!-- Section 4: Deployment Limits & Validity -->
-              <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent); margin-top:20px; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
-                4. Deployment Limits &amp; Validity
-              </div>
-
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-                <div class="form-group">
-                  <label for="vpMaxCounters">Max Concurrent Registers / Cashier Terminals</label>
-                  <input type="number" id="vpMaxCounters" name="max_counters" min="1" max="100" value="3" required style="font-size:14px; font-weight:600;">
-                  <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Maximum POS stations permitted on the local network.</div>
-                </div>
-
-                <div class="form-group">
-                  <label>Validity &amp; Expiration Policy</label>
-                  <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
-                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:normal; cursor:pointer;">
-                      <input type="radio" name="expiry_mode" value="perpetual" checked onchange="toggleVpExpiry(true)" style="accent-color:var(--accent);">
-                      <strong>Perpetual / No Expiry</strong> (Lifetime offline deployment)
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:normal; cursor:pointer;">
-                      <input type="radio" name="expiry_mode" value="dated" onchange="toggleVpExpiry(false)" style="accent-color:var(--accent);">
-                      <strong>Expiring License</strong> (Specify validity cutoff date)
-                    </label>
-                    <div id="vpDatePickerWrap" style="display:none; margin-top:4px;">
-                      <input type="date" name="expires_at" id="vpExpiresAt" min="<?= date('Y-m-d') ?>" value="<?= date('Y-m-d', strtotime('+1 year')) ?>">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:24px; border-top:1px solid var(--line); padding-top:16px;">
-                <button type="reset" class="btn" onclick="selectVpTier('SUPERMARKET'); selectVpMode('RETAIL_SHOP'); toggleVpExpiry(true);">Reset Form</button>
-                <button type="submit" class="btn btn-primary" style="padding:9px 22px; font-weight:600;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>
-                  Generate Offline License
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- Right: Guidance & Tools Widgets -->
-          <div>
-            <!-- Widget 1: Public Key Infrastructure -->
-            <div class="vp-side-widget">
-              <div class="vp-side-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-2-2l2 2M3 13l7 7 10-10-7-7-10 10zM14 7l3 3"/></svg>
-                Cryptographic Key Infrastructure
-              </div>
-              <p style="font-size:12px; color:var(--text-dim); margin-top:4px; line-height:1.45;">
-                Licenses are signed with the SpectraOps private key using <strong>RSA-2048</strong> with <strong>SHA-256</strong>. VendPulse distributions verify signatures completely air-gapped using your public key.
-              </p>
-              <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
-                <button type="button" class="btn btn-outline" onclick="openModal('vpPubKeyModal')" style="justify-content:center; border-color:#0dc0e7; color:#bef6fd;">
-                  🔑 View / Copy Public Key
-                </button>
-                <a href="?download_vp_pubkey=1" class="btn" style="justify-content:center; text-decoration:none;">
-                  📥 Download public.pem
-                </a>
-              </div>
-            </div>
-
-            <!-- Widget 2: Offline Air-Gap Delivery Workflow -->
-            <div class="vp-side-widget">
-              <div class="vp-side-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                Air-Gap Provisioning Steps
-              </div>
-              <ol class="vp-step-list">
-                <li><strong>Distribute Public Key:</strong> Bundle <code class="mono">public.pem</code> inside client's VendPulse instance at <code class="mono">config/spectraops_pub.pem</code>.</li>
-                <li><strong>Generate License:</strong> Select client tier and counters limit, then issue the cryptographically signed license file.</li>
-                <li><strong>Offline Activation:</strong> Copy the generated <code class="mono">.vpl</code> file onto client machine via USB or local network. VendPulse verifies signature with 0 internet access.</li>
-              </ol>
-            </div>
-
-            <!-- Widget 3: Live Verification Utility -->
-            <div class="vp-side-widget">
-              <div class="vp-side-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-                Offline License Verifier
-              </div>
-              <p style="font-size:12px; color:var(--text-dim); margin-top:4px; line-height:1.4;">
-                Validate any issued license file or string against the SpectraOps public key to inspect claims and verify signature integrity.
-              </p>
-              <button type="button" class="btn" onclick="openModal('vpVerifyModal')" style="width:100%; justify-content:center; margin-top:10px; border-color:#3dd68c; color:#8fefc0;">
-                🛡️ Open License Verifier Tool
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section: Issued Offline Licenses Ledger Table -->
-        <div class="card" style="margin-top:24px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <div>
-              <h3 style="margin:0; font-size:1.1rem; color:var(--text); display:flex; align-items:center; gap:8px;">
-                <span>Issued Offline Licenses</span>
-                <span class="nav-count ok" style="font-size:12px;"><?= count($vpLicensesList) ?></span>
-              </h3>
-              <div style="font-size:12px; color:var(--text-dim); margin-top:2px;">Audit trail of cryptographically signed VendPulse deployment credentials.</div>
-            </div>
-
-            <div style="display:flex; gap:8px; align-items:center;">
-              <form method="GET" style="display:flex; gap:6px;">
-                <input type="hidden" name="page" value="licenses">
-                <input type="hidden" name="view" value="vendpulse_generator">
-                <input type="text" name="vp_search" value="<?= htmlspecialchars($_GET['vp_search'] ?? '') ?>" placeholder="Search client or license ID..." style="font-size:12px; padding:5px 10px; width:200px;">
-                <select name="vp_mode" style="font-size:12px; padding:5px 8px; background:var(--ink); color:var(--text); border:1px solid var(--line); border-radius:var(--radius);">
-                  <option value="">All Usage Modes</option>
-                  <option value="RETAIL_SHOP" <?= (($_GET['vp_mode'] ?? '') === 'RETAIL_SHOP') ? 'selected' : '' ?>>🛍️ Retail Shop</option>
-                  <option value="SUPERMARKET" <?= (($_GET['vp_mode'] ?? '') === 'SUPERMARKET') ? 'selected' : '' ?>>🛒 Supermarket</option>
-                  <option value="RESTAURANT" <?= (($_GET['vp_mode'] ?? '') === 'RESTAURANT') ? 'selected' : '' ?>>🍽️ Restaurant</option>
-                </select>
-                <button type="submit" class="btn btn-sm">Filter</button>
-                <?php if (!empty($_GET['vp_search']) || !empty($_GET['vp_tier']) || !empty($_GET['vp_mode'])): ?>
-                  <a href="?page=licenses&view=vendpulse_generator" class="btn btn-sm">Clear</a>
-                <?php endif; ?>
-              </form>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>License Ref ID</th>
-                <th>Client / Organization</th>
-                <th>Operating Tier</th>
-                <th>Usage Mode</th>
-                <th>HWID Device Lock</th>
-                <th>Registers</th>
-                <th>Validity / Expiry</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th style="text-align:right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($vpLicensesList)): ?>
-                <tr>
-                  <td colspan="10" style="text-align:center; padding:32px; color:var(--text-dim);">
-                    No VendPulse offline licenses issued yet. Use the form above to generate your first client license.
-                  </td>
-                </tr>
-              <?php else: ?>
-                <?php foreach ($vpLicensesList as $vpl): ?>
-                  <tr>
-                    <td>
-                      <code class="mono" style="font-size:12px; font-weight:700; color:var(--accent); background:var(--panel-2); padding:3px 7px; border-radius:4px; border:1px solid var(--line);"><?= htmlspecialchars($vpl['license_id']) ?></code>
-                    </td>
-                    <td>
-                      <strong><?= htmlspecialchars($vpl['client_name']) ?></strong>
-                    </td>
-                    <td>
-                      <?php
-                        $t = $vpl['tier'];
-                        $tClass = 'vp-tag-supermarket';
-                        if ($t === 'RETAIL_BASIC') $tClass = 'vp-tag-retail';
-                        elseif ($t === 'ENTERPRISE_WHOLESALE') $tClass = 'vp-tag-wholesale';
-                      ?>
-                      <span class="vp-tier-tag <?= $tClass ?>" style="margin:0;"><?= htmlspecialchars($t) ?></span>
-                    </td>
-                    <td>
-                      <?php
-                        $um = $vpl['usage_mode'] ?? 'RETAIL_SHOP';
-                        $umClass = 'vp-tag-retail';
-                        $umIcon = '🛍️';
-                        if ($um === 'SUPERMARKET') {
-                          $umClass = 'vp-tag-supermarket';
-                          $umIcon = '🛒';
-                        } elseif ($um === 'RESTAURANT') {
-                          $umClass = 'vp-tag-restaurant';
-                          $umIcon = '🍽️';
-                        }
-                      ?>
-                      <span class="vp-tier-tag <?= $umClass ?>" style="margin:0;"><?= $umIcon ?> <?= htmlspecialchars($um) ?></span>
-                    </td>
-                    <td>
-                      <?php if (!empty($vpl['machine_hwid'])): ?>
-                        <code class="mono" style="font-size:11px; color:var(--text);"><?= htmlspecialchars(substr($vpl['machine_hwid'], 0, 16)) ?><?= strlen($vpl['machine_hwid']) > 16 ? '...' : '' ?></code>
-                      <?php else: ?>
-                        <span style="font-size:11px; color:var(--text-faint); font-style:italic;">Unconstrained (Any)</span>
-                      <?php endif; ?>
-                    </td>
-                    <td>
-                      <span class="mono" style="font-weight:600; font-size:12px;"><?= (int)$vpl['max_counters'] ?> Station<?= (int)$vpl['max_counters'] > 1 ? 's' : '' ?></span>
-                    </td>
-                    <td>
-                      <?php if (!empty($vpl['expires_at'])): ?>
-                        <span class="mono" style="font-size:11px; <?= (int)$vpl['expires_at'] < time() ? 'color:var(--crit); font-weight:700;' : '' ?>">
-                          <?= htmlspecialchars(date('Y-m-d', (int)$vpl['expires_at'])) ?>
-                        </span>
-                      <?php else: ?>
-                        <span style="color:var(--ok); font-size:12px; font-weight:600;">Perpetual</span>
-                      <?php endif; ?>
-                    </td>
-                    <td>
-                      <?php
-                        $st = $vpl['status'] ?? 'active';
-                        $isExp = !empty($vpl['expires_at']) && (int)$vpl['expires_at'] < time();
-                        if ($isExp && $st === 'active') {
-                          $st = 'expired';
-                        }
-                        $pillClass = ($st === 'active') ? 'ok' : (($st === 'revoked') ? 'dead' : 'warn');
-                      ?>
-                      <span class="status-pill <?= $pillClass ?>">
-                        <span class="dot dot-<?= $pillClass ?>"></span>
-                        <?= strtoupper(htmlspecialchars($st)) ?>
-                      </span>
-                    </td>
-                    <td>
-                      <span class="mono" style="font-size:11px; color:var(--text-faint);"><?= htmlspecialchars(date('Y-m-d H:i', strtotime($vpl['created_at']))) ?></span>
-                    </td>
-                    <td style="text-align:right;">
-                      <div style="display:inline-flex; gap:6px; align-items:center; justify-content:flex-end;">
-                        <!-- Download .vpl file -->
-                        <a href="?download_vp_license=<?= (int)$vpl['id'] ?>" class="btn btn-sm btn-primary" title="Download License Bundle (.vpl)">
-                          📥 .vpl
-                        </a>
-
-                        <!-- View / Copy Bundle -->
-                        <button type="button" class="btn btn-sm" onclick='viewVpBundleModal(<?= json_encode($vpl) ?>)' title="View Claims & Copy String">
-                          📋 View
-                        </button>
-
-                        <?php if (($vpl['status'] ?? '') === 'revoked'): ?>
-                          <!-- Reactivate -->
-                          <form method="POST" style="display:inline;" onsubmit="return confirm('Reactivate license \'<?= htmlspecialchars(addslashes($vpl['license_id'])) ?>\'?');">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                            <input type="hidden" name="action" value="reactivate_vp_license">
-                            <input type="hidden" name="license_id" value="<?= (int)$vpl['id'] ?>">
-                            <button type="submit" class="btn btn-sm" style="border-color:var(--ok); color:var(--ok);" title="Reactivate License">
-                              Resume
-                            </button>
-                          </form>
-                        <?php else: ?>
-                          <!-- Revoke -->
-                          <form method="POST" style="display:inline;" onsubmit="return confirm('Revoke offline license \'<?= htmlspecialchars(addslashes($vpl['license_id'])) ?>\'?');">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                            <input type="hidden" name="action" value="revoke_vp_license">
-                            <input type="hidden" name="license_id" value="<?= (int)$vpl['id'] ?>">
-                            <button type="submit" class="btn btn-sm" style="border-color:var(--warn); color:var(--warn);" title="Revoke License">
-                              Revoke
-                            </button>
-                          </form>
-                        <?php endif; ?>
-
-                        <!-- Delete -->
-                        <a href="?delete_vp_license=<?= (int)$vpl['id'] ?>" 
-                           class="btn btn-sm" 
-                           style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #ef4444; text-decoration:none;"
-                           onclick="return confirm('Permanently remove this license from the audit registry?');">
-                          Delete
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
+              <span class="pill <?= $lvlCls ?> pill-plain"><?= so_e(strtolower($lvl)) ?></span>
+            </li>
+          <?php endforeach; ?>
         <?php endif; ?>
+      </ul>
+      <div class="panel-foot"><a href="?page=errors">See every error</a></div>
+    </section>
+  </div>
+</div>
+</div>
 
-      <?php elseif ($activePage === 'users'): ?>
-        <table>
-          <thead>
-            <tr>
-              <th>Operator Name</th>
-              <th>Email Address</th>
-              <th>Role</th>
-              <th>Created At</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($usersList as $u): 
-              $isSelf = ((int)$u['id'] === (int)($_SESSION['fleet_user_id'] ?? 0));
-            ?>
-              <tr>
-                <td>
-                  <strong><?= htmlspecialchars($u['name']) ?></strong>
-                  <?php if ($isSelf): ?>
-                    <span class="mono" style="font-size:10px; color:var(--accent); margin-left:6px; background:rgba(79,168,224,0.12); padding:1px 6px; border-radius:3px; border:1px solid rgba(79,168,224,0.25);">YOU</span>
-                  <?php endif; ?>
-                </td>
-                <td><span class="mono" style="font-size:12px;"><?= htmlspecialchars($u['email']) ?></span></td>
-                <td>
-                  <span class="status-pill <?= $u['role'] === 'admin' ? 'ok' : 'dead' ?>">
-                    <span class="dot dot-<?= $u['role'] === 'admin' ? 'ok' : 'dead' ?>"></span>
-                    <?= strtoupper(htmlspecialchars($u['role'])) ?>
-                  </span>
-                </td>
-                <td><span class="mono" style="font-size:11px; color:var(--text-faint);"><?= htmlspecialchars($u['created_at']) ?></span></td>
-                <td style="text-align:right;">
-                  <div style="display:inline-flex; gap:6px; align-items:center;">
-                    <button type="button" class="btn btn-sm" onclick='openEditUserModal(<?= json_encode($u) ?>)' title="Edit Operator Profile">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                      Edit
-                    </button>
-                    <button type="button" class="btn btn-sm" onclick="openResetPasswordModal(<?= (int)$u['id'] ?>, '<?= htmlspecialchars(addslashes($u['name'])) ?>')" title="Reset Password">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      Password
-                    </button>
-                    <?php if (!$isSelf): ?>
-                      <a href="?delete_admin_user=<?= $u['id'] ?>" 
-                         class="btn btn-sm" 
-                         style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; text-decoration: none;"
-                         onclick="return confirm('Permanently revoke and delete this administrator account?');">
-                          Delete User
-                      </a>
-                    <?php else: ?>
-                      <span style="font-size: 0.72rem; color: var(--text-muted);">(Active Session)</span>
-                    <?php endif; ?>
-                  </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+<?php elseif (in_array($activePage, ['deployments', 'fleet'])): ?>
+<!-- ================= VIEW: FLEET DEPLOYMENTS ================= -->
+<div class="strip" role="group" aria-label="Filter by status">
+  <a class="strip-item" href="?page=deployments" <?= $filterStatus === 'all' ? 'aria-current="true"' : '' ?>><div class="strip-label"><span class="dot dot-accent"></span>All systems</div><div class="strip-value"><?= (int)$totalDeployments ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=healthy" <?= $filterStatus === 'healthy' ? 'aria-current="true"' : '' ?>><div class="strip-label"><span class="dot dot-ok"></span>Healthy</div><div class="strip-value is-ok"><?= (int)$healthyCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=warning" <?= $filterStatus === 'warning' ? 'aria-current="true"' : '' ?>><div class="strip-label"><span class="dot dot-warn"></span>Warning</div><div class="strip-value is-warn"><?= (int)$warningCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=critical" <?= $filterStatus === 'critical' ? 'aria-current="true"' : '' ?>><div class="strip-label"><span class="dot dot-crit"></span>Critical</div><div class="strip-value is-crit"><?= (int)$criticalCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=unreachable" <?= $filterStatus === 'unreachable' ? 'aria-current="true"' : '' ?>><div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div><div class="strip-value is-dead"><?= (int)$unreachableCount ?></div></a>
+  <a class="strip-item" href="?page=deployments&status=outdated" <?= $filterStatus === 'outdated' ? 'aria-current="true"' : '' ?>><div class="strip-label"><?= so_icon('rotate-cw', 'icon-sm') ?>Outdated builds</div><div class="strip-value"><?= (int)$outdatedCount ?></div></a>
+</div>
 
-      <?php elseif ($activePage === 'orders'): ?>
-        <!-- Orders & Deployments Interactive KPI Summary Strip -->
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-bottom:20px; padding:16px; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
-          
-          <!-- Card: Total Store Orders -->
-          <a href="?page=orders&status=all" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid <?= ($orderFilter === '' && ($orderStatus === '' || $orderStatus === 'all')) ? 'var(--accent)' : 'var(--line)' ?>; background:<?= ($orderFilter === '' && ($orderStatus === '' || $orderStatus === 'all')) ? 'rgba(13,192,231,0.08)' : 'rgba(255,255,255,0.02)' ?>; transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); font-weight:700; letter-spacing:0.5px;">Total Orders</span>
-              <span style="font-size:16px;">📦</span>
+<div class="toolbar">
+  <form class="search" role="search" method="get" action="dashboard.php">
+    <input type="hidden" name="page" value="deployments">
+    <label class="sr-only" for="q">Search deployments</label>
+    <?= so_icon('search') ?>
+    <input class="input" id="q" name="search" type="search" placeholder="Search client, domain, or IP" value="<?= so_e($searchQuery ?? '') ?>">
+  </form>
+  <div class="chips" role="group" aria-label="Filter by product">
+    <a class="chip" href="?page=deployments" <?= empty($filterProduct) ? 'aria-pressed="true"' : 'aria-pressed="false"' ?>>All products</a>
+    <?php foreach ($products as $p): ?>
+      <a class="chip" href="?page=deployments&product_id=<?= (int)$p['id'] ?>" <?= ($filterProduct ?? 0) === (int)$p['id'] ? 'aria-pressed="true"' : 'aria-pressed="false"' ?>><?= so_e($p['product_name']) ?></a>
+    <?php endforeach; ?>
+  </div>
+  <span class="toolbar-spacer"></span>
+  <span class="result-count"><?= count($filteredDeployments) ?> deployments</span>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Client</th>
+        <th scope="col">Product</th>
+        <th scope="col">Status</th>
+        <th scope="col">Version</th>
+        <th scope="col" class="num">Database</th>
+        <th scope="col" class="num">Free disk</th>
+        <th scope="col" class="num">Users 24h</th>
+        <th scope="col">Errors</th>
+        <th scope="col">Last heartbeat</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($filteredDeployments)): ?>
+        <tr><td colspan="10" class="dim" style="text-align:center; padding:32px;">No deployments matched the current filters.</td></tr>
+      <?php else: ?>
+        <?php foreach ($filteredDeployments as $d): 
+          $s = strtolower((string)($d['computed_status'] ?? 'unknown'));
+          $rCls = so_row_class($s);
+          $rel = so_rel_time($d['last_heartbeat_at'] ?? null);
+          $payload = so_dep_payload($d);
+        ?>
+          <tr class="<?= $rCls ?>">
+            <td>
+              <div class="cell-main">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="link-btn" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments"><?= so_e($d['client_name']) ?></button>
+                  <a href="dashboard.php?action=download_bundle&id=<?= (int)$d['id'] ?>" download="spectraops.json" class="btn btn-icon btn-sm" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
+                </div>
+                <span class="cell-sub"><?= so_e($d['deployment_domain']) ?></span>
+              </div>
+            </td>
+            <td><span class="tag"><?= so_e($d['product_name']) ?></span></td>
+            <td><?= so_status_pill($s, $d['status_reason'] ?? null) ?></td>
+            <td><span class="ver <?= !empty($d['is_outdated']) ? 'is-outdated' : '' ?>" <?= !empty($d['is_outdated']) ? 'title="Latest is v' . so_e($d['latest_version']) . '"' : '' ?>>v<?= so_e($d['current_version'] ?? '—') ?></span></td>
+            <td class="num <?= so_metric_class('latency', $d['db_latency_ms']) ?>"><?= so_fmt_ms($d['db_latency_ms']) ?></td>
+            <td class="num <?= so_metric_class('disk', $d['storage_free_gb']) ?>"><?= so_fmt_gb($d['storage_free_gb']) ?></td>
+            <td class="num"><?= so_fmt_int($d['active_users_24h']) ?></td>
+            <td><span class="badge-n <?= empty($d['error_count']) ? 'is-zero' : '' ?>"><?= (int)($d['error_count'] ?? 0) ?></span></td>
+            <td class="nowrap num <?= so_rel_class($rel['level']) ?>"><?= so_e($rel['text']) ?></td>
+            <td class="col-actions">
+              <div class="row-actions">
+                <button type="button" class="btn btn-icon btn-sm" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments" aria-label="Open diagnostics for <?= so_e($d['client_name']) ?>"><?= so_icon('eye') ?></button>
+                <a class="btn btn-icon btn-sm" href="https://<?= so_e($d['deployment_domain']) ?>" target="_blank" rel="noopener" aria-label="Open <?= so_e($d['client_name']) ?> site"><?= so_icon('external-link') ?></a>
+              </div>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
+
+<?php elseif ($activePage === 'metrics'): ?>
+<!-- ================= VIEW: METRICS ================= -->
+<div class="summary">
+  <span>Fleet health<b><?= (int)$fleetHealthPct ?>%</b></span>
+  <span>Avg database latency<b><?= so_fmt_ms($avgLatency) ?></b></span>
+  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers24h) ?></b></span>
+  <span>Version adoption<b><?= (int)$versionAdoptionPct ?>%</b></span>
+</div>
+
+<div class="content">
+<div class="grid-auto">
+  <section class="panel">
+    <div class="panel-head"><h2>Database latency</h2><small>warn over 500 ms, critical over 1,500 ms</small></div>
+    <div class="panel-body">
+      <?php if (empty($latencyList)): ?>
+        <p class="dim" style="padding:12px;">No latency metrics recorded yet.</p>
+      <?php else: ?>
+        <?php foreach (array_slice($latencyList, 0, 8) as $item): 
+          $lat = (float)$item['latency'];
+          $latCls = so_metric_class('latency', $lat);
+          $barPct = min(100, max(5, round(($lat / $maxLatencyBar) * 100)));
+        ?>
+          <div class="meter-row">
+            <div class="meter-head">
+              <span><?= so_e($item['name']) ?> <span class="faint"><?= so_e($item['domain'] ?? '') ?></span></span>
+              <span class="num <?= $latCls ?>"><?= so_fmt_ms($lat) ?></span>
             </div>
-            <div style="font-size:1.75rem; font-weight:800; color:var(--text); margin-top:6px;"><?= $orderStats['total'] ?></div>
-            <div style="font-size:11px; color:var(--text-faint); margin-top:4px;">All store checkouts</div>
-          </a>
-
-          <!-- Card: Cloud Deployments -->
-          <a href="?page=orders&filter=cloud" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid <?= ($orderFilter === 'cloud') ? '#0ea5e9' : 'rgba(14,165,233,0.25)' ?>; background:<?= ($orderFilter === 'cloud') ? 'rgba(14,165,233,0.15)' : 'rgba(14,165,233,0.05)' ?>; transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:#0ea5e9; font-weight:700; letter-spacing:0.5px;">☁️ Cloud Systems</span>
-              <span style="font-size:11px; background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; font-weight:700;">SaaS</span>
-            </div>
-            <div style="font-size:1.75rem; font-weight:800; color:#38bdf8; margin-top:6px;"><?= $orderStats['cloud'] ?></div>
-            <div style="font-size:11px; color:#7dd3fc; margin-top:4px;"><?= $orderStats['cloud_deployed'] ?> Live &bull; <?= $orderStats['cloud_pending'] ?> Pending</div>
-          </a>
-
-          <!-- Card: Live Deployed Nodes -->
-          <a href="?page=orders&filter=deployed" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid <?= ($orderFilter === 'deployed') ? '#10b981' : 'rgba(16,185,129,0.25)' ?>; background:<?= ($orderFilter === 'deployed') ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.05)' ?>; transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:#10b981; font-weight:700; letter-spacing:0.5px;">🟢 Live Nodes</span>
-              <span class="dot dot-healthy" style="box-shadow:0 0 8px #10b981;"></span>
-            </div>
-            <div style="font-size:1.75rem; font-weight:800; color:#34d399; margin-top:6px;"><?= $orderStats['cloud_deployed'] ?></div>
-            <div style="font-size:11px; color:#6ee7b7; margin-top:4px;">Reporting active telemetry</div>
-          </a>
-
-          <!-- Card: Awaiting Deployment -->
-          <a href="?page=orders&filter=pending" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid <?= ($orderFilter === 'pending') ? '#f59e0b' : 'rgba(245,158,11,0.25)' ?>; background:<?= ($orderFilter === 'pending') ? 'rgba(245,158,11,0.15)' : 'rgba(245,158,11,0.05)' ?>; transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:#fbbf24; font-weight:700; letter-spacing:0.5px;">⏳ Pending Deploy</span>
-              <span style="font-size:14px;">⚡</span>
-            </div>
-            <div style="font-size:1.75rem; font-weight:800; color:#fde68a; margin-top:6px;"><?= $orderStats['cloud_pending'] ?></div>
-            <div style="font-size:11px; color:#fde047; margin-top:4px;">Domain unassigned</div>
-          </a>
-
-          <!-- Card: Offline POS Orders -->
-          <a href="?page=orders&filter=pos" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid <?= ($orderFilter === 'pos') ? '#a855f7' : 'rgba(168,85,247,0.25)' ?>; background:<?= ($orderFilter === 'pos') ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.05)' ?>; transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:#c084fc; font-weight:700; letter-spacing:0.5px;">🛒 Offline POS</span>
-              <span style="font-size:14px;">🛡️</span>
-            </div>
-            <div style="font-size:1.75rem; font-weight:800; color:#d8b4fe; margin-top:6px;"><?= $orderStats['offline'] ?></div>
-            <div style="font-size:11px; color:#e9d5ff; margin-top:4px;">Air-Gapped Retail Engines</div>
-          </a>
-
-          <!-- Card: Total Downloads -->
-          <a href="?page=orders&status=all" style="text-decoration:none; display:block; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); transition:all 0.2s ease;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:11px; text-transform:uppercase; color:var(--text-dim); font-weight:700; letter-spacing:0.5px;">📥 Deliveries</span>
-              <span style="font-size:14px;">🌐</span>
-            </div>
-            <div style="font-size:1.75rem; font-weight:800; color:var(--text); margin-top:6px;"><?= $orderStats['downloads'] ?></div>
-            <div style="font-size:11px; color:var(--text-faint); margin-top:4px;">Customer portal downloads</div>
-          </a>
-
-        </div>
-
-        <!-- Filter & Search Toolbar -->
-        <div style="background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:20px;">
-          <form method="GET" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-            <input type="hidden" name="page" value="orders">
-            <?php if (!empty($orderFilter)): ?>
-              <input type="hidden" name="filter" value="<?= htmlspecialchars($orderFilter) ?>">
-            <?php endif; ?>
-
-            <!-- Search Field -->
-            <div style="flex:1; min-width:280px; position:relative;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-dim);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" name="order_search" value="<?= htmlspecialchars($orderSearch) ?>" placeholder="Search Order ID, Client, Domain, or License Key..." style="width:100%; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 14px 10px 38px; color:var(--text); font-size:13px;">
-            </div>
-
-            <!-- System Mode Filter -->
-            <div style="min-width:180px;">
-              <select name="mode" style="width:100%; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13px;">
-                <option value="all" <?= ($orderMode === '' || $orderMode === 'all') ? 'selected' : '' ?>>All System Architectures</option>
-                <option value="CLOUD_HOSTED" <?= $orderMode === 'CLOUD_HOSTED' ? 'selected' : '' ?>>☁️ Cloud Hosted SaaS</option>
-                <option value="SUPERMARKET" <?= $orderMode === 'SUPERMARKET' ? 'selected' : '' ?>>🛒 Supermarket POS</option>
-                <option value="RETAIL_SHOP" <?= $orderMode === 'RETAIL_SHOP' ? 'selected' : '' ?>>🛍️ Retail Basic POS</option>
-                <option value="RESTAURANT" <?= $orderMode === 'RESTAURANT' ? 'selected' : '' ?>>🍽️ Restaurant &amp; Dining</option>
-              </select>
-            </div>
-
-            <!-- Order Status Filter -->
-            <div style="min-width:140px;">
-              <select name="status" style="width:100%; background:var(--ink); border:1px solid var(--line); border-radius:8px; padding:10px 12px; color:var(--text); font-size:13px;">
-                <option value="all" <?= ($orderStatus === '' || $orderStatus === 'all') ? 'selected' : '' ?>>All Statuses</option>
-                <option value="completed" <?= $orderStatus === 'completed' ? 'selected' : '' ?>>Completed</option>
-                <option value="pending" <?= $orderStatus === 'pending' ? 'selected' : '' ?>>Pending</option>
-              </select>
-            </div>
-
-            <!-- Action Buttons -->
-            <button type="submit" class="btn btn-primary" style="padding:10px 16px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              Filter Orders
-            </button>
-
-            <?php if (!empty($orderSearch) || !empty($orderFilter) || (!empty($orderMode) && $orderMode !== 'all') || (!empty($orderStatus) && $orderStatus !== 'all')): ?>
-              <a href="?page=orders&status=all" class="btn btn-outline" style="text-decoration:none; padding:10px 14px; color:var(--text-muted);" title="Reset filters">
-                ✕ Clear
-              </a>
-            <?php endif; ?>
-          </form>
-
-          <!-- Quick Navigation Tabs -->
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
-            <span style="font-size:11.5px; color:var(--text-dim); align-self:center; margin-right:4px; font-weight:600;">QUICK VIEWS:</span>
-            
-            <a href="?page=orders&status=all" class="btn btn-sm <?= (empty($orderFilter) && (empty($orderStatus) || $orderStatus === 'all')) ? 'btn-primary' : 'btn-outline' ?>" style="text-decoration:none; font-size:12px; padding:4px 10px;">
-              All Orders (<?= $orderStats['total'] ?>)
-            </a>
-            
-            <a href="?page=orders&filter=cloud" class="btn btn-sm <?= ($orderFilter === 'cloud') ? 'btn-primary' : 'btn-outline' ?>" style="text-decoration:none; font-size:12px; padding:4px 10px; border-color:rgba(14,165,233,0.4); color:<?= ($orderFilter === 'cloud') ? '#fff' : '#38bdf8' ?>;">
-              ☁️ Cloud Systems (<?= $orderStats['cloud'] ?>)
-            </a>
-
-            <a href="?page=orders&filter=deployed" class="btn btn-sm <?= ($orderFilter === 'deployed') ? 'btn-primary' : 'btn-outline' ?>" style="text-decoration:none; font-size:12px; padding:4px 10px; border-color:rgba(16,185,129,0.4); color:<?= ($orderFilter === 'deployed') ? '#fff' : '#34d399' ?>;">
-              🟢 Live Deployed Nodes (<?= $orderStats['cloud_deployed'] ?>)
-            </a>
-
-            <a href="?page=orders&filter=pending" class="btn btn-sm <?= ($orderFilter === 'pending') ? 'btn-primary' : 'btn-outline' ?>" style="text-decoration:none; font-size:12px; padding:4px 10px; border-color:rgba(245,158,11,0.4); color:<?= ($orderFilter === 'pending') ? '#fff' : '#fbbf24' ?>;">
-              ⏳ Awaiting Deployment (<?= $orderStats['cloud_pending'] ?>)
-            </a>
-
-            <a href="?page=orders&filter=pos" class="btn btn-sm <?= ($orderFilter === 'pos') ? 'btn-primary' : 'btn-outline' ?>" style="text-decoration:none; font-size:12px; padding:4px 10px; border-color:rgba(168,85,247,0.4); color:<?= ($orderFilter === 'pos') ? '#fff' : '#c084fc' ?>;">
-              🛒 Offline POS Systems (<?= $orderStats['offline'] ?>)
-            </a>
+            <div class="meter"><i class="<?= $latCls === 'is-crit' ? 'is-crit' : ($latCls === 'is-hot' ? 'is-warn' : '') ?>" style="--v:<?= $barPct ?>%"></i></div>
           </div>
-        </div>
-
-        <!-- Orders & Deployments Table -->
-        <table>
-          <thead>
-            <tr>
-              <th>Order Ref &amp; Client</th>
-              <th>Software System</th>
-              <th>Cloud Deployment &amp; Fleet Node</th>
-              <th>Entitlement</th>
-              <th>License Credentials</th>
-              <th>Self-Service Portal</th>
-              <th>Ingress Date</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (empty($ordersList)): ?>
-              <tr>
-                <td colspan="8" style="text-align:center; padding:56px 16px; color:var(--text-faint);">
-                  <div style="font-size:32px; margin-bottom:12px;">📦</div>
-                  <div style="font-size:15px; font-weight:600; color:var(--text);">No matching orders found</div>
-                  <div style="font-size:12.5px; color:var(--text-dim); margin-top:4px;">
-                    <?php if (!empty($orderSearch) || !empty($orderFilter) || !empty($orderMode)): ?>
-                      Try clearing search queries or switching filter tabs.
-                      <div style="margin-top:12px;">
-                        <a href="?page=orders&status=all" class="btn btn-sm btn-outline" style="text-decoration:none;">View All Orders</a>
-                      </div>
-                    <?php else: ?>
-                      Send test purchase order webhooks to <code>/api/v1/orders/provision</code>.
-                    <?php endif; ?>
-                  </div>
-                </td>
-              </tr>
-            <?php else: ?>
-              <?php foreach ($ordersList as $o): 
-                $portalUrl = $dashOrderService ? $dashOrderService->buildPortalUrl((string)$o['download_token']) : ('portal/download.php?token=' . urlencode((string)$o['download_token']));
-                $portalLink = 'portal/download.php?token=' . urlencode((string)$o['download_token']);
-                $oMode = strtoupper((string)($o['usage_mode'] ?? 'RETAIL_SHOP'));
-                $licId = (string)($o['license_id'] ?? '');
-                $prod = strtoupper((string)($o['purchased_product'] ?? 'VENDPULSE'));
-                $isCloud = str_starts_with($licId, 'SPEC-') || $oMode === 'CLOUD_HOSTED' || ($prod !== 'VENDPULSE' && $prod !== 'VP');
-
-                // Heartbeat calculation if deployed
-                $hbText = 'Never';
-                $hbClass = 'hb-dead';
-                if (!empty($o['deployment_last_heartbeat'])) {
-                    $mins = max(0, (int)floor((time() - strtotime($o['deployment_last_heartbeat'] . ' UTC')) / 60));
-                    if ($mins < 2) {
-                        $hbText = 'Just now';
-                        $hbClass = 'hb-fresh';
-                    } elseif ($mins < 60) {
-                        $hbText = $mins . 'm ago';
-                        $hbClass = 'hb-fresh';
-                    } elseif ($mins < 1440) {
-                        $hbText = floor($mins / 60) . 'h ' . ($mins % 60) . 'm ago';
-                        $hbClass = 'hb-stale';
-                    } else {
-                        $hbText = floor($mins / 1440) . 'd ago';
-                        $hbClass = 'hb-dead';
-                    }
-                }
-
-                $depStatus = strtolower((string)($o['deployment_status'] ?? 'healthy'));
-                if (!in_array($depStatus, ['healthy', 'warning', 'critical', 'unreachable'], true)) {
-                    $depStatus = 'healthy';
-                }
-              ?>
-                <tr>
-                  <!-- Column 1: Order Ref & Client -->
-                  <td>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                      <span class="mono" style="font-weight:700; color:var(--accent); font-size:12.5px;"><?= htmlspecialchars($o['order_id']) ?></span>
-                      <span style="font-size:10px; color:#10b981; font-weight:700;">✓</span>
-                    </div>
-                    <div style="font-weight:600; color:var(--text); margin-top:3px; font-size:13px;"><?= htmlspecialchars($o['business_name']) ?></div>
-                    <div style="font-size:11.5px; color:var(--text-dim);"><?= htmlspecialchars($o['customer_name']) ?> &lt;<?= htmlspecialchars($o['customer_email']) ?>&gt;</div>
-                    <?php if (!empty($o['client_code'])): ?>
-                      <div class="mono" style="font-size:10px; color:var(--text-faint); margin-top:2px;">Account: <?= htmlspecialchars($o['client_code']) ?></div>
-                    <?php endif; ?>
-                  </td>
-
-                  <!-- Column 2: Software System & Architecture -->
-                  <td>
-                    <?php if ($isCloud): ?>
-                      <div style="display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:6px; background:rgba(14,165,233,0.1); border:1px solid rgba(14,165,233,0.3); color:#38bdf8; font-size:11px; font-weight:700;">
-                        ☁️ Cloud SaaS
-                      </div>
-                      <div style="font-weight:700; color:var(--text); font-size:12.5px; margin-top:4px;">
-                        <?= htmlspecialchars($o['product_name'] ?? $prod) ?>
-                      </div>
-                      <div class="mono" style="font-size:10.5px; color:var(--text-dim); margin-top:2px;">
-                        Catalog: <?= htmlspecialchars($o['product_code'] ?? $prod) ?>
-                      </div>
-                    <?php else: ?>
-                      <?php 
-                        $modeColor = match ($oMode) {
-                            'SUPERMARKET' => '#10b981',
-                            'RESTAURANT' => '#f59e0b',
-                            default => '#3b82f6',
-                        };
-                        $modeIcon = match ($oMode) {
-                            'SUPERMARKET' => '🛒',
-                            'RESTAURANT' => '🍽️',
-                            default => '🛍️',
-                        };
-                      ?>
-                      <div style="display:inline-flex; align-items:center; gap:6px; padding:3px 8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid <?= $modeColor ?>; color:<?= $modeColor ?>; font-size:11px; font-weight:700;">
-                        <?= $modeIcon ?> <?= htmlspecialchars($oMode) ?>
-                      </div>
-                      <div style="font-weight:600; color:var(--text); font-size:12.5px; margin-top:4px;">
-                        VendPulse POS Engine
-                      </div>
-                      <div style="font-size:10.5px; color:var(--text-dim); margin-top:2px;">
-                        Offline Air-Gapped POS
-                      </div>
-                    <?php endif; ?>
-                  </td>
-
-                  <!-- Column 3: Cloud Deployment & Fleet Status -->
-                  <td>
-                    <?php if ($isCloud): ?>
-                      <?php if (!empty($o['deployment_id'])): ?>
-                        <div>
-                          <a href="https://<?= htmlspecialchars($o['deployment_domain']) ?>" target="_blank" style="color:#38bdf8; font-weight:700; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;" title="Open live production domain">
-                            🌐 <?= htmlspecialchars($o['deployment_domain']) ?>
-                            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
-                          </a>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-                          <span class="status-pill <?= $depStatus ?>" style="font-size:10.5px; padding:2px 7px;">
-                            <span class="dot dot-<?= $depStatus ?>"></span><?= ucfirst($depStatus) ?>
-                          </span>
-                          <span class="version-tag" style="font-size:10px;">v<?= htmlspecialchars($o['deployment_version'] ?? '1.0.0') ?></span>
-                          <span class="hb-cell <?= $hbClass ?>" style="font-size:10.5px; padding:1px 6px;"><?= $hbText ?></span>
-                        </div>
-                        <div style="margin-top:6px;">
-                          <a href="?page=overview&product_id=<?= (int)$o['product_id'] ?>&deployment_id=<?= (int)$o['deployment_id'] ?>#deployment-feed" class="btn btn-xs btn-outline" style="font-size:10.5px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; border-color:rgba(14,165,233,0.4); color:#38bdf8;" title="Inspect Live Telemetry Feed in Fleet">
-                            📡 Fleet Node Feed &rarr;
-                          </a>
-                        </div>
-                      <?php else: ?>
-                        <div>
-                          <span class="status-pill" style="border-color:rgba(245,158,11,0.4); color:#fbbf24; background:rgba(245,158,11,0.06); font-size:10.5px; padding:2px 7px;">
-                            <span class="dot" style="background:#f59e0b; box-shadow:0 0 6px #f59e0b;"></span>Awaiting Deployment
-                          </span>
-                        </div>
-                        <div style="font-size:10.5px; color:var(--text-faint); margin-top:3px;">Domain lock unassigned</div>
-                        <div style="margin-top:6px;">
-                          <button type="button" class="btn btn-xs btn-outline" style="border-color:rgba(14,165,233,0.4); color:#38bdf8; font-size:10.5px; padding:3px 8px; display:inline-flex; align-items:center; gap:4px;" onclick='openQuickPairForOrder(<?= htmlspecialchars(json_encode([
-                              "product_id" => (int)($o["product_id"] ?? 1),
-                              "client_name" => $o["business_name"],
-                              "license_id" => $o["license_id"],
-                              "order_id" => $o["order_id"]
-                          ]), ENT_QUOTES) ?>)' title="Assign a production domain to this cloud order">
-                            🔗 Pair Domain
-                          </button>
-                        </div>
-                      <?php endif; ?>
-                    <?php else: ?>
-                      <div>
-                        <span class="status-pill ok" style="background:rgba(16,185,129,0.06); border-color:rgba(16,185,129,0.3); color:#34d399; font-size:10.5px; padding:2px 7px;">
-                          <span class="dot dot-ok"></span>Air-Gapped POS
-                        </span>
-                      </div>
-                      <div style="font-size:10.5px; color:var(--text-dim); margin-top:3px;">No public telemetry required</div>
-                    <?php endif; ?>
-                  </td>
-
-                  <!-- Column 4: Entitlements & Capacity -->
-                  <td>
-                    <div style="font-size:13px; font-weight:700; color:var(--text);">
-                      <?= (int)$o['max_counters'] ?> <span style="font-size:11px; font-weight:400; color:var(--text-dim);"><?= $isCloud ? 'Seat(s)' : 'Till(s)' ?></span>
-                    </div>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
-                      <?= !empty($o['term_duration_months']) ? (int)$o['term_duration_months'] . ' Months' : 'Perpetual' ?>
-                    </div>
-                  </td>
-
-                  <!-- Column 5: License Credentials -->
-                  <td>
-                    <?php if (!empty($o['license_id'])): ?>
-                      <div style="display:flex; align-items:center; gap:4px;">
-                        <?php if ($isCloud): ?>
-                          <a href="?page=licenses&search=<?= urlencode($o['license_id']) ?>" class="mono" style="font-size:11.5px; color:#38bdf8; text-decoration:none; font-weight:700;" title="View cloud license in Central Licenses">
-                            <?= htmlspecialchars($o['license_id']) ?>
-                          </a>
-                        <?php else: ?>
-                          <a href="?page=licenses&view=vendpulse&vp_search=<?= urlencode($o['license_id']) ?>" class="mono" style="font-size:11.5px; color:#38bdf8; text-decoration:none; font-weight:700;" title="View offline license details">
-                            <?= htmlspecialchars($o['license_id']) ?>
-                          </a>
-                        <?php endif; ?>
-                        <button type="button" class="icon-btn" style="padding:2px 4px; height:auto; width:auto; border:none; background:transparent;" onclick="copyToClipboard('<?= addslashes((string)$o['license_id']) ?>', 'License key copied!')" title="Copy License Key">
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        </button>
-                      </div>
-                      <div style="font-size:10px; color:#10b981; margin-top:2px;">✓ Verified Key</div>
-                    <?php else: ?>
-                      <span style="color:var(--text-faint);">—</span>
-                    <?php endif; ?>
-                  </td>
-
-                  <!-- Column 6: Self-Service Portal -->
-                  <td>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                      <a href="<?= htmlspecialchars($portalLink) ?>" target="_blank" class="btn btn-sm btn-outline" style="text-decoration:none; padding:4px 8px; font-size:11px; display:inline-flex; align-items:center; gap:4px;">
-                        🌐 Portal
-                      </a>
-                      <button type="button" class="btn btn-sm btn-outline" style="padding:4px 8px; font-size:11px;" onclick="copyToClipboard('<?= addslashes((string)$portalUrl) ?>', 'Portal URL copied to clipboard!')" title="Copy Customer Portal URL">
-                        📋 Copy
-                      </button>
-                    </div>
-                    <div style="font-size:10px; color:var(--text-dim); margin-top:3px;">
-                      <strong><?= (int)$o['download_count'] ?></strong> downloads
-                    </div>
-                  </td>
-
-                  <!-- Column 7: Ingress Date -->
-                  <td>
-                    <span style="font-size:12px; color:var(--text-dim);"><?= htmlspecialchars(substr((string)$o['created_at'], 0, 16)) ?></span>
-                  </td>
-
-                  <!-- Column 8: Actions -->
-                  <td style="text-align:right;">
-                    <div style="display:inline-flex; gap:6px; align-items:center;">
-                      <button type="button" class="btn btn-sm btn-outline" style="padding:4px 8px; font-size:11.5px;" onclick='openOrderInspectModal(<?= htmlspecialchars(json_encode($o), ENT_QUOTES) ?>)' title="Inspect Order &amp; Telemetry Details">
-                        🔍 Inspect
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
+        <?php endforeach; ?>
       <?php endif; ?>
     </div>
+  </section>
 
-  </main>
-</div>
-
-<!-- ================= MODALS ================= -->
-
-<!-- Modal: Comprehensive Order & Deployment Details Inspect Modal -->
-<div class="modal-bg" id="orderInspectModal">
-  <div class="modal-box" style="max-width:760px;">
-    <div class="modal-header">
-      <div class="modal-title" style="display:flex; align-items:center; gap:8px;">
-        <span>Order &amp; Fleet Deployment Details</span>
-        <span class="status-pill ok" id="inspectOrderBadge">✓ Completed</span>
-      </div>
-      <button type="button" class="icon-btn" onclick="closeModal('orderInspectModal')">✕</button>
+  <section class="panel">
+    <div class="panel-head"><h2>Free disk</h2><small>warn under 3 GB, critical under 1 GB</small></div>
+    <div class="panel-body">
+      <?php 
+      $diskNodes = array_filter($deployments, fn($d) => !empty($d['storage_free_gb']));
+      usort($diskNodes, fn($a, $b) => ($a['storage_free_gb'] <=> $b['storage_free_gb']));
+      if (empty($diskNodes)): ?>
+        <p class="dim" style="padding:12px;">No disk telemetry recorded yet.</p>
+      <?php else: ?>
+        <?php foreach (array_slice($diskNodes, 0, 8) as $d): 
+          $diskVal = (float)$d['storage_free_gb'];
+          $dCls = so_metric_class('disk', $diskVal);
+        ?>
+          <div class="meter-row">
+            <div class="meter-head">
+              <span><?= so_e($d['client_name']) ?> <span class="faint"><?= so_e($d['deployment_domain']) ?></span></span>
+              <span class="num <?= $dCls ?>"><?= so_fmt_gb($diskVal) ?></span>
+            </div>
+            <div class="meter"><i class="<?= $dCls === 'is-crit' ? 'is-crit' : ($dCls === 'is-hot' ? 'is-warn' : '') ?>" style="--v:<?= min(100, max(3, round($diskVal))) ?>%"></i></div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
-    <div class="modal-desc" id="inspectOrderSub">Order details, customer account, license status, and cloud node telemetry.</div>
+  </section>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin: 16px 0;">
-      <!-- Section: Client & Contact -->
-      <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px;">
-        <div style="font-size:11px; text-transform:uppercase; color:var(--text-dim); font-weight:700; margin-bottom:8px;">Customer &amp; Business Profile</div>
-        <div style="font-size:15px; font-weight:700; color:var(--text);" id="inspectBusinessName">—</div>
-        <div style="font-size:12.5px; color:var(--text-dim); margin-top:2px;" id="inspectCustomerName">—</div>
-        <div style="font-size:11px; color:var(--accent); font-family:var(--font-mono); margin-top:6px;" id="inspectClientCode">Account: —</div>
-      </div>
-
-      <!-- Section: Product & Architecture -->
-      <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px;">
-        <div style="font-size:11px; text-transform:uppercase; color:var(--text-dim); font-weight:700; margin-bottom:8px;">Software Product &amp; Entitlement</div>
-        <div style="font-size:15px; font-weight:700; color:var(--text);" id="inspectProductName">—</div>
-        <div style="font-size:12px; color:var(--text-dim); margin-top:2px;" id="inspectSystemType">—</div>
-        <div style="font-size:12px; color:var(--accent); margin-top:4px;" id="inspectSeatsTerm">—</div>
-      </div>
+  <section class="panel">
+    <div class="panel-head"><h2>Memory in use</h2><small>peak per heartbeat</small></div>
+    <div class="panel-body">
+      <?php if (empty($memoryList)): ?>
+        <p class="dim" style="padding:12px;">No memory metrics reported yet.</p>
+      <?php else: ?>
+        <?php foreach (array_slice($memoryList, 0, 8) as $item): 
+          $mem = (float)$item['memory'];
+          $barPct = min(100, max(5, round(($mem / $maxMemoryBar) * 100)));
+        ?>
+          <div class="meter-row">
+            <div class="meter-head">
+              <span><?= so_e($item['name']) ?></span>
+              <span class="num"><?= so_fmt_mb($mem) ?></span>
+            </div>
+            <div class="meter"><i class="is-info" style="--v:<?= $barPct ?>%"></i></div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
+  </section>
 
-    <!-- Section: Cloud Deployment Telemetry -->
-    <div style="background:rgba(14,165,233,0.04); border:1px solid rgba(14,165,233,0.25); border-radius:8px; padding:16px; margin-bottom:16px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div style="font-size:12px; font-weight:700; color:#38bdf8; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
-          <span>🌐 Cloud Instance Deployment Node</span>
+  <section class="panel">
+    <div class="panel-head"><h2>Heartbeat freshness</h2><small><?= (int)$totalDeployments ?> systems</small></div>
+    <div class="panel-body">
+      <?php
+      $fresh = 0; $stale = 0; $dead = 0;
+      foreach ($deployments as $d) {
+        $rt = so_rel_time($d['last_heartbeat_at'] ?? null);
+        if ($rt['level'] === 'dead' || $rt['level'] === 'never') $dead++;
+        elseif ($rt['level'] === 'stale') $stale++;
+        else $fresh++;
+      }
+      $tot = max(1, $totalDeployments);
+      ?>
+      <div class="meter-row"><div class="meter-head"><span>Under 30 minutes</span><span class="num"><?= $fresh ?></span></div><div class="meter"><i style="--v:<?= round(($fresh / $tot) * 100) ?>%"></i></div></div>
+      <div class="meter-row"><div class="meter-head"><span>30 minutes to 2 hours</span><span class="num"><?= $stale ?></span></div><div class="meter"><i class="is-warn" style="--v:<?= round(($stale / $tot) * 100) ?>%"></i></div></div>
+      <div class="meter-row"><div class="meter-head"><span>Over 2 hours</span><span class="num"><?= $dead ?></span></div><div class="meter"><i class="is-dead" style="--v:<?= round(($dead / $tot) * 100) ?>%"></i></div></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>PHP versions</h2></div>
+    <div class="panel-body">
+      <?php 
+      $phpVersions = [];
+      foreach ($deployments as $d) {
+        $ver = !empty($d['php_version']) ? 'PHP ' . strtok($d['php_version'], ' ') : 'Unknown';
+        $phpVersions[$ver] = ($phpVersions[$ver] ?? 0) + 1;
+      }
+      arsort($phpVersions);
+      foreach ($phpVersions as $ver => $c): ?>
+        <div class="meter-row">
+          <div class="meter-head"><span><?= so_e($ver) ?></span><span class="num"><?= (int)$c ?></span></div>
+          <div class="meter"><i class="is-info" style="--v:<?= round(($c / max(1, $totalDeployments)) * 100) ?>%"></i></div>
         </div>
-        <div id="inspectDepStatusPill"></div>
-      </div>
-      <div id="inspectDepDetails" style="font-size:12.5px; color:var(--text); line-height:1.6;">
-        <!-- Dynamically injected -->
-      </div>
+      <?php endforeach; ?>
     </div>
+  </section>
 
-    <!-- Section: License Key & Credentials -->
-    <div style="margin-bottom:16px;">
-      <label style="font-size:11.5px; font-weight:700; color:var(--text-dim); text-transform:uppercase;">Cryptographic License Reference</label>
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <input type="text" class="mono" id="inspectLicenseKey" readonly style="flex:1; background:var(--ink); padding:8px 12px; border-radius:6px; border:1px solid var(--line); color:#38bdf8; font-weight:700;">
-        <button type="button" class="btn btn-sm btn-outline" onclick="copyToClipboard(document.getElementById('inspectLicenseKey').value, 'License key copied!')">Copy</button>
-      </div>
-    </div>
-
-    <!-- Section: Customer Portal Link -->
-    <div style="margin-bottom:16px;">
-      <label style="font-size:11.5px; font-weight:700; color:var(--text-dim); text-transform:uppercase;">Customer Self-Service Portal</label>
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <input type="text" class="mono" id="inspectPortalUrl" readonly style="flex:1; background:var(--ink); padding:8px 12px; border-radius:6px; border:1px solid var(--line); color:var(--text);">
-        <button type="button" class="btn btn-sm btn-outline" onclick="copyToClipboard(document.getElementById('inspectPortalUrl').value, 'Portal link copied!')">Copy</button>
-        <a id="inspectPortalBtn" href="#" target="_blank" class="btn btn-sm btn-primary" style="text-decoration:none;">Open Portal</a>
-      </div>
-    </div>
-
-    <!-- Collapsible: Raw Ingress Webhook Payload -->
-    <details style="margin-top:16px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:10px;">
-      <summary style="font-size:11.5px; font-weight:600; color:var(--text-dim); cursor:pointer;">View Ingress Webhook Raw JSON Payload</summary>
-      <pre class="mono" id="inspectRawPayload" style="background:#050810; padding:10px; border-radius:6px; font-size:11px; color:#93c5fd; overflow-x:auto; margin-top:8px; max-height:180px;"></pre>
-    </details>
-
-    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-      <button type="button" class="btn btn-primary" onclick="closeModal('orderInspectModal')">Close</button>
-    </div>
-  </div>
-</div>
-    </div>
-
-  </main>
-</div>
-
-<!-- ================= MODALS ================= -->
-
-<!-- Modal: Order Webhook Documentation -->
-<div class="modal-bg" id="orderWebhookModal">
-  <div class="modal-box" style="max-width:720px;">
-    <div class="modal-header">
-      <div class="modal-title">E-Commerce Store Order Webhook Integration</div>
-      <button type="button" class="icon-btn" onclick="closeModal('orderWebhookModal')">✕</button>
-    </div>
-    <div class="modal-desc">
-      Configure your WooCommerce, Shopify, or custom checkout webhooks to automatically provision customer licenses and self-service portals for both Cloud and Offline systems.
-    </div>
-
-    <div style="margin: 16px 0;">
-      <label style="font-size:12px; font-weight:600; color:var(--text-dim);">WEBHOOK INGRESS ENDPOINT (POST)</label>
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <input type="text" class="mono" readonly value="<?= htmlspecialchars((getenv('SPECTRAOPS_PUBLIC_URL') ?: 'http://127.0.0.1:8080/SPECTRAOPS/public') . '/api/v1/orders/provision') ?>" style="flex:1; background:var(--ink); padding:8px 12px; border-radius:6px; border:1px solid var(--line); color:var(--accent);">
-        <button type="button" class="btn btn-sm btn-outline" onclick="copyToClipboard('<?= htmlspecialchars((getenv('SPECTRAOPS_PUBLIC_URL') ?: 'http://127.0.0.1:8080/SPECTRAOPS/public') . '/api/v1/orders/provision') ?>')">Copy</button>
-      </div>
-    </div>
-
-    <div style="margin: 16px 0;">
-      <label style="font-size:12px; font-weight:600; color:var(--text-dim);">REQUIRED AUTHENTICATION HEADER</label>
-      <div style="margin-top:4px;">
-        <code class="mono" style="display:block; background:var(--ink); padding:8px 12px; border-radius:6px; border:1px solid var(--line); color:#bef6fd;">
-          X-SpectraOps-Webhook-Secret: <?= htmlspecialchars(getenv('SPECTRAOPS_WEBHOOK_SECRET') ?: 'spec_whsec_test_secret_2026_pulse') ?>
-        </code>
-      </div>
-    </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin: 16px 0;">
-      <div>
-        <label style="font-size:11px; font-weight:600; color:#38bdf8;">☁️ CLOUD SYSTEMS (PRISM-EDU, POS-PRO)</label>
-        <pre class="mono" style="background:#050810; padding:10px; border-radius:6px; border:1px solid rgba(56,189,248,0.25); font-size:11px; color:#93c5fd; overflow-x:auto; margin-top:4px;">{
-  "order_id": "ORD-2026-CLOUD",
-  "customer_name": "Dr. Sarah Mansour",
-  "customer_email": "sarah@academy.edu",
-  "business_name": "Al-Noor Academy",
-  "purchased_product": "PRISM-EDU",
-  "usage_mode": "CLOUD_HOSTED",
-  "term_duration_months": 12,
-  "max_seats": 50,
-  "domain_lock": "academy.spectraops.cloud"
-}</pre>
-      </div>
-      <div>
-        <label style="font-size:11px; font-weight:600; color:#34d399;">🛒 OFFLINE POS (VENDPULSE)</label>
-        <pre class="mono" style="background:#050810; padding:10px; border-radius:6px; border:1px solid rgba(52,211,153,0.25); font-size:11px; color:#86efac; overflow-x:auto; margin-top:4px;">{
-  "order_id": "ORD-2026-OFFLINE",
-  "customer_name": "Ahmed Ibrahim",
-  "customer_email": "ahmed@example.com",
-  "business_name": "Al-Amana Groceries",
-  "purchased_product": "VENDPULSE",
-  "usage_mode": "SUPERMARKET",
-  "term_duration_months": 12,
-  "max_counters": 3,
-  "include_installer_bundle": true
-}</pre>
-      </div>
-    </div>
-
-    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-      <button type="button" class="btn btn-primary" onclick="closeModal('orderWebhookModal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Pair Deployment Modal -->
-<div class="modal-bg" id="pairModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Pair Client Deployment</div>
-      <button type="button" class="icon-btn" onclick="closeModal('pairModal')">✕</button>
-    </div>
-    <div class="modal-desc">Connect a deployed client instance using the deployment key provided by its installation installer.</div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="pair_client">
-      <div class="form-group">
-        <label>Software Product</label>
-        <select name="product_id" required>
-          <?php foreach ($products as $p): ?>
-            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['product_name']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Client / Organization Name</label>
-        <input type="text" name="client_name" placeholder="e.g. Grand Central Retail Flagship" required>
-      </div>
-      <div class="form-group">
-        <label>Assigned Domain / FQDN</label>
-        <input type="text" name="deployment_domain" placeholder="e.g. pos.grandcentral.store" required>
-      </div>
-      <div class="form-group">
-        <label>Client Deployment Key</label>
-        <input type="text" name="api_key" placeholder="PRISM-DEP-..." class="mono" required>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('pairModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Pair &amp; Authorize</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Publish Release Modal -->
-<div class="modal-bg" id="releaseModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Publish New Release / Hotfix</div>
-      <button type="button" class="icon-btn" onclick="closeModal('releaseModal')">✕</button>
-    </div>
-    <div class="modal-desc">Upload a new release package (.zip). Packages are cryptographically signed with the hub's offline private key.</div>
-    <form method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="publish_release">
-      <div class="form-group">
-        <label>Target Product</label>
-        <select name="product_id" required>
-          <?php foreach ($products as $p): ?>
-            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['product_name']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Release Version</label>
-        <input type="text" name="version" placeholder="e.g. 2.5.1" class="mono" required>
-      </div>
-      <div class="form-group">
-        <label>Package Archive (.zip only)</label>
-        <input type="file" name="package_file" accept=".zip" required>
-      </div>
-      <div class="form-group">
-        <label>Release Notes / Changelog</label>
-        <textarea name="changelog" rows="3" placeholder="Summary of fixes or improvements..."></textarea>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('releaseModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Sign &amp; Distribute</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Link New Deployment (One-Click Bundle) Modal -->
-<div class="modal-bg" id="linkDeployModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Link New Deployment</div>
-      <button type="button" class="icon-btn" onclick="closeModal('linkDeployModal')">✕</button>
-    </div>
-    <div class="modal-desc">Atomically provision a deployment node, bind an active license lease, and generate a downloadable <code>spectraops.json</code> connection bundle.</div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="link_deployment">
-      <div class="form-group">
-        <label>Software Product</label>
-        <select name="product_slug" required>
-          <?php foreach ($products as $p): ?>
-            <option value="<?= htmlspecialchars($p['product_slug']) ?>"><?= htmlspecialchars($p['product_name']) ?> (<?= htmlspecialchars($p['product_slug']) ?>)</option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Client Name</label>
-        <input type="text" name="client_name" placeholder="e.g. Westminster Demo" required>
-      </div>
-      <div class="form-group">
-        <label>Client Domain URL</label>
-        <input type="text" name="domain" placeholder="e.g. https://demo.prismedu.com" required>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div class="form-group">
-          <label>Environment</label>
-          <select name="environment">
-            <option value="production">Production</option>
-            <option value="staging">Staging</option>
-            <option value="demo">Demo</option>
-          </select>
+  <section class="panel">
+    <div class="panel-head"><h2>Operating systems</h2></div>
+    <div class="panel-body">
+      <?php 
+      $osDist = [];
+      foreach ($deployments as $d) {
+        $os = !empty($d['os_info']) ? $d['os_info'] : 'Unknown';
+        $osDist[$os] = ($osDist[$os] ?? 0) + 1;
+      }
+      arsort($osDist);
+      foreach (array_slice($osDist, 0, 8) as $os => $c): ?>
+        <div class="meter-row">
+          <div class="meter-head"><span><?= so_e($os) ?></span><span class="num"><?= (int)$c ?></span></div>
+          <div class="meter"><i class="is-info" style="--v:<?= round(($c / max(1, $totalDeployments)) * 100) ?>%"></i></div>
         </div>
-        <div class="form-group">
-          <label>License Tier</label>
-          <select name="license_tier">
-            <option value="perpetual">Perpetual</option>
-            <option value="subscription">Subscription</option>
-            <option value="trial">Trial (30 Days)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Expiry Days <span style="opacity:0.65; font-weight:400;">(optional — leave blank for perpetual)</span></label>
-        <input type="number" name="expiry_days" min="1" placeholder="e.g. 365">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('linkDeployModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Provision &amp; Generate Bundle</button>
-      </div>
-    </form>
-  </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
+</div>
 </div>
 
-<!-- Register Deployment Modal -->
-<div class="modal-bg" id="regModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Register Deployment</div>
-      <button type="button" class="icon-btn" onclick="closeModal('regModal')">✕</button>
-    </div>
-    <div class="modal-desc">Issue a new client credential token for telemetry reporting and update checks.</div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="register_deploy">
-      <div class="form-group">
-        <label>Software Product</label>
-        <select name="product_id" required>
-          <?php foreach ($products as $p): ?>
-            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['product_name']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Client Name</label>
-        <input type="text" name="client_name" placeholder="e.g. Oakridge Preparatory School" required>
-      </div>
-      <div class="form-group">
-        <label>Deployment Domain</label>
-        <input type="text" name="deployment_domain" placeholder="e.g. prism.oakridge.edu" required>
-      </div>
-      <div class="form-group">
-        <label>Environment</label>
-        <select name="environment">
-          <option value="production">Production</option>
-          <option value="staging">Staging</option>
-          <option value="development">Development</option>
-        </select>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('regModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Generate Ingestion Key</button>
-      </div>
-    </form>
+<?php elseif ($activePage === 'errors'): ?>
+<!-- ================= VIEW: ERRORS ================= -->
+<div class="toolbar">
+  <div class="field" style="min-width:240px">
+    <label class="sr-only" for="f-dep">Deployment</label>
+    <select class="select" id="f-dep" data-no-busy>
+      <option value="">All deployments</option>
+      <?php foreach ($deployments as $d): ?>
+        <option value="<?= so_e($d['client_name']) ?>"><?= so_e($d['client_name']) ?></option>
+      <?php endforeach; ?>
+    </select>
   </div>
+  <span class="toolbar-spacer"></span>
+  <span class="result-count"><?= count($errorLogs ?? []) ?> incidents</span>
 </div>
 
-<!-- Register Product Modal -->
-<div class="modal-bg" id="regProductModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Register Product</div>
-      <button type="button" class="icon-btn" onclick="closeModal('regProductModal')">✕</button>
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="register_product">
-      <div class="form-group">
-        <label>Product Name</label>
-        <input type="text" name="product_name" placeholder="e.g. POS Pro Store Terminal" required>
-      </div>
-      <div class="form-group">
-        <label>Prefix Code (2-8 chars, e.g. PRISM, POS, MED, CRM)</label>
-        <input type="text" name="product_code" placeholder="e.g. POS" class="mono" style="text-transform:uppercase;" maxlength="8">
-      </div>
-      <div class="form-group">
-        <label>Product Slug</label>
-        <input type="text" name="product_slug" placeholder="e.g. pos-pro" class="mono" required>
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <input type="text" name="description" placeholder="Brief description">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('regProductModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Product</button>
-      </div>
-    </form>
-  </div>
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Level</th>
+        <th scope="col">Message</th>
+        <th scope="col">System</th>
+        <th scope="col">Location</th>
+        <th scope="col" class="num">Seen</th>
+        <th scope="col" class="num">Last seen</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($errorLogs)): ?>
+        <tr><td colspan="7" class="dim" style="text-align:center; padding:32px;">Zero exception incidents found. System operational health is stable.</td></tr>
+      <?php else: ?>
+        <?php foreach ($errorLogs as $err): 
+          $lvl = strtoupper((string)($err['error_level'] ?? 'ERROR'));
+          $isCrit = in_array($lvl, ['FATAL', 'CRITICAL']);
+          $errPayload = [
+            'id' => $err['id'] ?? 0,
+            'error_level' => $lvl,
+            'error_message' => $err['error_message'] ?? '',
+            'client_name' => $err['client_name'] ?? 'Deployment #' . ($err['deployment_id'] ?? 0),
+            'deployment_domain' => $err['deployment_domain'] ?? '',
+            'product_name' => $err['product_name'] ?? '',
+            'file_path' => $err['file_path'] ?? '',
+            'line_number' => $err['line_number'] ?? 0,
+            'occurrences' => $err['occurrences'] ?? 1,
+            'last_seen_at' => $err['last_seen_at'] ?? ($err['occurred_at'] ?? ''),
+            'first_seen_at' => $err['first_seen_at'] ?? ($err['occurred_at'] ?? ''),
+            'stack_trace' => $err['stack_trace'] ?? '',
+            'request_uri' => $err['request_uri'] ?? ''
+          ];
+        ?>
+          <tr class="<?= $isCrit ? 'row-crit' : '' ?>">
+            <td><span class="pill <?= $isCrit ? 'pill-crit' : 'pill-warn' ?>"><?= so_e($lvl) ?></span></td>
+            <td style="max-width:360px"><div class="truncate" title="<?= so_e($err['error_message']) ?>"><?= so_e($err['error_message']) ?></div></td>
+            <td>
+              <div class="cell-main">
+                <strong><?= so_e($err['client_name'] ?? 'Node #' . ($err['deployment_id'] ?? 0)) ?></strong>
+                <span class="cell-sub"><?= so_e($err['product_name'] ?? '') ?></span>
+              </div>
+            </td>
+            <td class="mono dim nowrap"><?= so_e(basename((string)($err['file_path'] ?? ''))) ?><?= !empty($err['line_number']) ? ':' . (int)$err['line_number'] : '' ?></td>
+            <td class="num"><?= (int)($err['occurrences'] ?? 1) ?>×</td>
+            <td class="num nowrap dim"><?= so_e(substr((string)($err['last_seen_at'] ?? ($err['occurred_at'] ?? '')), 5, 11)) ?></td>
+            <td class="col-actions">
+              <div class="row-actions">
+                <button type="button" class="btn btn-sm" data-err-open data-err="<?= so_e(json_encode($errPayload, JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP)) ?>" data-clear-href="?delete_error=<?= (int)$err['id'] ?>&page=errors">View trace</button>
+              </div>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </tbody>
+  </table>
 </div>
 
-<!-- Modal: Issue Software License -->
-<div class="modal-bg" id="licenseModal">
-  <div class="modal-box" style="max-width:540px;">
-    <div class="modal-header">
-      <div class="modal-title">Issue Software License</div>
-      <button type="button" class="icon-btn" onclick="closeModal('licenseModal')">✕</button>
-    </div>
-    <div class="modal-desc">Select deployment environment to provision an online activation key or air-gapped cryptographic bundle.</div>
+<?php elseif ($activePage === 'tickets'): ?>
+<!-- ================= VIEW: SUPPORT TICKETS ================= -->
+<div class="toolbar">
+  <div class="seg" role="group" aria-label="Filter by status">
+    <a class="seg-item" href="?page=tickets" <?= ($filterTicketStatus ?? 'all') === 'all' ? 'aria-current="true"' : '' ?>>All <span class="num"><?= count($tickets ?? []) ?></span></a>
+    <a class="seg-item" href="?page=tickets&ticket_status=open" <?= ($filterTicketStatus ?? '') === 'open' ? 'aria-current="true"' : '' ?>>Open</a>
+    <a class="seg-item" href="?page=tickets&ticket_status=resolved" <?= ($filterTicketStatus ?? '') === 'resolved' ? 'aria-current="true"' : '' ?>>Resolved</a>
+    <a class="seg-item" href="?page=tickets&ticket_status=closed" <?= ($filterTicketStatus ?? '') === 'closed' ? 'aria-current="true"' : '' ?>>Closed</a>
+  </div>
+  <span class="toolbar-spacer"></span>
+  <span class="result-count"><?= count($tickets ?? []) ?> tickets</span>
+</div>
 
-    <!-- License Issuance Type Switcher Cards -->
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-      <div class="vp-choice-card selected" id="choiceCloudCard" onclick="switchLicenseModalTab('standard')">
-        <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--text);">
-          <span>🌐</span> Standard Cloud
-        </div>
-        <div style="font-size:11px; color:var(--text-dim); margin-top:3px; line-height:1.3;">
-          Online HMAC key (PRISM, Connected Deployments)
-        </div>
-      </div>
-      <div class="vp-choice-card" id="choiceVendPulseCard" onclick="switchLicenseModalTab('vendpulse')">
-        <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:13px; color:var(--ok);">
-          <span>⚡</span> VendPulse Offline
-        </div>
-        <div style="font-size:11px; color:var(--text-dim); margin-top:3px; line-height:1.3;">
-          Air-gapped RSA bundle with System Usage Mode
-        </div>
-      </div>
-    </div>
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Ticket</th>
+        <th scope="col">Client and requester</th>
+        <th scope="col">Priority</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="num">Opened</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($tickets)): ?>
+        <tr><td colspan="6" class="dim" style="text-align:center; padding:32px;">No support tickets in this view.</td></tr>
+      <?php else: ?>
+        <?php foreach ($tickets as $t): 
+          $st = strtolower((string)($t['status'] ?? 'open'));
+          $pr = strtolower((string)($t['priority'] ?? 'medium'));
+          $prCls = ($pr === 'urgent' || $pr === 'critical') ? 'pill-crit' : (($pr === 'high') ? 'pill-warn' : 'pill-info');
+          $stCls = $st === 'resolved' ? 'pill-ok' : ($st === 'closed' ? 'pill-dead' : ($st === 'in_progress' ? 'pill-warn' : 'pill-info'));
+        ?>
+          <tr>
+            <td>
+              <div class="cell-main">
+                <strong><?= so_e($t['subject'] ?? 'Ticket') ?></strong>
+                <span class="cell-sub"><?= so_e($t['reference'] ?? '') ?> · <?= so_e($t['category'] ?? 'general') ?></span>
+              </div>
+            </td>
+            <td>
+              <div class="cell-main">
+                <strong><?= so_e($t['client_name'] ?? 'Client') ?></strong>
+                <span class="cell-sub"><?= so_e($t['requester_name'] ?? '') ?><?= !empty($t['requester_role']) ? ', ' . so_e($t['requester_role']) : '' ?></span>
+              </div>
+            </td>
+            <td><span class="pill <?= $prCls ?>"><?= so_e($pr) ?></span></td>
+            <td><span class="pill <?= $stCls ?>"><?= so_e($st) ?></span></td>
+            <td class="num nowrap dim"><?= so_e(substr((string)($t['created_at'] ?? ''), 5, 11)) ?></td>
+            <td class="col-actions">
+              <div class="row-actions" style="opacity:1">
+                <?php if ($st === 'open' || $st === 'in_progress'): ?>
+                  <a class="btn btn-sm" href="?resolve_ticket=<?= urlencode((string)$t['reference']) ?>&status=resolved&page=tickets">Resolve</a>
+                  <a class="btn btn-sm btn-ghost" href="?resolve_ticket=<?= urlencode((string)$t['reference']) ?>&status=closed&page=tickets">Close</a>
+                <?php else: ?>
+                  <a class="btn btn-sm btn-ghost" href="?resolve_ticket=<?= urlencode((string)$t['reference']) ?>&status=open&page=tickets">Reopen</a>
+                <?php endif; ?>
+              </div>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
 
-    <!-- Standard Cloud Form -->
-    <div id="standardLicenseFormWrap">
-      <form method="POST">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-        <input type="hidden" name="action" value="issue_license">
-        <input type="hidden" name="page" value="licenses">
-        <div class="form-group">
-          <label>Target System / Product</label>
-          <select name="product_id" id="issueLicenseProductSelect" required onchange="handleProductSelectChange(this)">
-            <?php foreach ($products as $p): ?>
-              <?php $isVp = ($p['product_code'] === 'VP' || ($p['product_slug'] ?? '') === 'vendpulse'); ?>
-              <option value="<?= $p['id'] ?>" data-is-vp="<?= $isVp ? '1' : '0' ?>" <?= $isVp ? 'style="color:#3dd68c; font-weight:600;"' : '' ?>>
-                <?= htmlspecialchars($p['product_name']) ?> (Prefix: <?= htmlspecialchars($p['product_code'] ?? 'N/A') ?>) <?= $isVp ? '— ⚡ Offline Generator' : '' ?>
-              </option>
+<?php elseif (in_array($activePage, ['releases', 'updates'])): ?>
+<!-- ================= VIEW: RELEASES ================= -->
+<div class="content">
+<div class="grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2>Published releases</h2><small><?= count($releases ?? []) ?> packages</small></div>
+    <div class="table-wrap">
+      <table class="table" style="min-width:760px">
+        <thead>
+          <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Version</th>
+            <th scope="col">Changelog</th>
+            <th scope="col">Package</th>
+            <th scope="col">SHA-256</th>
+            <th scope="col" class="num">Released</th>
+            <th scope="col">State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($releases)): ?>
+            <tr><td colspan="7" class="dim" style="text-align:center; padding:32px;">No releases published yet. Use "Publish release" to upload an OTA update.</td></tr>
+          <?php else: ?>
+            <?php foreach ($releases as $rel): ?>
+              <tr>
+                <td><span class="tag"><?= so_e($rel['product_name'] ?? 'Product') ?></span></td>
+                <td><span class="ver" style="color:var(--text)">v<?= so_e($rel['version'] ?? '') ?></span></td>
+                <td class="dim" style="max-width:320px"><div class="truncate" title="<?= so_e($rel['changelog'] ?? '') ?>"><?= so_e($rel['changelog'] ?? '—') ?></div></td>
+                <td class="mono dim nowrap"><?= so_e($rel['package_filename'] ?? '') ?></td>
+                <td class="mono faint nowrap" title="<?= so_e($rel['package_checksum'] ?? '') ?>"><?= so_e(substr((string)($rel['package_checksum'] ?? ''), 0, 12)) ?>…</td>
+                <td class="num nowrap dim"><?= so_e(substr((string)($rel['released_at'] ?? ''), 0, 10)) ?></td>
+                <td><span class="pill <?= !empty($rel['is_active']) ? 'pill-ok' : 'pill-dead' ?>"><?= !empty($rel['is_active']) ? 'active' : 'retired' ?></span></td>
+              </tr>
             <?php endforeach; ?>
-          </select>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Version adoption</h2><small><?= (int)$versionAdoptionPct ?>% on latest</small></div>
+    <div class="panel-body">
+      <?php foreach ($products as $p): 
+        $pid = (int)$p['id'];
+        $pNodes = array_filter($deployments, fn($d) => (int)($d['product_id'] ?? 0) === $pid);
+        $totalP = count($pNodes);
+        if ($totalP === 0) continue;
+        $currP = count(array_filter($pNodes, fn($d) => empty($d['is_outdated'])));
+        $pctP = round(($currP / $totalP) * 100);
+      ?>
+        <div class="meter-row">
+          <div class="meter-head">
+            <span><?= so_e($p['product_name']) ?> <span class="faint">v<?= so_e($p['latest_version'] ?? '1.0.0') ?></span></span>
+            <span class="num"><?= $currP ?> of <?= $totalP ?> current</span>
+          </div>
+          <div class="meter"><i class="<?= $pctP < 60 ? 'is-crit' : ($pctP < 90 ? 'is-warn' : '') ?>" style="--v:<?= $pctP ?>%"></i></div>
         </div>
-        <div class="form-group">
-          <label>Client / School / Business Name</label>
-          <input type="text" id="standardClientName" name="client_name" placeholder="e.g. Al-Amal Academy" required>
-        </div>
-        <div class="form-group">
-          <label>Client Admin Email</label>
-          <input type="email" name="client_email" placeholder="admin@clientdomain.com" required>
-        </div>
-        <div class="form-group">
-          <label>License Type</label>
-          <select name="license_type" onchange="document.getElementById('expGroup').style.display = (this.value === 'perpetual') ? 'none' : 'block';">
-            <option value="perpetual">Perpetual (Lifetime)</option>
-            <option value="subscription">Subscription (Annual/Monthly)</option>
-            <option value="trial">Trial (Temporary)</option>
-          </select>
-        </div>
-        <div class="form-group" id="expGroup" style="display:none;">
-          <label>Expiration Date</label>
-          <input type="date" name="expires_at">
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-          <button type="button" class="btn" onclick="closeModal('licenseModal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Generate License Key</button>
+      <?php endforeach; ?>
+    </div>
+  </section>
+</div>
+</div>
+
+<?php elseif ($activePage === 'products'): ?>
+<!-- ================= VIEW: PRODUCTS ================= -->
+<div class="table-wrap">
+  <table class="table" style="min-width:700px">
+    <thead>
+      <tr>
+        <th scope="col">Slug</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Description</th>
+        <th scope="col">Repository</th>
+        <th scope="col" class="num">Deployments</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($products as $p): 
+        $cnt = count(array_filter($deployments, fn($d) => (int)($d['product_id'] ?? 0) === (int)$p['id']));
+      ?>
+        <tr>
+          <td class="mono font-semibold"><?= so_e($p['product_slug']) ?></td>
+          <td><strong style="font-weight:600"><?= so_e($p['product_name']) ?></strong></td>
+          <td class="dim" style="max-width:320px"><div class="truncate"><?= so_e($p['description'] ?? '—') ?></div></td>
+          <td class="mono dim nowrap"><?= so_e($p['repository_url'] ?? '—') ?></td>
+          <td class="num"><?= $cnt ?></td>
+        </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+
+<?php elseif ($activePage === 'licenses'): ?>
+<!-- ================= VIEW: LICENSES ================= -->
+<div class="content">
+<div class="grid-2">
+  <section class="panel">
+    <div class="panel-head"><h2>Cloud Issued Licenses</h2><small><?= count($licensesList ?? []) ?> total</small></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">License Key</th>
+            <th scope="col">Client</th>
+            <th scope="col">Status</th>
+            <th scope="col">Expiry</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($licensesList)): ?>
+            <tr><td colspan="4" class="dim" style="text-align:center; padding:24px;">No central licenses issued yet.</td></tr>
+          <?php else: ?>
+            <?php foreach (array_slice($licensesList, 0, 15) as $lic): 
+              $lst = strtolower((string)($lic['status'] ?? 'active'));
+              $lstCls = $lst === 'active' ? 'pill-ok' : ($lst === 'suspended' ? 'pill-warn' : 'pill-dead');
+            ?>
+              <tr>
+                <td class="mono font-semibold"><span title="<?= so_e($lic['license_key'] ?? '') ?>"><?= so_e($lic['license_key'] ?? '') ?></span></td>
+                <td>
+                  <div class="cell-main">
+                    <strong><?= so_e($lic['client_name'] ?? 'Client') ?></strong>
+                    <span class="cell-sub"><?= so_e($lic['product_name'] ?? '') ?></span>
+                  </div>
+                </td>
+                <td><span class="pill <?= $lstCls ?>"><?= so_e($lst) ?></span></td>
+                <td class="mono dim nowrap"><?= !empty($lic['expires_at']) ? so_e(substr((string)$lic['expires_at'], 0, 10)) : 'Perpetual' ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Offline VendPulse Licenses</h2><small><?= (int)($vpStats['total'] ?? 0) ?> cryptographic leases</small></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Reference ID</th>
+            <th scope="col">Client</th>
+            <th scope="col">Mode</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($vpLicenses)): ?>
+            <tr><td colspan="4" class="dim" style="text-align:center; padding:24px;">No offline VendPulse licenses generated yet.</td></tr>
+          <?php else: ?>
+            <?php foreach (array_slice($vpLicenses, 0, 15) as $vplic): 
+              $vst = strtolower((string)($vplic['status'] ?? 'active'));
+              $vstCls = $vst === 'active' ? 'pill-ok' : ($vst === 'suspended' ? 'pill-warn' : 'pill-dead');
+            ?>
+              <tr>
+                <td class="mono font-semibold"><?= so_e($vplic['license_id'] ?? '') ?></td>
+                <td><?= so_e($vplic['client_name'] ?? '') ?></td>
+                <td><span class="tag"><?= so_e($vplic['usage_mode'] ?? 'RETAIL') ?></span></td>
+                <td><span class="pill <?= $vstCls ?>"><?= so_e($vst) ?></span></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+</div>
+
+<?php elseif ($activePage === 'orders'): ?>
+<!-- ================= VIEW: STORE ORDERS ================= -->
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Order Reference</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Product</th>
+        <th scope="col">Status</th>
+        <th scope="col" class="num">Downloads</th>
+        <th scope="col" class="num">Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (empty($orders)): ?>
+        <tr><td colspan="6" class="dim" style="text-align:center; padding:32px;">No orders found in registry.</td></tr>
+      <?php else: ?>
+        <?php foreach ($orders as $ord): 
+          $ost = strtolower((string)($ord['status'] ?? 'completed'));
+          $ostCls = $ost === 'completed' ? 'pill-ok' : ($ost === 'pending' ? 'pill-warn' : 'pill-dead');
+        ?>
+          <tr>
+            <td class="mono font-semibold"><?= so_e($ord['order_reference'] ?? '') ?></td>
+            <td>
+              <div class="cell-main">
+                <strong><?= so_e($ord['business_name'] ?? ($ord['customer_name'] ?? 'Customer')) ?></strong>
+                <span class="cell-sub"><?= so_e($ord['customer_email'] ?? '') ?></span>
+              </div>
+            </td>
+            <td><span class="tag"><?= so_e($ord['purchased_product'] ?? '') ?></span></td>
+            <td><span class="pill <?= $ostCls ?>"><?= so_e($ost) ?></span></td>
+            <td class="num"><?= (int)($ord['download_count'] ?? 0) ?></td>
+            <td class="num dim nowrap"><?= so_e(substr((string)($ord['created_at'] ?? ''), 0, 10)) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
+
+<?php elseif ($activePage === 'users'): ?>
+<!-- ================= VIEW: USERS ================= -->
+<div class="table-wrap">
+  <table class="table" style="min-width:600px">
+    <thead>
+      <tr>
+        <th scope="col">Name</th>
+        <th scope="col">Email</th>
+        <th scope="col">Role</th>
+        <th scope="col" class="num">Added</th>
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ($usersList as $u): ?>
+        <tr>
+          <td><strong style="font-weight:500"><?= so_e($u['name'] ?? 'Operator') ?></strong></td>
+          <td class="mono dim"><?= so_e($u['email'] ?? '') ?></td>
+          <td><span class="pill pill-info pill-plain"><?= so_e($u['role'] ?? 'viewer') ?></span></td>
+          <td class="num dim"><?= so_e(substr((string)($u['created_at'] ?? ''), 0, 10)) ?></td>
+          <td class="col-actions">
+            <div class="row-actions">
+              <?php if ((int)($u['id'] ?? 0) !== (int)($_SESSION['fleet_user_id'] ?? 0)): ?>
+                <a class="btn btn-icon btn-sm btn-ghost" href="?delete_user=<?= (int)$u['id'] ?>&page=users" data-confirm="Permanently delete user <?= so_e($u['name']) ?>?" aria-label="Delete user <?= so_e($u['name']) ?>"><?= so_icon('trash-2') ?></a>
+              <?php endif; ?>
+            </div>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+<?php endif; ?>
+
+</main>
+</div>
+</div>
+
+<!-- ================= OVERLAYS, DRAWERS & DIALOGS ================= -->
+
+<!-- 1. Deployment Diagnostics Drawer -->
+<div class="overlay overlay-end" id="dep-drawer" aria-hidden="true">
+  <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="dep-drawer-t">
+    <div class="overlay-head">
+      <div>
+        <h2 id="dep-drawer-t"><span id="dep-title">Deployment</span></h2>
+        <p><span id="dep-domain"></span></p>
+      </div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <div id="dep-status"></div>
+      <p class="dim" id="dep-reason"></p>
+      <div class="tiles">
+        <div class="tile"><span>Database latency</span><strong id="dep-latency">—</strong></div>
+        <div class="tile"><span>Memory</span><strong id="dep-memory">—</strong></div>
+        <div class="tile"><span>Free disk</span><strong id="dep-disk">—</strong></div>
+        <div class="tile"><span>Active users (24h)</span><strong id="dep-users">—</strong></div>
+      </div>
+      <div id="dep-spark-wrap"><div class="section-label">Database latency, recent heartbeats</div><div id="dep-spark"></div></div>
+      <dl class="kv">
+        <dt>Product</dt><dd id="dep-product"></dd>
+        <dt>Environment</dt><dd id="dep-env"></dd>
+        <dt>Server IP</dt><dd class="mono" id="dep-ip"></dd>
+        <dt>Runtime</dt><dd class="mono" id="dep-stack"></dd>
+        <dt>Operating system</dt><dd id="dep-os"></dd>
+        <dt>Last heartbeat</dt><dd class="mono" id="dep-heartbeat"></dd>
+        <dt>Ingest key</dt><dd class="mono" id="dep-key"></dd>
+      </dl>
+    </div>
+    <div class="overlay-foot">
+      <a class="btn btn-danger is-left" id="dep-remove" href="#" data-confirm="Remove this deployment and all of its telemetry?" hidden><?= so_icon('trash-2') ?>Remove</a>
+      <a class="btn" id="dep-visit" href="#" target="_blank" rel="noopener">Open site<?= so_icon('external-link', 'icon-sm') ?></a>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Error Incident Trace Dialog -->
+<div class="overlay" id="err-dialog" aria-hidden="true">
+  <div class="dialog dialog-wide" role="dialog" aria-modal="true" aria-labelledby="err-dialog-t">
+    <div class="overlay-head">
+      <div>
+        <h2 id="err-dialog-t"><span id="err-level"></span> Error incident</h2>
+      </div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <p id="err-message" style="font-weight:500;overflow-wrap:anywhere"></p>
+      <dl class="kv">
+        <dt>System</dt><dd id="err-client"></dd>
+        <dt>Location</dt><dd class="mono" id="err-location"></dd>
+        <dt>Occurrences</dt><dd class="mono" id="err-count"></dd>
+        <dt>First seen</dt><dd class="mono" id="err-first"></dd>
+        <dt>Last seen</dt><dd class="mono" id="err-last"></dd>
+      </dl>
+      <div>
+        <div class="section-label">Stack trace</div>
+        <pre class="codeblock" id="err-trace"></pre>
+      </div>
+    </div>
+    <div class="overlay-foot">
+      <a class="btn btn-danger is-left" id="err-clear" href="#" data-confirm="Clear this error from the stream?" hidden><?= so_icon('trash-2') ?>Clear error</a>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. One-Click Link New Deployment & Connection Bundle Dialog -->
+<div class="overlay" id="dlg-link-deploy" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-link-t">
+    <div class="overlay-head">
+      <div>
+        <h2 id="dlg-link-t">Link New Deployment</h2>
+        <p>Provisions deployment &amp; license bundle (spectraops.json)</p>
+      </div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-link-f" method="post">
+        <input type="hidden" name="action" value="link_deployment">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="link_product_slug">Product</label>
+            <select class="select" id="link_product_slug" name="product_slug" required>
+              <option value="">Select product...</option>
+              <?php foreach ($products as $p): ?>
+                <option value="<?= so_e($p['product_slug']) ?>"><?= so_e($p['product_name']) ?> (<?= so_e($p['product_slug']) ?>)</option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="field">
+            <label for="link_client_name">Client Name</label>
+            <input class="input" id="link_client_name" name="client_name" type="text" placeholder="Westminster Demo" required>
+          </div>
+          <div class="field span-2">
+            <label for="link_domain">Deployment Domain</label>
+            <input class="input mono" id="link_domain" name="domain" type="text" placeholder="https://demo.prismedu.com" required>
+            <div class="field-hint">Target site URL (e.g. https://demo.prismedu.com).</div>
+          </div>
+          <div class="field">
+            <label for="link_environment">Environment</label>
+            <select class="select" id="link_environment" name="environment">
+              <option value="production">Production</option>
+              <option value="staging">Staging</option>
+              <option value="demo" selected>Demo</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="link_license_tier">License Tier</label>
+            <select class="select" id="link_license_tier" name="license_tier">
+              <option value="demo">Demo / Trial</option>
+              <option value="standard" selected>Standard Enterprise</option>
+              <option value="premium">Premium Pro</option>
+            </select>
+          </div>
         </div>
       </form>
     </div>
-
-    <!-- VendPulse Offline Provisioning Launch Card -->
-    <div id="vendPulseModalLaunchWrap" style="display:none;">
-      <div style="background:linear-gradient(135deg, rgba(61,214,140,0.1) 0%, rgba(79,168,224,0.08) 100%); border:1px solid #3dd68c; border-radius:var(--radius); padding:16px;">
-        <div style="display:flex; align-items:center; gap:8px; color:#3dd68c; font-weight:700; font-size:14px; margin-bottom:8px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          VendPulse Offline Cryptographic Generator
-        </div>
-        <div style="font-size:12.5px; color:var(--text); line-height:1.5; margin-bottom:12px;">
-          VendPulse instances operate in air-gapped / offline environments and require an asymmetric <strong>RSA-2048 SHA-256 signed bundle</strong> (<code class="mono">.vpl</code>) binding the authorized <strong>System Usage Mode</strong>:
-        </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">
-          <span class="vp-tier-tag vp-tag-retail">🛍️ RETAIL_SHOP</span>
-          <span class="vp-tier-tag vp-tag-supermarket">🛒 SUPERMARKET</span>
-          <span class="vp-tier-tag vp-tag-restaurant">🍽️ RESTAURANT</span>
-        </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label style="font-size:12px;">Client / Business Name (Optional, will prefill):</label>
-          <input type="text" id="vpModalClientNamePrefill" placeholder="e.g. Al-Amana Groceries" style="font-size:13px;">
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
-          <button type="button" class="btn btn-outline" onclick="closeModal('licenseModal')">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="launchVendPulseGeneratorFromModal()" style="display:inline-flex; align-items:center; gap:6px;">
-            <span>Open VendPulse Generator</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-      </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-link-f" class="btn btn-primary">Link &amp; Generate Bundle</button>
     </div>
   </div>
 </div>
 
-<!-- Modal: Renew License & Deployment -->
-<div class="modal-bg" id="renewLicenseModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Renew Software License &amp; Deployment</div>
-      <button type="button" class="icon-btn" onclick="closeModal('renewLicenseModal')">✕</button>
-    </div>
-    <div class="modal-desc">Extend subscription term, update expiration date, and restore deployment operations.</div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="renew_license">
-      <input type="hidden" name="page" value="licenses">
-      <input type="hidden" name="license_id" id="renewLicId">
-
-      <div class="modal-meta-grid" style="margin-bottom:16px;">
-        <div><strong>Key:</strong> <span class="mono text-accent" id="renewLicKey">—</span></div>
-        <div><strong>Client:</strong> <span id="renewLicClient">—</span></div>
-        <div><strong>Product:</strong> <span id="renewLicProduct">—</span></div>
-        <div><strong>Bound Domain:</strong> <span class="mono" id="renewLicDomain">Unbound</span></div>
-      </div>
-
-      <div class="form-group">
-        <label>Renewal License Type</label>
-        <select name="license_type" id="renewLicType" onchange="toggleRenewExpDisplay(this.value)">
-          <option value="subscription">Subscription (Fixed Duration)</option>
-          <option value="perpetual">Perpetual (No Expiration)</option>
-          <option value="trial">Trial (Temporary)</option>
-        </select>
-      </div>
-
-      <div class="form-group" id="renewExpGroup">
-        <label>Quick Term Presets</label>
-        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
-          <button type="button" class="chip" onclick="setRenewalDate(30)">+30 Days</button>
-          <button type="button" class="chip" onclick="setRenewalDate(90)">+90 Days</button>
-          <button type="button" class="chip" onclick="setRenewalDate(180)">+6 Months</button>
-          <button type="button" class="chip" onclick="setRenewalDate(365)">+1 Year</button>
-          <button type="button" class="chip" onclick="setRenewalDate(730)">+2 Years</button>
-        </div>
-        <label style="margin-top:6px;">New Expiration Date</label>
-        <input type="date" name="expires_at" id="renewLicExpiresAt">
-      </div>
-
-      <div class="form-group">
-        <label>Renewal Reason / Reference Notes (Optional)</label>
-        <input type="text" name="reason" placeholder="e.g. Contract extended, renewed via operator console">
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('renewLicenseModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Renew License &amp; Deployment</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Suspend License -->
-<div class="modal-bg" id="suspendLicenseModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" style="color:var(--warn);">Suspend License &amp; Deployment</div>
-      <button type="button" class="icon-btn" onclick="closeModal('suspendLicenseModal')">✕</button>
-    </div>
-    <div class="modal-desc">
-      Suspending this license temporarily blocks client activation, release updates, and telemetry ingestion.
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="suspend_license">
-      <input type="hidden" name="page" value="licenses">
-      <input type="hidden" name="license_id" id="suspendLicId">
-
-      <div class="modal-meta-grid" style="margin-bottom:16px;">
-        <div><strong>Key:</strong> <span class="mono text-accent" id="suspendLicKey">—</span></div>
-        <div><strong>Client:</strong> <span id="suspendLicClient">—</span></div>
-        <div style="grid-column: span 2;"><strong>Bound Deployment Domain:</strong> <span class="mono" id="suspendLicDomain">None</span></div>
-      </div>
-
-      <div class="alert-strip warn" style="margin-bottom:14px; padding:10px 12px; font-size:12px; border-radius:var(--radius);">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>The bound deployment will be flagged as inactive and barred from receiving system updates until resumed or renewed.</span>
-      </div>
-
-      <div class="form-group">
-        <label>Reason for Suspension</label>
-        <input type="text" name="reason" placeholder="e.g. Overdue payment, account audit, maintenance" required>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('suspendLicenseModal')">Cancel</button>
-        <button type="submit" class="btn" style="background:var(--warn-dim); border-color:var(--warn); color:var(--warn-text); font-weight:600;">Confirm Suspension</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Revoke License -->
-<div class="modal-bg" id="revokeLicenseModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" style="color:var(--crit);">Permanently Revoke License</div>
-      <button type="button" class="icon-btn" onclick="closeModal('revokeLicenseModal')">✕</button>
-    </div>
-    <div class="modal-desc">
-      Revoking a license permanently terminates access. The bound client deployment will be disconnected.
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="revoke_license">
-      <input type="hidden" name="page" value="licenses">
-      <input type="hidden" name="license_id" id="revokeLicId">
-
-      <div class="modal-meta-grid" style="margin-bottom:16px;">
-        <div><strong>Key:</strong> <span class="mono text-accent" id="revokeLicKey">—</span></div>
-        <div><strong>Client:</strong> <span id="revokeLicClient">—</span></div>
-        <div style="grid-column: span 2;"><strong>Bound Deployment Domain:</strong> <span class="mono" id="revokeLicDomain">None</span></div>
-      </div>
-
-      <div class="alert-strip danger" style="margin-bottom:14px; padding:10px 12px; font-size:12px; border-radius:var(--radius);">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>Warning: This action terminates service authorization for the deployment. This should only be executed for contract cancellation or security compromise.</span>
-      </div>
-
-      <div class="form-group">
-        <label>Reason for Revocation</label>
-        <input type="text" name="reason" placeholder="e.g. Contract cancelled, breach of licensing terms" required>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('revokeLicenseModal')">Cancel</button>
-        <button type="submit" class="btn btn-danger">Revoke License &amp; Decommission</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Delete Deployment Confirmation -->
-<div class="modal-bg" id="deleteDeploymentModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" style="color:var(--crit); display:flex; align-items:center; gap:8px;">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        Remove Deployed System
-      </div>
-      <button type="button" class="icon-btn" onclick="closeModal('deleteDeploymentModal')">✕</button>
-    </div>
-    <div class="modal-desc">
-      Are you sure you want to permanently delete this monitored deployment?
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="delete_deployment">
-      <input type="hidden" name="page" value="<?= htmlspecialchars($activePage) ?>">
-      <input type="hidden" name="deployment_id" id="deleteModalDepId">
-
-      <div class="modal-meta-grid" style="margin-bottom:16px;">
-        <div><strong>Product:</strong> <span class="product-badge" id="deleteModalProduct">—</span></div>
-        <div><strong>Client:</strong> <span id="deleteModalClient" style="font-weight:600;">—</span></div>
-        <div style="grid-column: span 2;"><strong>Domain:</strong> <span class="mono text-accent" id="deleteModalDomain">—</span></div>
-      </div>
-
-      <div class="alert-strip danger" style="margin-bottom:16px; padding:12px; font-size:12px; border-radius:var(--radius); display:flex; gap:10px; align-items:flex-start;">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div>
-          <strong>Permanent Deletion Warning:</strong>
-          <p style="margin:4px 0 0 0; color:var(--text-dim);">
-            All linked telemetry heartbeats, diagnostic metrics, and crash logs will be permanently deleted. If an active software license is bound to this system, it will be automatically decoupled and reset to unactivated.
-          </p>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('deleteDeploymentModal')">Cancel</button>
-        <button type="submit" class="btn btn-danger" style="display:flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          Permanently Delete Deployment
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Register User Modal -->
-<div class="modal-bg" id="regUserModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Create User Account</div>
-      <button type="button" class="icon-btn" onclick="closeModal('regUserModal')">✕</button>
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="register_user">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" name="user_name" placeholder="e.g. Elena Rostova" required>
-      </div>
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" name="user_email" placeholder="elena@domain.com" required>
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select name="user_role" required>
-          <option value="admin">Administrator (Full Control)</option>
-          <option value="viewer">Viewer (Read Only)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="user_password" placeholder="Min 8 characters" required minlength="8">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('regUserModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Create User</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Edit User Modal -->
-<div class="modal-bg" id="editUserModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Edit Operator Account</div>
-      <button type="button" class="icon-btn" onclick="closeModal('editUserModal')">✕</button>
-    </div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="update_user">
-      <input type="hidden" name="user_id" id="editUserId">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" name="user_name" id="editUserName" required>
-      </div>
-      <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" name="user_email" id="editUserEmail" required>
-      </div>
-      <div class="form-group">
-        <label>Role</label>
-        <select name="user_role" id="editUserRole" required>
-          <option value="admin">Administrator (Full Control)</option>
-          <option value="viewer">Viewer (Read Only)</option>
-        </select>
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('editUserModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Reset Password Modal -->
-<div class="modal-bg" id="resetPasswordModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Reset Operator Password</div>
-      <button type="button" class="icon-btn" onclick="closeModal('resetPasswordModal')">✕</button>
-    </div>
-    <div class="modal-desc" id="resetPasswordDesc">Update access credentials for operator.</div>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-      <input type="hidden" name="action" value="reset_user_password">
-      <input type="hidden" name="user_id" id="resetPasswordUserId">
-      <div class="form-group">
-        <label>New Password (min 8 characters)</label>
-        <input type="password" name="new_password" placeholder="Enter new password" required minlength="8">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeModal('resetPasswordModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Update Password</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- System Diagnostics Inspector Modal -->
-<div class="modal-bg" id="systemDetailModal">
-  <div class="modal-box" style="max-width: 560px;">
-    <div class="modal-header">
+<!-- 4. Register Deployment Modal -->
+<div class="overlay" id="dlg-register" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-register-t">
+    <div class="overlay-head">
       <div>
-        <div class="modal-title" id="sysModalClient">System Diagnostics</div>
-        <div class="mono" id="sysModalDomain" style="font-size:11px; color:var(--text-faint); margin-top:2px;"></div>
+        <h2 id="dlg-register-t">Register a deployment</h2>
+        <p>Creates an ingest token for the client app.</p>
       </div>
-      <button type="button" class="icon-btn" onclick="closeModal('systemDetailModal')">✕</button>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
     </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
-      <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-        <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase;">Response Latency</div>
-        <div id="sysModalLatency" class="mono" style="font-size:18px; font-weight:600; color:var(--text); margin-top:2px;">—</div>
-      </div>
-      <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-        <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase;">Memory Usage</div>
-        <div id="sysModalMemory" class="mono" style="font-size:18px; font-weight:600; color:var(--text); margin-top:2px;">—</div>
-      </div>
-      <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-        <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase;">Free Disk Space</div>
-        <div id="sysModalDisk" class="mono" style="font-size:18px; font-weight:600; color:var(--text); margin-top:2px;">—</div>
-      </div>
-      <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-        <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase;">Active Users (24h)</div>
-        <div id="sysModalUsers" class="mono" style="font-size:18px; font-weight:600; color:var(--accent); margin-top:2px;">—</div>
-      </div>
-    </div>
-
-    <div style="background:var(--ink); border:1px solid var(--line); border-radius:var(--radius); padding:12px; font-size:12px; margin-bottom:16px;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="color:var(--text-dim);">Product &amp; Version:</span>
-        <strong id="sysModalProduct"></strong>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="color:var(--text-dim);">Environment:</span>
-        <span id="sysModalEnv" class="product-badge"></span>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="color:var(--text-dim);">Server IP Address:</span>
-        <code id="sysModalIp" class="mono"></code>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="color:var(--text-dim);">PHP &amp; Database:</span>
-        <span id="sysModalStack" class="mono"></span>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span style="color:var(--text-dim);">Operating System:</span>
-        <span id="sysModalOs"></span>
-      </div>
-      <div style="display:flex; justify-content:space-between;">
-        <span style="color:var(--text-dim);">Health Diagnostic Note:</span>
-        <span id="sysModalReason" style="color:var(--accent);"></span>
-      </div>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span id="sysModalStatusBadge" class="status-pill"></span>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn" onclick="closeModal('systemDetailModal')">Close</button>
-        <a id="sysModalFeedBtn" href="#" class="btn btn-outline" style="border-color:var(--accent); color:var(--accent); text-decoration:none;">Errors &amp; Tickets &rarr;</a>
-        <a id="sysModalVisitBtn" href="#" target="_blank" class="btn btn-primary">Open Site ↗</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-function openModal(id) {
-  var el = document.getElementById(id);
-  if (el) el.classList.add('active');
-}
-function closeModal(id) {
-  var el = document.getElementById(id);
-  if (el) el.classList.remove('active');
-}
-
-// Close modals when clicking outside modal box
-document.querySelectorAll('.modal-bg').forEach(function(bg) {
-  bg.addEventListener('click', function(e) {
-    if (e.target === bg) {
-      bg.classList.remove('active');
-    }
-  });
-});
-
-function openSystemModal(dep) {
-  document.getElementById('sysModalClient').textContent = dep.client_name || 'Deployment';
-  document.getElementById('sysModalDomain').textContent = dep.deployment_domain || '';
-  document.getElementById('sysModalProduct').textContent = (dep.product_name || '') + ' (v' + (dep.current_version || '1.0.0') + ')';
-  document.getElementById('sysModalEnv').textContent = (dep.environment || 'production').toUpperCase();
-  document.getElementById('sysModalIp').textContent = dep.server_ip || 'Awaiting heartbeat';
-  document.getElementById('sysModalStack').textContent = (dep.php_version ? 'PHP ' + dep.php_version : 'PHP ?') + ' / ' + (dep.mysql_version ? 'DB ' + dep.mysql_version : 'DB ?');
-  document.getElementById('sysModalOs').textContent = dep.os_info || 'Unknown OS';
-  document.getElementById('sysModalReason').textContent = dep.status_reason || 'Normal operation';
-
-  document.getElementById('sysModalLatency').textContent = (dep.db_latency_ms !== null && dep.db_latency_ms !== undefined) ? dep.db_latency_ms + ' ms' : '—';
-  document.getElementById('sysModalMemory').textContent = (dep.memory_usage_mb !== null && dep.memory_usage_mb !== undefined) ? Math.round(dep.memory_usage_mb) + ' MB' : '—';
-  document.getElementById('sysModalDisk').textContent = (dep.storage_free_gb !== null && dep.storage_free_gb !== undefined) ? Math.round(dep.storage_free_gb * 10) / 10 + ' GB' : '—';
-  document.getElementById('sysModalUsers').textContent = (dep.active_users_24h !== null && dep.active_users_24h !== undefined) ? Number(dep.active_users_24h).toLocaleString() : '—';
-
-  var status = dep.computed_status || dep.status || 'healthy';
-  var badge = document.getElementById('sysModalStatusBadge');
-  badge.className = 'status-pill ' + (status === 'unreachable' ? 'dead' : status);
-  badge.innerHTML = '<span class="dot dot-' + (status === 'unreachable' ? 'dead' : status) + '"></span>' + status;
-
-  document.getElementById('sysModalVisitBtn').href = 'https://' + (dep.deployment_domain || '#');
-  var feedBtn = document.getElementById('sysModalFeedBtn');
-  if (feedBtn) feedBtn.href = '?page=overview&product_id=' + (dep.product_id || 1) + '&deployment_id=' + (dep.id || 0) + '#deployment-feed';
-  openModal('systemDetailModal');
-}
-
-function openEditUserModal(u) {
-  document.getElementById('editUserId').value = u.id || '';
-  document.getElementById('editUserName').value = u.name || '';
-  document.getElementById('editUserEmail').value = u.email || '';
-  document.getElementById('editUserRole').value = u.role || 'viewer';
-  openModal('editUserModal');
-}
-
-function openResetPasswordModal(id, name) {
-  document.getElementById('resetPasswordUserId').value = id;
-  document.getElementById('resetPasswordDesc').textContent = 'Update access password for operator: ' + name;
-  openModal('resetPasswordModal');
-}
-
-function openRenewModal(lic) {
-  document.getElementById('renewLicId').value = lic.id || '';
-  document.getElementById('renewLicKey').textContent = lic.license_key || '—';
-  document.getElementById('renewLicClient').textContent = lic.client_name || '—';
-  document.getElementById('renewLicProduct').textContent = (lic.product_name || '') + ' (' + (lic.product_code || '—') + ')';
-  document.getElementById('renewLicDomain').textContent = lic.deployment_domain || 'Unbound';
-
-  var typeSelect = document.getElementById('renewLicType');
-  typeSelect.value = lic.license_type || 'subscription';
-  toggleRenewExpDisplay(typeSelect.value);
-
-  var expInput = document.getElementById('renewLicExpiresAt');
-  if (lic.expires_at) {
-    expInput.value = lic.expires_at.split(' ')[0];
-  } else {
-    expInput.value = '';
-  }
-  openModal('renewLicenseModal');
-}
-
-function toggleRenewExpDisplay(val) {
-  var expGroup = document.getElementById('renewExpGroup');
-  if (expGroup) {
-    expGroup.style.display = (val === 'perpetual') ? 'none' : 'block';
-  }
-}
-
-function setRenewalDate(days) {
-  var d = new Date();
-  d.setDate(d.getDate() + days);
-  var yyyy = d.getFullYear();
-  var mm = String(d.getMonth() + 1).padStart(2, '0');
-  var dd = String(d.getDate()).padStart(2, '0');
-  var expInput = document.getElementById('renewLicExpiresAt');
-  if (expInput) {
-    expInput.value = yyyy + '-' + mm + '-' + dd;
-  }
-  var typeSelect = document.getElementById('renewLicType');
-  if (typeSelect && typeSelect.value === 'perpetual') {
-    typeSelect.value = 'subscription';
-    toggleRenewExpDisplay('subscription');
-  }
-}
-
-function openSuspendModal(lic) {
-  document.getElementById('suspendLicId').value = lic.id || '';
-  document.getElementById('suspendLicKey').textContent = lic.license_key || '—';
-  document.getElementById('suspendLicClient').textContent = lic.client_name || '—';
-  document.getElementById('suspendLicDomain').textContent = lic.deployment_domain || 'Unbound';
-  openModal('suspendLicenseModal');
-}
-
-function openRevokeModal(lic) {
-  document.getElementById('revokeLicId').value = lic.id || '';
-  document.getElementById('revokeLicKey').textContent = lic.license_key || '—';
-  document.getElementById('revokeLicClient').textContent = lic.client_name || '—';
-  document.getElementById('revokeLicDomain').textContent = lic.deployment_domain || 'Unbound';
-  openModal('revokeLicenseModal');
-}
-
-function openDeleteDeploymentModal(depId, clientName, domain, productName) {
-  document.getElementById('deleteModalDepId').value = depId || '';
-  document.getElementById('deleteModalClient').textContent = clientName || '—';
-  document.getElementById('deleteModalDomain').textContent = domain || '—';
-  document.getElementById('deleteModalProduct').textContent = productName || 'System';
-  openModal('deleteDeploymentModal');
-}
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  try { localStorage.setItem('spectraops_theme', theme); } catch(e) {}
-  document.querySelectorAll('.theme-toggle-label').forEach(function(el) {
-    el.textContent = theme === 'light' ? 'Light' : 'Dark';
-  });
-  document.querySelectorAll('.theme-toggle-btn').forEach(function(btn) {
-    btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
-    btn.setAttribute('title', 'Switch to ' + (theme === 'light' ? 'Dark' : 'Light') + ' mode');
-  });
-}
-
-function toggleTheme() {
-  var current = document.documentElement.getAttribute('data-theme') || 'dark';
-  applyTheme(current === 'light' ? 'dark' : 'light');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  var saved = 'dark';
-  try { saved = localStorage.getItem('spectraops_theme') || 'dark'; } catch(e) {}
-  applyTheme(saved);
-});
-</script>
-
-<!-- Upload & Publish Patch Modal -->
-<div class="modal-bg" id="patchModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center;">
-    <div class="modal" style="background:#0e2448; padding:24px; border-radius:10px; width:440px; border:1px solid #0dc0e7; color:#eefdff;">
-        <h3 style="margin-top:0; color:#bef6fd;">Publish System Patch / Hotfix</h3>
-        <form method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="publish_patch">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-            
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:#92c6de;">Target System</label>
-                <select name="product_id" id="patchProductId" style="width:100%; padding:8px; background:#091830; border:1px solid rgba(13,192,231,0.3); color:#fff; border-radius:6px;" required>
-                    <?php foreach ($products as $p): ?>
-                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['product_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:#92c6de;">New Version Tag (SemVer)</label>
-                <input type="text" name="version" placeholder="2.5.1" style="width:100%; padding:8px; background:#091830; border:1px solid rgba(13,192,231,0.3); color:#fff; border-radius:6px; box-sizing:border-box;" required>
-            </div>
-
-            <div style="margin-bottom:12px;">
-                <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:#92c6de;">Changelog / Fix Summary</label>
-                <textarea name="changelog" rows="3" placeholder="Fixed null pointer exception..." style="width:100%; padding:8px; background:#091830; border:1px solid rgba(13,192,231,0.3); color:#fff; border-radius:6px; box-sizing:border-box;" required></textarea>
-            </div>
-
-            <div style="margin-bottom:16px;">
-                <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:#92c6de;">Patch Archive (.ZIP)</label>
-                <input type="file" name="patch_zip" accept=".zip" style="width:100%; color:#92c6de;" required>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
-                <button type="button" class="btn btn-outline" style="padding:6px 12px; background:transparent; border:1px solid #92c6de; color:#92c6de; border-radius:6px; cursor:pointer;" onclick="closePatchModal()">Cancel</button>
-                <button type="submit" class="btn" style="padding:6px 14px; background:#f59e0b; color:#091830; font-weight:700; border:none; border-radius:6px; cursor:pointer;">Publish &amp; Distribute</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Enhanced AI Review & Visual Diff Modal -->
-<div class="modal-bg" id="aiReviewModal">
-    <div class="modal-box" style="max-width: 1080px; width: 95vw; max-height: 92vh; display: flex; flex-direction: column; padding: 24px;">
-        
-        <!-- Header -->
-        <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--line);">
-            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <span class="btn-ai" style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; font-size:11px; border-radius:12px; pointer-events:none;">
-                    ✨ AI Diagnostics
-                </span>
-                <div class="modal-title" style="margin:0; font-size:15px; font-weight:600; color:var(--text);">
-                    Automated Hotfix Review
-                </div>
-                <span id="aiVersionBadge" class="mono" style="font-size:11px; padding:2px 8px; border-radius:var(--radius); background:var(--panel-2); border:1px solid var(--line); color:var(--accent); font-weight:600;"></span>
-            </div>
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="font-size:11.5px; color:var(--text-dim);">
-                    Target: <code id="aiDiffFilePath" class="mono" style="color:var(--accent); background:var(--ink); padding:2px 7px; border-radius:var(--radius); border:1px solid var(--line);"></code>
-                </div>
-                <button type="button" class="icon-btn" onclick="closeModal('aiReviewModal')">✕</button>
-            </div>
-        </div>
-
-        <!-- Scrollable Body Content -->
-        <div style="overflow-y:auto; flex:1; padding-right:4px;">
-            <!-- Diagnosis Summary Cards -->
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-                <div style="background:var(--panel-2); padding:12px 14px; border-radius:var(--radius); border:1px solid var(--line); border-left:3px solid #a855f7;">
-                    <div style="display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#c084fc;">
-                        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#a855f7;"></span>
-                        Root Cause Analysis
-                    </div>
-                    <p id="aiRootCause" style="margin:6px 0 0; font-size:12.5px; color:var(--text); line-height:1.5;"></p>
-                </div>
-                <div style="background:var(--panel-2); padding:12px 14px; border-radius:var(--radius); border:1px solid var(--line); border-left:3px solid var(--accent);">
-                    <div style="display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--accent);">
-                        <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent);"></span>
-                        Proposed Remediation
-                    </div>
-                    <p id="aiFixSummary" style="margin:6px 0 0; font-size:12.5px; color:var(--text); line-height:1.5;"></p>
-                </div>
-            </div>
-
-            <!-- Visual Side-by-Side Diff Mount Point -->
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-dim);">
-                    <span class="dot dot-ok"></span>
-                    Code Comparison (Side-by-Side Unified Diff)
-                </div>
-                <div style="font-size:11px; color:var(--text-faint);" class="mono">
-                    Unified Git Diff &bull; Auto-verified syntax
-                </div>
-            </div>
-            <div class="diff-container" id="visualDiffMount"></div>
-        </div>
-
-        <!-- Footer / Action Controls -->
-        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div style="font-size:11.5px; color:var(--text-dim); display:flex; align-items:center; gap:8px;">
-                <span>Archive: <code id="aiArchiveName" class="mono" style="color:var(--accent);"></code></span>
-                <span style="color:var(--line);">|</span>
-                <span>SHA-256: <code id="aiChecksum" class="mono" style="color:var(--ok); font-size:11px;"></code></span>
-            </div>
-            <form method="POST" style="margin:0;">
-                <input type="hidden" name="action" value="approve_ai_patch">
-                <input type="hidden" name="csrf_token" id="aiApproveCsrfToken" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-                <input type="hidden" name="error_id" id="aiApproveErrorId" value="">
-                <div style="display:flex; gap:10px;">
-                    <button type="button" class="btn btn-outline" onclick="closeModal('aiReviewModal')">Dismiss</button>
-                    <button type="submit" class="btn btn-success" style="display:flex; align-items:center; gap:6px;">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Approve &amp; Release to Fleet
-                    </button>
-                </div>
-            </form>
-        </div>
-
-    </div>
-</div>
-
-<!-- Modal: Upload & Sync Master Project Codebase -->
-<div class="modal-bg" id="codebaseModal">
-    <div class="modal-box" style="max-width: 520px;">
-        <div class="modal-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:16px;">📦</span>
-                <div class="modal-title">Sync Master Codebase</div>
-            </div>
-            <button type="button" class="icon-btn" onclick="closeModal('codebaseModal')">✕</button>
-        </div>
-
-        <p class="modal-desc">
-            Upload the clean baseline source code (<code>.zip</code>) of any existing or new system. SpectraOps will store it under <code>/storage/codebases/{slug}</code> so the AI diagnostic engine can inspect files and build targeted hotfixes.
-        </p>
-
-        <form method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="sync_codebase">
-            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-
-            <div class="form-group">
-                <label>Target System / Product</label>
-                <select name="product_id" id="codebaseProductSelect" required>
-                    <?php foreach ($products as $p): ?>
-                        <option value="<?= $p['id'] ?>" <?= (isset($productId) && $productId === $p['id']) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($p['product_name']) ?> (<?= htmlspecialchars($p['product_code']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Base Version Tag</label>
-                <input type="text" name="base_version" id="codebaseVersionInput" placeholder="1.0.0" required>
-            </div>
-
-            <div class="form-group">
-                <label>Codebase Archive (.ZIP)</label>
-                <input type="file" name="codebase_zip" accept=".zip" required>
-                <small style="display:block; font-size:11px; color:var(--text-faint); margin-top:4px;">
-                    Ensure <code>.env</code>, secret keys, and client uploads are excluded from this zip.
-                </small>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-                <button type="button" class="btn btn-outline" onclick="closeModal('codebaseModal')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Extract &amp; Sync Codebase</button>
-            </div>
-        </form>
-
-    </div>
-</div>
-
-<!-- Modal: VendPulse Public Key Infrastructure -->
-<div class="modal-bg" id="vpPubKeyModal">
-  <div class="modal-box" style="max-width: 680px; width: 95vw;">
-    <div class="modal-header">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:20px;">🔑</span>
-        <div>
-          <div class="modal-title">VendPulse Public Key Infrastructure</div>
-          <div style="font-size:12px; color:var(--text-dim); margin-top:2px;">RSA-2048 with SHA-256 (SHA256withRSA) Verification Certificate</div>
-        </div>
-      </div>
-      <button type="button" class="icon-btn" onclick="closeModal('vpPubKeyModal')">✕</button>
-    </div>
-
-    <p class="modal-desc" style="margin-top:8px;">
-      This public key is distributed with VendPulse client apps to cryptographically verify offline license signatures without network access.
-      <strong style="color:var(--ok);">It is 100% safe to embed in client binaries or configuration files.</strong>
-      The matching private signing key remains permanently protected on this SpectraOps server.
-    </p>
-
-    <div style="background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:10px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-      <div style="font-size:11.5px; color:var(--text-dim);">
-        Algorithm: <strong style="color:var(--accent);">RSA-2048</strong> &bull;
-        Digest: <strong style="color:var(--accent);">SHA-256</strong> &bull;
-        Storage: <code class="mono" style="color:var(--text); font-size:11px;">keys/vendpulse_public.pem</code>
-      </div>
-      <span class="status-pill ok" style="font-size:11px;">
-        <span class="dot dot-ok"></span> ACTIVE &amp; SECURED
-      </span>
-    </div>
-
-    <div class="form-group">
-      <label style="display:flex; justify-content:space-between; align-items:center;">
-        <span>Public Key PEM Format (SPKI)</span>
-        <span style="font-size:11px; color:var(--text-faint);">Click to select all</span>
-      </label>
-      <textarea id="vpPubKeyText" class="mono" rows="9" readonly onclick="this.select()" style="font-size:11.5px; background:var(--ink); color:#bef6fd; border:1px solid var(--line); padding:12px; width:100%; border-radius:var(--radius); box-sizing:border-box; resize:vertical;"><?= htmlspecialchars($vpPublicKey) ?></textarea>
-    </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; border-top:1px solid var(--line); padding-top:16px;">
-      <a href="?download_vp_pubkey=1" class="btn" style="text-decoration:none;">
-        📥 Download public.pem
-      </a>
-      <div style="display:flex; gap:10px;">
-        <button type="button" class="btn btn-outline" onclick="closeModal('vpPubKeyModal')">Close</button>
-        <button type="button" class="btn btn-primary" onclick="copyVpRawText(document.getElementById('vpPubKeyText').value, this)">
-          📋 Copy Public Key
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: VendPulse Offline License Verifier -->
-<div class="modal-bg" id="vpVerifyModal">
-  <div class="modal-box" style="max-width: 720px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
-    <div class="modal-header">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:20px;">🛡️</span>
-        <div>
-          <div class="modal-title">Offline Cryptographic License Verifier</div>
-          <div style="font-size:12px; color:var(--text-dim); margin-top:2px;">Validate signature, tamper status, hardware lock, and expiration date</div>
-        </div>
-      </div>
-      <button type="button" class="icon-btn" onclick="closeModal('vpVerifyModal')">✕</button>
-    </div>
-
-    <div style="overflow-y:auto; flex:1; padding-right:4px;">
-      <p class="modal-desc" style="margin-top:6px;">
-        Paste any generated VendPulse license (either raw JSON with <code class="mono">payload</code> and <code class="mono">signature</code>, or Base64 bundle string). SpectraOps will verify it using the public key exactly as an air-gapped terminal does.
-      </p>
-
-      <div class="form-group">
-        <label for="vpVerifyInput">License Bundle (JSON or Base64 String) <span style="color:var(--crit)">*</span></label>
-        <textarea id="vpVerifyInput" class="mono" rows="5" placeholder='Paste {"payload": {...}, "signature": "..."} or Base64 bundle here...' style="font-size:12px; background:var(--ink); color:var(--text); width:100%; box-sizing:border-box; border-radius:var(--radius); border:1px solid var(--line); padding:10px;"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="vpVerifyHwid">Hardware Fingerprint / HWID Check <span style="color:var(--text-faint); font-weight:normal;">(Optional - simulate client machine ID)</span></label>
-        <input type="text" id="vpVerifyHwid" class="mono" placeholder="Enter hardware UUID if this license is machine-locked" style="font-size:12px;">
-      </div>
-
-      <div style="margin-top:14px;">
-        <button type="button" id="btnRunVpVerify" class="btn btn-primary" onclick="runVpVerification(this)" style="width:100%; justify-content:center; padding:10px;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-          Run Cryptographic Verification
-        </button>
-      </div>
-
-      <!-- Verification Result Container -->
-      <div id="vpVerifyResult" style="display:none; margin-top:18px;"></div>
-    </div>
-
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px; border-top:1px solid var(--line); padding-top:14px;">
-      <button type="button" class="btn btn-outline" onclick="closeModal('vpVerifyModal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: VendPulse License Details Inspector -->
-<div class="modal-bg" id="vpViewModal">
-  <div class="modal-box" style="max-width: 780px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
-    <div class="modal-header">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:20px;">📜</span>
-        <div>
-          <div class="modal-title">VendPulse License Inspector</div>
-          <div style="font-size:12px; color:var(--text-dim); margin-top:2px;">Cryptographic credentials and deployment claims</div>
-        </div>
-      </div>
-      <button type="button" class="icon-btn" onclick="closeModal('vpViewModal')">✕</button>
-    </div>
-
-    <div style="overflow-y:auto; flex:1; padding-right:4px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--panel-2); padding:12px 16px; border-radius:var(--radius); border:1px solid var(--line); margin-bottom:14px;">
-        <div>
-          <div style="font-size:11px; text-transform:uppercase; color:var(--text-faint); font-weight:600;">License Reference</div>
-          <div id="vpViewLicenseId" class="mono" style="font-size:16px; font-weight:700; color:var(--accent);"></div>
-          <div id="vpViewClient" style="font-size:13px; color:var(--text); margin-top:2px; font-weight:600;"></div>
-        </div>
-        <div style="text-align:right;">
-          <div id="vpViewStatusBadge"></div>
-          <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:6px; align-items:center;">
-            <div id="vpViewTierBadge"></div>
-            <div id="vpViewUsageModeBadge"></div>
+    <div class="overlay-body">
+      <form id="dlg-register-f" method="post">
+        <input type="hidden" name="action" value="register_deploy">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="r-product_id">Product</label>
+            <select class="select" id="r-product_id" name="product_id" required>
+              <option value="">Select a product</option>
+              <?php foreach ($products as $p): ?>
+                <option value="<?= (int)$p['id'] ?>"><?= so_e($p['product_name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="field">
+            <label for="client_name">Client name</label>
+            <input class="input" id="client_name" name="client_name" type="text" placeholder="Oakridge Preparatory School" required>
+          </div>
+          <div class="field">
+            <label for="deployment_domain">Deployment domain</label>
+            <input class="input" id="deployment_domain" name="deployment_domain" type="text" placeholder="prism.oakridge.edu" required aria-describedby="deployment_domain-h">
+            <div class="field-hint" id="deployment_domain-h">Hostname only, no https://.</div>
+          </div>
+          <div class="field">
+            <label for="r-environment">Environment</label>
+            <select class="select" id="r-environment" name="environment">
+              <option value="production">Production</option>
+              <option value="staging">Staging</option>
+              <option value="development">Development</option>
+            </select>
           </div>
         </div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
-        <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-          <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; font-weight:600;">Operational Mode &amp; Limits</div>
-          <div style="margin-top:6px; font-size:13px;">
-            <div>Usage Mode: <strong id="vpViewUsageModeText" style="color:var(--ok);"></strong></div>
-            <div style="margin-top:4px;">Max POS Stations: <strong id="vpViewCounters" class="mono" style="color:var(--accent);"></strong></div>
-            <div style="margin-top:4px;">Hardware Fingerprint: <code id="vpViewHwid" class="mono" style="font-size:11.5px; color:var(--text-dim);"></code></div>
-          </div>
-        </div>
-
-        <div style="background:var(--panel-2); padding:12px; border-radius:var(--radius); border:1px solid var(--line);">
-          <div style="font-size:11px; color:var(--text-faint); text-transform:uppercase; font-weight:600;">Validity Dates</div>
-          <div style="margin-top:6px; font-size:13px;">
-            <div>Issued At: <span id="vpViewIssuedAt" class="mono" style="color:var(--text-dim);"></span></div>
-            <div style="margin-top:4px;">Expires At: <span id="vpViewExpiresAt" class="mono"></span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Allowed Application Modules</label>
-        <div id="vpViewModules" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;"></div>
-      </div>
-
-      <div class="form-group" style="margin-top:14px;">
-        <label style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Raw Cryptographic Bundle (Canonical Payload + RSA Signature)</span>
-          <span style="font-size:11px; color:var(--text-faint);">Format: JSON</span>
-        </label>
-        <textarea id="vpViewBundleBox" class="mono" rows="7" readonly onclick="this.select()" style="font-size:11.5px; background:var(--ink); color:var(--text); width:100%; border-radius:var(--radius); border:1px solid var(--line); padding:10px; box-sizing:border-box;"></textarea>
-      </div>
+      </form>
     </div>
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid var(--line); padding-top:14px;">
-      <a id="vpViewDownloadLink" href="#" class="btn btn-primary" style="text-decoration:none;">
-        📥 Download .vpl File
-      </a>
-      <div style="display:flex; gap:10px;">
-        <button type="button" class="btn btn-outline" onclick="closeModal('vpViewModal')">Close</button>
-        <button type="button" class="btn" onclick="copyVpRawText(document.getElementById('vpViewBundleBox').value, this)">
-          📋 Copy Bundle JSON
-        </button>
-      </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-register-f" class="btn btn-primary">Register deployment</button>
     </div>
   </div>
 </div>
 
-<!-- Load diff parser & diff2html UI -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/9.0.0/diff.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
-
-<script>
-    function openCodebaseModal(productId, version) {
-        if (productId) {
-            var sel = document.getElementById('codebaseProductSelect');
-            if (sel) sel.value = productId;
-        }
-        if (version) {
-            var ver = document.getElementById('codebaseVersionInput');
-            if (ver) ver.value = version;
-        }
-        openModal('codebaseModal');
-    }
-    function closeCodebaseModal() {
-        closeModal('codebaseModal');
-    }
-
-    function openPatchModal(productId) {
-        if (productId) {
-            var sel = document.getElementById('patchProductId');
-            if (sel) sel.value = productId;
-        }
-        openModal('patchModal');
-    }
-    function closePatchModal() {
-        closeModal('patchModal');
-    }
-
-async function triggerAiFix(errorId) {
-    const btn = (typeof event !== 'undefined' && event && (event.currentTarget || (event.target.closest ? event.target.closest('button') : event.target))) || (typeof event !== 'undefined' && event ? event.target : null);
-    const origText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = 'Diagnosing with Gemini...';
-    }
-
-    try {
-        const fd = new FormData();
-        fd.append('action', 'ai_diagnose');
-        fd.append('error_id', errorId);
-        fd.append('csrf_token', '<?= htmlspecialchars($_SESSION["csrf_token"] ?? "") ?>');
-
-        const targetUrl = 'dashboard.php';
-        const res = await fetch(targetUrl, { 
-            method: 'POST', 
-            headers: {
-                'X-CSRF-Token': '<?= htmlspecialchars($_SESSION["csrf_token"] ?? "") ?>'
-            },
-            body: fd 
-        });
-
-        const rawText = await res.text();
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch (jsonErr) {
-            console.error('Non-JSON response from server:', rawText);
-            const cleanErr = rawText.replace(/<[^>]*>/g, '').trim().substring(0, 140);
-            throw new Error(cleanErr || ('Server returned HTTP ' + res.status));
-        }
-
-        if (data.success) {
-            document.getElementById('aiVersionBadge').innerText = 'v' + data.new_version;
-            document.getElementById('aiDiffFilePath').innerText = data.fixed_file_path;
-            document.getElementById('aiRootCause').innerText = data.root_cause;
-            document.getElementById('aiFixSummary').innerText = data.fix_summary;
-            document.getElementById('aiArchiveName').innerText = data.package_filename;
-            document.getElementById('aiChecksum').innerText = data.package_checksum;
-            document.getElementById('aiApproveErrorId').value = data.error_id;
-
-            if (data.csrf_token) {
-                const approveCsrfInput = document.getElementById('aiApproveCsrfToken');
-                if (approveCsrfInput) {
-                    approveCsrfInput.value = data.csrf_token;
-                }
-            }
-
-            // 1. Generate Unified Diff patch string via JsDiff
-            const fileName = data.fixed_file_path || 'file.php';
-            let diffRendered = false;
-
-            if (typeof Diff !== 'undefined' && typeof Diff2Html !== 'undefined' && typeof Diff2Html.html === 'function') {
-                try {
-                    const patchText = Diff.createTwoFilesPatch(
-                        'Original/' + fileName,
-                        'Patched/' + fileName,
-                        data.original_code || '',
-                        data.corrected_code || '',
-                        'Base Version',
-                        'v' + data.new_version
-                    );
-
-                    // 2. Render Side-by-Side view using Diff2Html
-                    const diffHtml = Diff2Html.html(patchText, {
-                        drawFileList: false,
-                        matching: 'lines',
-                        outputFormat: 'side-by-side',
-                        renderNothingWhenEmpty: false
-                    });
-
-                    document.getElementById('visualDiffMount').innerHTML = diffHtml;
-                    diffRendered = true;
-                } catch (diffErr) {
-                    console.warn('Diff2Html render error, using fallback:', diffErr);
-                }
-            }
-
-            if (!diffRendered) {
-                const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                document.getElementById('visualDiffMount').innerHTML = `
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-family:'JetBrains Mono',monospace; font-size:0.8rem; margin-top:4px;">
-                        <div style="background:var(--ink); padding:12px; border-radius:var(--radius); border:1px solid var(--line); overflow:auto; max-height:360px;">
-                            <div style="color:var(--crit); font-weight:600; margin-bottom:6px; border-bottom:1px solid var(--line); padding-bottom:4px; font-size:11px; text-transform:uppercase;">Original Code</div>
-                            <pre style="margin:0; white-space:pre-wrap; color:var(--text); font-family:inherit;">` + escapeHtml(data.original_code || '') + `</pre>
-                        </div>
-                        <div style="background:var(--ink); padding:12px; border-radius:var(--radius); border:1px solid var(--line); overflow:auto; max-height:360px;">
-                            <div style="color:var(--ok); font-weight:600; margin-bottom:6px; border-bottom:1px solid var(--line); padding-bottom:4px; font-size:11px; text-transform:uppercase;">Patched Code (v` + escapeHtml(data.new_version || '') + `)</div>
-                            <pre style="margin:0; white-space:pre-wrap; color:var(--text); font-family:inherit;">` + escapeHtml(data.corrected_code || '') + `</pre>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // 3. Open Modal
-            openModal('aiReviewModal');
-        } else {
-            alert('SpectraOps AI Diagnosis Alert: ' + (data.error || 'Diagnostic engine could not generate a patch.'));
-        }
-    } catch (e) {
-        console.error('SpectraOps AI Diagnostic Engine Error:', e);
-        alert('SpectraOps AI Diagnostic Engine: ' + (e.message || 'Failed to connect.'));
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origText;
-        }
-    }
-}
-
-// --- Issue Software License Modal Handlers ---
-function switchLicenseModalTab(type) {
-    const cardCloud = document.getElementById('choiceCloudCard');
-    const cardVp = document.getElementById('choiceVendPulseCard');
-    const wrapCloud = document.getElementById('standardLicenseFormWrap');
-    const wrapVp = document.getElementById('vendPulseModalLaunchWrap');
-    
-    if (type === 'vendpulse') {
-        if (cardCloud) cardCloud.classList.remove('selected');
-        if (cardVp) cardVp.classList.add('selected');
-        if (wrapCloud) wrapCloud.style.display = 'none';
-        if (wrapVp) wrapVp.style.display = 'block';
-        
-        const stdClient = document.getElementById('standardClientName');
-        const vpPre = document.getElementById('vpModalClientNamePrefill');
-        if (stdClient && vpPre && stdClient.value.trim() !== '' && vpPre.value.trim() === '') {
-            vpPre.value = stdClient.value.trim();
-        }
-    } else {
-        if (cardVp) cardVp.classList.remove('selected');
-        if (cardCloud) cardCloud.classList.add('selected');
-        if (wrapVp) wrapVp.style.display = 'none';
-        if (wrapCloud) wrapCloud.style.display = 'block';
-    }
-}
-
-function handleProductSelectChange(selectEl) {
-    if (!selectEl) return;
-    const opt = selectEl.options[selectEl.selectedIndex];
-    if (opt && opt.getAttribute('data-is-vp') === '1') {
-        switchLicenseModalTab('vendpulse');
-    }
-}
-
-function launchVendPulseGeneratorFromModal() {
-    const prefillInput = document.getElementById('vpModalClientNamePrefill');
-    const clientVal = prefillInput ? prefillInput.value.trim() : '';
-    let target = '?page=licenses&view=vendpulse_generator';
-    if (clientVal) {
-        target += '&vp_client=' + encodeURIComponent(clientVal);
-    }
-    window.location.href = target;
-}
-
-function openIssueLicenseForProduct(productType) {
-    openModal('licenseModal');
-    if (productType === 'vendpulse') {
-        switchLicenseModalTab('vendpulse');
-    } else {
-        switchLicenseModalTab('standard');
-    }
-}
-
-// --- VendPulse Offline License Generator UI Handlers ---
-const VP_TIER_MODULES = {
-    'RETAIL_BASIC': ['catalog_grid', 'standard_pos', 'basic_receipt'],
-    'SUPERMARKET': ['barcode_rapid_stream', 'scale_comm', 'multi_till', 'cashier_shifts'],
-    'ENTERPRISE_WHOLESALE': ['multi_warehouse', 'b2b_invoices', 'credit_accounts', 'institutional_branding']
-};
-
-function selectVpTier(tier) {
-    const radioRetail = document.getElementById('tierRetail');
-    const radioSupermarket = document.getElementById('tierSupermarket');
-    const radioWholesale = document.getElementById('tierWholesale');
-    const cardRetail = document.getElementById('cardTierRetail');
-    const cardSupermarket = document.getElementById('cardTierSupermarket');
-    const cardWholesale = document.getElementById('cardTierWholesale');
-
-    if (cardRetail) cardRetail.classList.remove('selected');
-    if (cardSupermarket) cardSupermarket.classList.remove('selected');
-    if (cardWholesale) cardWholesale.classList.remove('selected');
-
-    if (tier === 'RETAIL_BASIC') {
-        if (radioRetail) radioRetail.checked = true;
-        if (cardRetail) cardRetail.classList.add('selected');
-    } else if (tier === 'ENTERPRISE_WHOLESALE') {
-        if (radioWholesale) radioWholesale.checked = true;
-        if (cardWholesale) cardWholesale.classList.add('selected');
-    } else {
-        if (radioSupermarket) radioSupermarket.checked = true;
-        if (cardSupermarket) cardSupermarket.classList.add('selected');
-    }
-
-    // Update checkboxes and chip highlight
-    const allowed = VP_TIER_MODULES[tier] || [];
-    document.querySelectorAll('#vpModulesContainer .vp-module-chip').forEach(function(chip) {
-        const input = chip.querySelector('input[type="checkbox"]');
-        if (input) {
-            const isIncluded = allowed.includes(input.value);
-            input.checked = isIncluded;
-            if (isIncluded) {
-                chip.classList.add('active');
-            } else {
-                chip.classList.remove('active');
-            }
-        }
-    });
-}
-
-function selectVpMode(mode) {
-    const radioRetail = document.getElementById('modeRetail');
-    const radioSupermarket = document.getElementById('modeSupermarket');
-    const radioRestaurant = document.getElementById('modeRestaurant');
-    const cardRetail = document.getElementById('cardModeRetail');
-    const cardSupermarket = document.getElementById('cardModeSupermarket');
-    const cardRestaurant = document.getElementById('cardModeRestaurant');
-
-    if (cardRetail) cardRetail.classList.remove('selected');
-    if (cardSupermarket) cardSupermarket.classList.remove('selected');
-    if (cardRestaurant) cardRestaurant.classList.remove('selected');
-
-    if (mode === 'SUPERMARKET') {
-        if (radioSupermarket) radioSupermarket.checked = true;
-        if (cardSupermarket) cardSupermarket.classList.add('selected');
-    } else if (mode === 'RESTAURANT') {
-        if (radioRestaurant) radioRestaurant.checked = true;
-        if (cardRestaurant) cardRestaurant.classList.add('selected');
-    } else {
-        if (radioRetail) radioRetail.checked = true;
-        if (cardRetail) cardRetail.classList.add('selected');
-    }
-}
-
-function regenerateVpLicenseId() {
-    const chars = '0123456789ABCDEF';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const input = document.getElementById('vpLicenseId');
-    if (input) {
-        input.value = 'VP-LIC-2026-' + code;
-    }
-}
-
-function toggleVpExpiry(isPerpetual) {
-    const wrap = document.getElementById('vpDatePickerWrap');
-    if (wrap) {
-        wrap.style.display = isPerpetual ? 'none' : 'block';
-    }
-}
-
-function copyVpRawText(text, btn) {
-    if (!text) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-            if (btn) {
-                const orig = btn.innerHTML;
-                btn.innerHTML = '✓ Copied!';
-                setTimeout(function() { btn.innerHTML = orig; }, 2000);
-            }
-        }).catch(function() {
-            fallbackCopy(text, btn);
-        });
-    } else {
-        fallbackCopy(text, btn);
-    }
-}
-
-function fallbackCopy(text, btn) {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-        document.execCommand('copy');
-        if (btn) {
-            const orig = btn.innerHTML;
-            btn.innerHTML = '✓ Copied!';
-            setTimeout(function() { btn.innerHTML = orig; }, 2000);
-        }
-    } catch(e) {
-        alert('Could not copy automatically. Please select text and press Ctrl+C.');
-    }
-    document.body.removeChild(ta);
-}
-
-function viewVpBundleModal(lic) {
-    if (!lic) return;
-    const elId = document.getElementById('vpViewLicenseId');
-    const elClient = document.getElementById('vpViewClient');
-    const elCounters = document.getElementById('vpViewCounters');
-    const elHwid = document.getElementById('vpViewHwid');
-    const elIssuedAt = document.getElementById('vpViewIssuedAt');
-    const elExpiresAt = document.getElementById('vpViewExpiresAt');
-    const elStatusBadge = document.getElementById('vpViewStatusBadge');
-    const elTierBadge = document.getElementById('vpViewTierBadge');
-    const elModules = document.getElementById('vpViewModules');
-    const elBundle = document.getElementById('vpViewBundleBox');
-    const elDl = document.getElementById('vpViewDownloadLink');
-
-    if (elId) elId.textContent = lic.license_id || 'N/A';
-    if (elClient) elClient.textContent = lic.client_name || 'N/A';
-    if (elCounters) elCounters.textContent = (lic.max_counters || 1) + ' Station(s)';
-    if (elHwid) elHwid.textContent = lic.machine_hwid ? lic.machine_hwid : 'Unconstrained (Any Machine)';
-    
-    // Dates
-    const issuedTs = lic.issued_at ? parseInt(lic.issued_at, 10) : 0;
-    const expiresTs = lic.expires_at ? parseInt(lic.expires_at, 10) : 0;
-    if (elIssuedAt) elIssuedAt.textContent = issuedTs ? new Date(issuedTs * 1000).toLocaleString() : 'N/A';
-    if (elExpiresAt) {
-        if (!expiresTs) {
-            elExpiresAt.innerHTML = '<span style="color:var(--ok); font-weight:700;">Perpetual (No Expiry)</span>';
-        } else {
-            const isExp = (expiresTs * 1000) < Date.now();
-            elExpiresAt.innerHTML = '<span style="' + (isExp ? 'color:var(--crit); font-weight:700;' : '') + '">' + new Date(expiresTs * 1000).toLocaleDateString() + (isExp ? ' (EXPIRED)' : '') + '</span>';
-        }
-    }
-
-    // Status badge
-    const st = lic.status || 'active';
-    let pillClass = (st === 'active') ? 'ok' : ((st === 'revoked') ? 'dead' : 'warn');
-    if (expiresTs && (expiresTs * 1000) < Date.now() && st === 'active') {
-        pillClass = 'warn';
-    }
-    if (elStatusBadge) {
-        elStatusBadge.innerHTML = '<span class="status-pill ' + pillClass + '"><span class="dot dot-' + pillClass + '"></span> ' + st.toUpperCase() + '</span>';
-    }
-
-    // Tier badge
-    const t = lic.tier || 'SUPERMARKET';
-    let tClass = 'vp-tag-supermarket';
-    if (t === 'RETAIL_BASIC') tClass = 'vp-tag-retail';
-    else if (t === 'ENTERPRISE_WHOLESALE') tClass = 'vp-tag-wholesale';
-    if (elTierBadge) {
-        elTierBadge.innerHTML = '<span class="vp-tier-tag ' + tClass + '">' + t + '</span>';
-    }
-
-    // Usage Mode badge and text
-    const elUsageModeText = document.getElementById('vpViewUsageModeText');
-    const elUsageModeBadge = document.getElementById('vpViewUsageModeBadge');
-    const um = lic.usage_mode || 'RETAIL_SHOP';
-    let umIcon = '🛍️';
-    let umClass = 'vp-tag-retail';
-    let umLabel = 'Retail Shop';
-    if (um === 'SUPERMARKET') {
-        umIcon = '🛒';
-        umClass = 'vp-tag-supermarket';
-        umLabel = 'Supermarket';
-    } else if (um === 'RESTAURANT') {
-        umIcon = '🍽️';
-        umClass = 'vp-tag-restaurant';
-        umLabel = 'Restaurant & Hospitality';
-    }
-    if (elUsageModeText) {
-        elUsageModeText.innerHTML = umIcon + ' ' + umLabel;
-    }
-    if (elUsageModeBadge) {
-        elUsageModeBadge.innerHTML = '<span class="vp-tier-tag ' + umClass + '">' + umIcon + ' ' + um + '</span>';
-    }
-
-    // Modules
-    let mods = [];
-    if (Array.isArray(lic.allowed_modules)) {
-        mods = lic.allowed_modules;
-    } else if (typeof lic.allowed_modules === 'string') {
-        try { mods = JSON.parse(lic.allowed_modules); } catch(e) { mods = []; }
-    }
-    if (elModules) {
-        elModules.innerHTML = '';
-        if (mods.length === 0) {
-            elModules.innerHTML = '<span style="color:var(--text-faint); font-size:12px;">No modules assigned.</span>';
-        } else {
-            mods.forEach(function(m) {
-                const chip = document.createElement('span');
-                chip.className = 'vp-module-chip active';
-                chip.style.margin = '2px';
-                chip.textContent = '✓ ' + m;
-                elModules.appendChild(chip);
-            });
-        }
-    }
-
-    // Bundle JSON
-    let bundleObj = null;
-    if (lic.signature) {
-        bundleObj = {
-            issuer: "SpectraOps",
-            product: "VENDPULSE",
-            license_id: lic.license_id,
-            client_name: lic.client_name,
-            machine_hwid: lic.machine_hwid || null,
-            tier: lic.tier,
-            usage_mode: lic.usage_mode || 'RETAIL_SHOP',
-            allowed_modules: mods,
-            max_counters: parseInt(lic.max_counters || 1, 10),
-            issued_at: issuedTs,
-            expires_at: expiresTs || null
-        };
-        const fullBundle = {
-            payload: bundleObj,
-            signature: lic.signature,
-            algorithm: "SHA256withRSA",
-            version: "1.0"
-        };
-        if (elBundle) elBundle.value = JSON.stringify(fullBundle, null, 2);
-    } else {
-        if (elBundle) elBundle.value = JSON.stringify(lic, null, 2);
-    }
-
-    // Download link
-    if (elDl) {
-        elDl.href = '?download_vp_license=' + encodeURIComponent(lic.id);
-    }
-
-    openModal('vpViewModal');
-}
-
-async function runVpVerification(btn) {
-    const inputEl = document.getElementById('vpVerifyInput');
-    const hwidEl = document.getElementById('vpVerifyHwid');
-    const resultEl = document.getElementById('vpVerifyResult');
-
-    const bundleVal = inputEl ? inputEl.value.trim() : '';
-    const hwidVal = hwidEl ? hwidEl.value.trim() : '';
-
-    if (!bundleVal) {
-        alert('Please paste a VendPulse license bundle (JSON or Base64).');
-        if (inputEl) inputEl.focus();
-        return;
-    }
-
-    const origText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Verifying cryptographic signature...';
-    }
-
-    try {
-        const fd = new FormData();
-        fd.append('action', 'verify_vp_license_ajax');
-        fd.append('license_bundle', bundleVal);
-        fd.append('expected_hwid', hwidVal);
-        fd.append('csrf_token', '<?= htmlspecialchars($_SESSION["csrf_token"] ?? "") ?>');
-
-        const res = await fetch('dashboard.php', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-Token': '<?= htmlspecialchars($_SESSION["csrf_token"] ?? "") ?>'
-            },
-            body: fd
-        });
-
-        const data = await res.json();
-        resultEl.style.display = 'block';
-
-        if (data.success && data.valid) {
-            const p = data.payload || {};
-            const expText = p.expires_at ? new Date(p.expires_at * 1000).toLocaleDateString() : 'Perpetual (No Expiry)';
-            const hwidMatch = data.hwid_match === true ? '<span style="color:var(--ok);">✓ HWID Matched</span>' : (data.hwid_match === false ? '<span style="color:var(--crit);">✗ HWID Mismatch</span>' : '<span style="color:var(--text-faint);">Not Specified / Unconstrained</span>');
-
-            const vUm = p.usage_mode || 'RETAIL_SHOP';
-            let vUmIcon = '🛍️';
-            let vUmLabel = 'Retail Shop';
-            if (vUm === 'SUPERMARKET') { vUmIcon = '🛒'; vUmLabel = 'Supermarket'; }
-            else if (vUm === 'RESTAURANT') { vUmIcon = '🍽️'; vUmLabel = 'Restaurant & Hospitality'; }
-
-            resultEl.innerHTML = `
-                <div style="background:rgba(61,214,140,0.08); border:1px solid #3dd68c; border-radius:var(--radius); padding:16px;">
-                    <div style="display:flex; align-items:center; gap:8px; color:#3dd68c; font-weight:700; font-size:14px; margin-bottom:8px;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Cryptographically Valid &amp; Authentic License
-                    </div>
-                    <div style="font-size:12px; color:var(--text); line-height:1.6;">
-                        <div>Client: <strong>${p.client_name || 'N/A'}</strong> (<code>${p.license_id || 'N/A'}</code>)</div>
-                        <div>Operating Tier: <strong style="color:var(--accent);">${p.tier || 'N/A'}</strong> &bull; System Mode: <strong style="color:var(--ok);">${vUmIcon} ${vUm} (${vUmLabel})</strong> &bull; Max Stations: <strong>${p.max_counters || 1}</strong></div>
-                        <div>Validity: <strong>${expText}</strong></div>
-                        <div>Hardware Lock: ${hwidMatch}</div>
-                        <div style="margin-top:6px; font-size:11px; color:var(--text-dim);">Signature Algorithm: <strong>${data.algorithm || 'SHA256withRSA'}</strong> &bull; Checked Against: <strong>SpectraOps Public Key</strong></div>
-                    </div>
-                </div>
-            `;
-        } else {
-            resultEl.innerHTML = `
-                <div style="background:rgba(239,68,68,0.08); border:1px solid var(--crit); border-radius:var(--radius); padding:16px;">
-                    <div style="display:flex; align-items:center; gap:8px; color:var(--crit); font-weight:700; font-size:14px; margin-bottom:6px;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        Verification Failed / Tampered License
-                    </div>
-                    <div style="font-size:12.5px; color:var(--text); line-height:1.5;">
-                        ${data.error || 'The digital signature does not match the canonical payload or key.'}
-                    </div>
-                </div>
-            `;
-        }
-    } catch (e) {
-        resultEl.style.display = 'block';
-        resultEl.innerHTML = `
-            <div style="background:rgba(239,68,68,0.08); border:1px solid var(--crit); border-radius:var(--radius); padding:14px; color:var(--crit); font-size:12px;">
-                Network / Server Error: ${e.message || 'Could not complete verification request.'}
-            </div>
-        `;
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origText;
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const cont = document.getElementById('vpModulesContainer');
-    if (cont) {
-        cont.addEventListener('change', function(e) {
-            if (e.target && e.target.type === 'checkbox') {
-                const chip = e.target.closest('.vp-module-chip');
-                if (chip) {
-                    if (e.target.checked) chip.classList.add('active');
-                    else chip.classList.remove('active');
-                }
-            }
-        });
-    }
-});
-
-// --- Store Orders & Cloud Deployments Interactive Handlers ---
-function openOrderInspectModal(order) {
-    if (!order) return;
-
-    // Order status pill
-    const badge = document.getElementById('inspectOrderBadge');
-    if (badge) {
-        const isCompleted = (order.status || '').toLowerCase() === 'completed';
-        badge.className = 'status-pill ' + (isCompleted ? 'ok' : 'warn');
-        badge.innerHTML = '<span class="dot dot-' + (isCompleted ? 'ok' : 'warn') + '"></span> ' + (order.status ? order.status.toUpperCase() : 'UNKNOWN');
-    }
-
-    // Subtitle
-    const sub = document.getElementById('inspectOrderSub');
-    if (sub) {
-        sub.textContent = 'Order #' + (order.order_id || order.id || 'N/A') + ' • Reference: ' + (order.order_number || order.order_id || 'N/A') + ' • Ingress: ' + (order.created_at || 'N/A');
-    }
-
-    // Business & Contact
-    const bName = document.getElementById('inspectBusinessName');
-    if (bName) bName.textContent = order.business_name || 'N/A';
-
-    const cName = document.getElementById('inspectCustomerName');
-    if (cName) {
-        const parts = [order.customer_name, order.customer_email, order.customer_phone].filter(Boolean);
-        cName.textContent = parts.length > 0 ? parts.join(' • ') : 'No customer contact specified';
-    }
-
-    const cCode = document.getElementById('inspectClientCode');
-    if (cCode) cCode.textContent = 'Client Account: ' + (order.client_code || 'Pending Linking');
-
-    // Product & Architecture
-    const isCloud = (order.license_type === 'CLOUD_SAAS') || (order.purchased_product && order.purchased_product.toUpperCase() !== 'VENDPULSE');
-    const pName = document.getElementById('inspectProductName');
-    if (pName) {
-        pName.textContent = order.product_name || order.purchased_product || 'Spectra Product';
-    }
-
-    const sType = document.getElementById('inspectSystemType');
-    if (sType) {
-        if (isCloud) {
-            sType.innerHTML = '<span style="color:#38bdf8; font-weight:700;">☁️ Cloud-Hosted SaaS</span> (Centrally Orchestrated)';
-        } else {
-            const m = order.usage_mode || 'RETAIL_SHOP';
-            sType.innerHTML = '<span style="color:#a855f7; font-weight:700;">🛒 VendPulse POS Engine</span> (' + m + ')';
-        }
-    }
-
-    const sTerm = document.getElementById('inspectSeatsTerm');
-    if (sTerm) {
-        const unit = isCloud ? 'Seat(s)' : 'Station(s)';
-        const cap = (order.max_counters || 1) + ' ' + unit;
-        const dur = order.term_duration_months ? (order.term_duration_months + ' Month Subscription') : 'Perpetual Lifetime License';
-        sTerm.textContent = cap + ' • ' + dur;
-    }
-
-    // Deployment Telemetry & Pairing
-    const depPill = document.getElementById('inspectDepStatusPill');
-    const depDetails = document.getElementById('inspectDepDetails');
-    if (isCloud) {
-        if (order.deployment_id) {
-            const dStatus = (order.deployment_status || 'healthy').toLowerCase();
-            let pillClass = 'ok';
-            if (dStatus === 'degraded' || dStatus === 'warning') pillClass = 'warn';
-            else if (dStatus === 'down' || dStatus === 'unreachable') pillClass = 'dead';
-            
-            if (depPill) {
-                depPill.innerHTML = '<span class="status-pill ' + pillClass + '"><span class="dot dot-' + pillClass + '"></span> Node ' + dStatus.toUpperCase() + '</span>';
-            }
-            if (depDetails) {
-                const dom = order.deployment_domain ? ('<a href="https://' + encodeURIComponent(order.deployment_domain) + '" target="_blank" style="color:#38bdf8; font-weight:700; text-decoration:none;">🌐 ' + order.deployment_domain + ' &nearr;</a>') : 'No domain specified';
-                const lastHb = order.deployment_last_heartbeat || 'Recently';
-                const users = order.deployment_active_users !== undefined ? order.deployment_active_users : 0;
-                const env = (order.deployment_environment || 'production').toUpperCase();
-                const ver = order.deployment_version || '1.0.0';
-                const ip = order.deployment_ip || 'Node IP Auto-Reported';
-                
-                depDetails.innerHTML = `
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                        <div>Production FQDN: <strong>${dom}</strong></div>
-                        <div>Active Version: <span class="version-tag" style="font-size:11px;">v${ver}</span></div>
-                        <div>Environment: <strong style="color:var(--accent);">${env}</strong></div>
-                        <div>Live Active Users: <strong style="color:#34d399;">${users} Online</strong></div>
-                        <div>Server IP: <code>${ip}</code></div>
-                        <div>Last Heartbeat: <code>${lastHb}</code></div>
-                    </div>
-                    <div style="margin-top:12px; display:flex; gap:8px;">
-                        <a href="?page=overview&product_id=${order.product_id || 1}&deployment_id=${order.deployment_id}#deployment-feed" class="btn btn-sm btn-outline" style="border-color:rgba(14,165,233,0.5); color:#38bdf8; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                            📡 Open Fleet Live Telemetry Feed &rarr;
-                        </a>
-                    </div>
-                `;
-            }
-        } else {
-            if (depPill) {
-                depPill.innerHTML = '<span class="status-pill warn" style="font-size:11px; padding:3px 8px;"><span class="dot dot-warn"></span> AWAITING CLOUD DEPLOYMENT</span>';
-            }
-            if (depDetails) {
-                const orderData = {
-                    product_id: order.product_id || 1,
-                    client_name: order.business_name || '',
-                    license_id: order.license_id || '',
-                    order_id: order.order_id || ''
-                };
-                window._currentQuickPairOrder = orderData;
-                
-                depDetails.innerHTML = `
-                    <div style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">
-                        This cloud software license has been successfully provisioned, but has not yet registered an active production domain or cluster deployment node.
-                    </div>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <button type="button" class="btn btn-sm btn-outline" style="border-color:#0ea5e9; color:#38bdf8; display:inline-flex; align-items:center; gap:4px;" onclick='closeModal("orderInspectModal"); openQuickPairForOrder(window._currentQuickPairOrder);'>
-                            🔗 Assign Domain &amp; Pair Fleet Node
-                        </button>
-                    </div>
-                `;
-            }
-        }
-    } else {
-        if (depPill) {
-            depPill.innerHTML = '<span class="status-pill ok" style="font-size:11px; padding:3px 8px;"><span class="dot dot-ok"></span> AIR-GAPPED OFFLINE POS</span>';
-        }
-        if (depDetails) {
-            depDetails.innerHTML = `
-                <div style="color:var(--text-muted); font-size:12px;">
-                    VendPulse operates in secure on-premise retail installations without mandatory internet or central telemetry reporting.
-                    The client authenticates stations and usage mode using cryptographically signed RSA license packages downloaded through their portal.
-                </div>
-            `;
-        }
-    }
-
-    // License Key
-    const licInput = document.getElementById('inspectLicenseKey');
-    if (licInput) licInput.value = order.license_id || 'Pending Issuance';
-
-    // Portal Link
-    const pUrl = document.getElementById('inspectPortalUrl');
-    const pBtn = document.getElementById('inspectPortalBtn');
-    const token = order.portal_access_token || '';
-    const fullPortalUrl = window.location.origin + window.location.pathname.replace(/dashboard\.php.*$/, '') + 'portal/download.php?token=' + encodeURIComponent(token);
-    if (pUrl) pUrl.value = fullPortalUrl;
-    if (pBtn) pBtn.href = fullPortalUrl;
-
-    // Raw Webhook Ingress Payload
-    const rawEl = document.getElementById('inspectRawPayload');
-    if (rawEl) {
-        if (order.raw_payload) {
-            try {
-                const parsed = typeof order.raw_payload === 'string' ? JSON.parse(order.raw_payload) : order.raw_payload;
-                rawEl.textContent = JSON.stringify(parsed, null, 2);
-            } catch(e) {
-                rawEl.textContent = order.raw_payload;
-            }
-        } else {
-            rawEl.textContent = '// No raw webhook payload recorded for this order.';
-        }
-    }
-
-    openModal('orderInspectModal');
-}
-
-function openQuickPairForOrder(data) {
-    if (!data) return;
-    const modal = document.getElementById('pairModal');
-    if (!modal) return;
-
-    if (data.product_id) {
-        const sel = modal.querySelector('select[name="product_id"]');
-        if (sel) sel.value = data.product_id;
-    }
-    if (data.client_name) {
-        const cInput = modal.querySelector('input[name="client_name"]');
-        if (cInput) cInput.value = data.client_name;
-    }
-    if (data.license_id) {
-        const kInput = modal.querySelector('input[name="api_key"]');
-        if (kInput) kInput.value = data.license_id;
-    }
-    const dInput = modal.querySelector('input[name="deployment_domain"]');
-    if (dInput) {
-        dInput.value = '';
-        setTimeout(function() { dInput.focus(); }, 120);
-    }
-    openModal('pairModal');
-}
-</script>
-
+<!-- 5. Pair Client Modal -->
+<div class="overlay" id="dlg-pair" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-pair-t">
+    <div class="overlay-head">
+      <div>
+        <h2 id="dlg-pair-t">Pair an existing client</h2>
+        <p>Links a client that already has its own key.</p>
+      </div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-pair-f" method="post">
+        <input type="hidden" name="action" value="pair_client">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="p-product_id">Product</label>
+            <select class="select" id="p-product_id" name="product_id" required>
+              <option value="">Select a product</option>
+              <?php foreach ($products as $p): ?>
+                <option value="<?= (int)$p['id'] ?>"><?= so_e($p['product_name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="field">
+            <label for="p_client_name">Client name</label>
+            <input class="input" id="p_client_name" name="client_name" type="text" placeholder="Horizon Science Academy" required>
+          </div>
+          <div class="field">
+            <label for="p_deployment_domain">Deployment domain</label>
+            <input class="input" id="p_deployment_domain" name="deployment_domain" type="text" placeholder="sis.horizon.edu" required>
+          </div>
+          <div class="field span-2">
+            <label for="p-api_key">Client API key</label>
+            <input class="input mono" id="p-api_key" name="api_key" required autocomplete="off" aria-describedby="p-k-h">
+            <div class="field-hint" id="p-k-h">Paste the key generated inside the client app.</div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-pair-f" class="btn btn-primary">Pair client</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Publish Release Modal -->
+<div class="overlay" id="dlg-publish" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-publish-t">
+    <div class="overlay-head">
+      <div>
+        <h2 id="dlg-publish-t">Publish a release</h2>
+        <p>Clients see it the next time they check for updates.</p>
+      </div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-publish-f" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="publish_release">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="u-product_id">Product</label>
+            <select class="select" id="u-product_id" name="product_id" required>
+              <option value="">Select a product</option>
+              <?php foreach ($products as $p): ?>
+                <option value="<?= (int)$p['id'] ?>"><?= so_e($p['product_name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="field">
+            <label for="version">Version</label>
+            <input class="input" id="version" name="version" type="text" placeholder="2.5.1" required>
+          </div>
+          <div class="field span-2">
+            <label for="u-changelog">Changelog</label>
+            <textarea class="textarea" id="u-changelog" name="changelog" placeholder="One change per line"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="u-pkg">Release package (.zip)</label>
+            <input class="input input-file" id="u-pkg" name="package_file" type="file" accept=".zip,application/zip" required>
+            <div class="field-hint">The SHA-256 checksum is calculated for you.</div>
+          </div>
+          <label class="check span-2"><input type="checkbox" name="is_active" value="1" checked> Make this release available to clients</label>
+        </div>
+      </form>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-publish-f" class="btn btn-primary">Publish release</button>
+    </div>
+  </div>
+</div>
+
+<!-- 7. New Product Modal -->
+<div class="overlay" id="dlg-product" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-product-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-product-t">New product</h2></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-product-f" method="post">
+        <input type="hidden" name="action" value="register_product">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="product_slug">Slug</label>
+            <input class="input" id="product_slug" name="product_slug" type="text" placeholder="school-erp" required aria-describedby="product_slug-h">
+            <div class="field-hint" id="product_slug-h">Lowercase letters, numbers and dashes.</div>
+          </div>
+          <div class="field">
+            <label for="product_name">Name</label>
+            <input class="input" id="product_name" name="product_name" type="text" placeholder="School ERP" required>
+          </div>
+          <div class="field span-2">
+            <label for="np-d">Description</label>
+            <textarea class="textarea" id="np-d" name="description"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="repository_url">Repository URL</label>
+            <input class="input" id="repository_url" name="repository_url" type="url" placeholder="https://github.com/…">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-product-f" class="btn btn-primary">Create product</button>
+    </div>
+  </div>
+</div>
+
+<!-- 8. Add User Modal -->
+<div class="overlay" id="dlg-user" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-user-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-user-t">Add a user</h2></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-user-f" method="post">
+        <input type="hidden" name="action" value="register_user">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="user_name">Full name</label>
+            <input class="input" id="user_name" name="user_name" type="text" placeholder="Jane Doe" required>
+          </div>
+          <div class="field">
+            <label for="user_email">Email</label>
+            <input class="input" id="user_email" name="user_email" type="email" placeholder="jane@company.com" required>
+          </div>
+          <div class="field">
+            <label for="user_role">Role</label>
+            <select class="select" id="user_role" name="user_role">
+              <option value="viewer">Viewer (read only)</option>
+              <option value="admin">Administrator (full access)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="user_password">Temporary password</label>
+            <input class="input" id="user_password" name="user_password" type="password" required aria-describedby="user_password-h" minlength="8" autocomplete="new-password">
+            <div class="field-hint" id="user_password-h">At least 8 characters.</div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-user-f" class="btn btn-primary">Add user</button>
+    </div>
+  </div>
+</div>
+
+<!-- 9. Issue License Modal -->
+<div class="overlay" id="dlg-license" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-license-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-license-t">Issue Software License</h2><p>Online cloud activation or offline cryptographic bundle.</p></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <form id="dlg-license-f" method="post">
+        <input type="hidden" name="action" value="issue_license">
+        <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+        <div class="form-grid">
+          <div class="field">
+            <label for="lic_product_id">Product</label>
+            <select class="select" id="lic_product_id" name="product_id" required>
+              <?php foreach ($products as $p): ?>
+                <option value="<?= (int)$p['id'] ?>"><?= so_e($p['product_name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lic_client_name">Client name</label>
+            <input class="input" id="lic_client_name" name="client_name" type="text" placeholder="Client Name" required>
+          </div>
+          <div class="field">
+            <label for="lic_client_email">Client email</label>
+            <input class="input" id="lic_client_email" name="client_email" type="email" placeholder="client@example.com">
+          </div>
+          <div class="field">
+            <label for="lic_tier">Tier / Type</label>
+            <select class="select" id="lic_tier" name="license_tier">
+              <option value="standard">Standard</option>
+              <option value="enterprise">Enterprise</option>
+              <option value="trial">Trial / Demo</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label for="lic_domain">Bound domain</label>
+            <input class="input mono" id="lic_domain" name="domain" type="text" placeholder="subdomain.example.com">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" form="dlg-license-f" class="btn btn-primary">Issue License</button>
+    </div>
+  </div>
+</div>
+
+<!-- 10. PKI Public Key Modal -->
+<div class="overlay" id="dlg-vp-pubkey" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-vp-pk-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-vp-pk-t">VendPulse RSA-2048 Public Key</h2><p>Used by offline edge stations to verify digital signatures.</p></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <pre class="codeblock" id="vp-pubkey-block"><?= so_e(file_exists(dirname(__DIR__) . '/keys/vendpulse_public.pem') ? file_get_contents(dirname(__DIR__) . '/keys/vendpulse_public.pem') : 'Public key file not generated yet.') ?></pre>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn btn-primary" data-copy="#vp-pubkey-block"><?= so_icon('copy') ?>Copy Public Key</button>
+      <button type="button" class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 11. Store Order Webhook Integration Info Modal -->
+<div class="overlay" id="dlg-order-webhook" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-webhook-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-webhook-t">Store Webhook Endpoint</h2><p>Connect your WooCommerce or Shopify store for automated fulfillment.</p></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <div class="field">
+        <label>Webhook URL</label>
+        <div class="token-row">
+          <input class="input mono" id="wh-url" readonly value="<?= so_e((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/api/v1/store/order_webhook.php') ?>">
+          <button type="button" class="btn" data-copy="#wh-url"><?= so_icon('copy') ?>Copy</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>Expected Payload</label>
+        <pre class="codeblock">{"order_id":1001,"customer_name":"John Doe","email":"john@example.com","product":"PRISM_EDU"}</pre>
+      </div>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn btn-primary" data-close>Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- 12. Reveal Credentials / Key Modal -->
+<?php if (!empty($regSuccess) || !empty($linkSuccess)): 
+  $tokData = $regSuccess ?: $linkSuccess;
+  $tokVal = $tokData['token'] ?? ($tokData['deployment_key'] ?? '');
+  $tokId = (int)($tokData['id'] ?? ($tokData['deployment_id'] ?? 0));
+?>
+<div class="overlay is-open" id="dlg-token" aria-hidden="false">
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-token-t">
+    <div class="overlay-head">
+      <div><h2 id="dlg-token-t">Deployment Registered &amp; Linked</h2></div>
+      <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
+    </div>
+    <div class="overlay-body">
+      <div class="alert alert-warning">
+        <?= so_icon('triangle-alert') ?>
+        <div>Save credentials now. Ingest tokens and deployment keys are stored as cryptographic hashes and cannot be shown again.</div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label for="tok">Credential / Key</label>
+        <div class="token-row">
+          <input class="input mono" id="tok" readonly value="<?= so_e($tokVal) ?>">
+          <button type="button" class="btn" data-copy="#tok"><?= so_icon('copy') ?>Copy</button>
+        </div>
+      </div>
+      <?php if ($tokId > 0): ?>
+      <div style="margin-top:18px;">
+        <a href="dashboard.php?action=download_bundle&id=<?= $tokId ?>" download="spectraops.json" class="btn btn-primary">
+          <?= so_icon('download') ?> Download Connection Bundle (spectraops.json)
+        </a>
+      </div>
+      <?php endif; ?>
+    </div>
+    <div class="overlay-foot">
+      <button type="button" class="btn btn-primary" data-close>Done</button>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="assets/js/spectraops-ui.js"></script>
 </body>
 </html>

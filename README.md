@@ -164,3 +164,21 @@ try {
     $reporter->reportError($e, 'CRITICAL');
 }
 ```
+
+---
+
+## 🎨 SpectraOps UI Design System
+
+SpectraOps features a unified, token-based design system that operates with zero external CDN dependencies:
+
+- **Style Guide & Spec**: Refer to [`DESIGN_SPEC.md`](file:///c:/xampp/htdocs/spectraops-design/DESIGN_SPEC.md) for color tokens (`--ink`, `--panel`, `--accent`, `--ok`, `--warn`, `--crit`), spacing scales, and layout rules.
+- **Visual Reference**: Finished markup references live under `reference/` (`reference/index.html`, `reference/overview.html`, `reference/deployments.html`, `reference/components.html`).
+- **Core Rules**:
+  1. **No External CDNs**: Never reference external fonts or script hosts (no Bootstrap, FontAwesome, Google Fonts, cdnjs, unpkg, jsdelivr). All fonts (InterVariable, JetBrainsMonoVariable) and icon sprites are self-hosted in `public/assets/`.
+  2. **No Inline Event Handlers**: Do not use inline `onclick=`, `onchange=`, or `onsubmit=`. Use the standard `data-*` hooks handled by `public/assets/js/spectraops-ui.js` (`data-open`, `data-close`, `data-dep-open`, `data-err-open`, `data-copy`, `data-confirm`, etc.).
+  3. **Strict Output Escaping**: Always escape rendered values using `so_e()` in PHP or `SO.esc()` in JS. Never output raw database rows containing `api_ingest_token_hash`; serialize them with `so_dep_payload()`.
+  4. **Design Verification**: Verify compliance at any time by running:
+     ```bash
+     php ../spectraops-design/tools/verify-design.php --project=.
+     ```
+

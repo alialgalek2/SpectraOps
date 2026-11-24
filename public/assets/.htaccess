@@ -1,0 +1,6 @@
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType font/woff2 "access plus 1 year"
+ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+Options -Indexes

@@ -1,0 +1,21 @@
+{
+    "design": "spectraops-design",
+    "version": "1.0.0",
+    "installed_at": "2026-11-24T01:50:35-08:00",
+    "public": "public/",
+    "helpers": "src/so_helpers.php",
+    "backup": "C:\\xampp\\htdocs\\SPECTRAOPS/.design-backup/20261124-015035",
+    "installed": {
+        "public/assets/css\\spectraops.css": "2896b26419cd564ead58a2d7586d748ddaa26aa0f1e45ee033ab7640b10cce9c",
+        "public/assets/fonts\\InterVariable-ext.woff2": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956",
+        "public/assets/fonts\\InterVariable.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+        "public/assets/fonts\\JetBrainsMonoVariable.woff2": "18be452724bfdc236c074ca94a249a7f41a86752c7d04ab258ce9ed5651f6a7e",
+        "public/assets/img\\icons.svg": "3339b0f8136bf4fc07984e8658120ad12ab629987a00e6438986b7c89799ff01",
+        "public/assets/img\\spectraops-icon.svg": "86ec52fad703485f72697f4a9820d087e95fd8407ccea77baffcc5026bcc1f99",
+        "public/assets/js\\spectraops-ui.js": "1cadf411303bb7d2274c2dc4e22865f49652d8c3daa10ded2f28718f42ce0147",
+        "public/index.html": "db059c976060c70f0670bf8d3dc9bd7fca8819d62bf0bee699c5e46ab691fd24",
+        "public/app.js": "4ce02cabb48bb80be71085bc74e8163d1ea1d146900ce42757763cdb3751a027",
+        "src/so_helpers.php": "06bac718c366d81253e90d2aa42f02df1c16fe8b8d29e9be8ba078e0d625edc2",
+        "public/assets/.htaccess": "fb0116fa38e18691d0e281e9d2c9b397fdce5f522f2822ab0f55ccdbce12c538"
+    }
+}

@@ -35,34 +35,34 @@ class AlertMailer {
             : $this->fromEmail;
 
         $badgeColor = match (strtolower($ticket['priority'] ?? 'medium')) {
-            'urgent', 'critical' => '#dc2626',
-            'high'               => '#ea580c',
-            'medium'             => '#0284c7',
-            default              => '#16a34a'
+            'urgent', 'critical' => '#EF5F64',
+            'high'               => '#F0B93D',
+            'medium'             => '#4FA8E0',
+            default              => '#3DD68C'
         };
 
         $htmlBody = "
-        <div style='font-family: Arial, sans-serif; background: #f8fafc; padding: 24px; color: #1e293b;'>
-            <div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0;'>
-                <div style='background: #091830; padding: 18px 24px; color: #ffffff;'>
-                    <span style='background: {$badgeColor}; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase;'>
+        <div style='font-family: Inter, Arial, sans-serif; background: #0A0E14; padding: 24px; color: #E8EDF2;'>
+            <div style='max-width: 600px; margin: 0 auto; background: #10141C; border-radius: 8px; overflow: hidden; border: 1px solid #1F2733;'>
+                <div style='background: #141A24; padding: 18px 24px; color: #E8EDF2; border-bottom: 1px solid #1F2733;'>
+                    <span style='background: {$badgeColor}; color: #0A0E14; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase;'>
                         " . htmlspecialchars($ticket['priority'] ?? 'MEDIUM') . "
                     </span>
-                    <h2 style='margin: 10px 0 0 0; font-size: 18px; color: #0dc0e7;'>New Support Ticket Submitted</h2>
+                    <h2 style='margin: 10px 0 0 0; font-size: 18px; color: #4FA8E0;'>New Support Ticket Submitted</h2>
                 </div>
                 <div style='padding: 24px;'>
                     <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;'>
-                        <tr><td style='padding: 6px 0; color: #64748b;'><strong>Reference:</strong></td><td><code>" . htmlspecialchars($ticket['reference'] ?? 'N/A') . "</code></td></tr>
-                        <tr><td style='padding: 6px 0; color: #64748b;'><strong>Client / School:</strong></td><td>" . htmlspecialchars($deployment['client_name'] ?? '') . " (" . htmlspecialchars($deployment['deployment_domain'] ?? '') . ")</td></tr>
-                        <tr><td style='padding: 6px 0; color: #64748b;'><strong>Product:</strong></td><td>" . htmlspecialchars($deployment['product_name'] ?? 'Prism EDU') . "</td></tr>
-                        <tr><td style='padding: 6px 0; color: #64748b;'><strong>Requester:</strong></td><td>" . htmlspecialchars($ticket['requester_name'] ?? 'Staff') . " &lt;" . htmlspecialchars($ticket['requester_email'] ?? 'N/A') . "&gt; (" . htmlspecialchars($ticket['requester_role'] ?? 'Staff') . ")</td></tr>
-                        <tr><td style='padding: 6px 0; color: #64748b;'><strong>Category:</strong></td><td>" . htmlspecialchars($ticket['category'] ?? 'General') . "</td></tr>
+                        <tr><td style='padding: 6px 0; color: #9DB1C7;'><strong>Reference:</strong></td><td style='color: #E8EDF2;'><code style='font-family: JetBrains Mono, monospace; background: #141A24; padding: 2px 6px; border-radius: 4px;'>" . htmlspecialchars($ticket['reference'] ?? 'N/A') . "</code></td></tr>
+                        <tr><td style='padding: 6px 0; color: #9DB1C7;'><strong>Client / School:</strong></td><td style='color: #E8EDF2;'>" . htmlspecialchars($deployment['client_name'] ?? '') . " (" . htmlspecialchars($deployment['deployment_domain'] ?? '') . ")</td></tr>
+                        <tr><td style='padding: 6px 0; color: #9DB1C7;'><strong>Product:</strong></td><td style='color: #E8EDF2;'>" . htmlspecialchars($deployment['product_name'] ?? 'Prism EDU') . "</td></tr>
+                        <tr><td style='padding: 6px 0; color: #9DB1C7;'><strong>Requester:</strong></td><td style='color: #E8EDF2;'>" . htmlspecialchars($ticket['requester_name'] ?? 'Staff') . " &lt;" . htmlspecialchars($ticket['requester_email'] ?? 'N/A') . "&gt; (" . htmlspecialchars($ticket['requester_role'] ?? 'Staff') . ")</td></tr>
+                        <tr><td style='padding: 6px 0; color: #9DB1C7;'><strong>Category:</strong></td><td style='color: #E8EDF2;'>" . htmlspecialchars($ticket['category'] ?? 'General') . "</td></tr>
                     </table>
-                    <div style='background: #f1f5f9; padding: 14px; border-radius: 8px; border-left: 4px solid #0dc0e7; margin-bottom: 24px;'>
-                        <strong style='display: block; margin-bottom: 6px; color: #0f172a;'>Message:</strong>
-                        <p style='margin: 0; line-height: 1.5; white-space: pre-wrap; font-size: 14px;'>" . htmlspecialchars($ticket['message'] ?? '') . "</p>
+                    <div style='background: #141A24; padding: 14px; border-radius: 6px; border-left: 4px solid #4FA8E0; margin-bottom: 24px;'>
+                        <strong style='display: block; margin-bottom: 6px; color: #E8EDF2;'>Message:</strong>
+                        <p style='margin: 0; line-height: 1.5; white-space: pre-wrap; font-size: 14px; color: #9DB1C7;'>" . htmlspecialchars($ticket['message'] ?? '') . "</p>
                     </div>
-                    <a href='https://support.yourcentraldomain.com/dashboard.php' style='display: inline-block; background: #0dc0e7; color: #091830; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;'>
+                    <a href='https://support.yourcentraldomain.com/dashboard.php' style='display: inline-block; background: #4FA8E0; color: #0A0E14; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;'>
                         Open Fleet Support Hub →
                     </a>
                 </div>

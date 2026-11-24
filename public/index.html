@@ -1,362 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SpectraOps — Telemetry & Central Fleet Operations for enterprise software deployments.">
-    <title>SpectraOps — Fleet</title>
-    <link rel="icon" type="image/svg+xml" href="spectraops-icon.svg">
-    <link rel="alternate icon" type="image/png" href="spectraops-icon.png">
-    <link rel="shortcut icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <script>
-        (function() {
-            var t = localStorage.getItem('spectraops_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', t);
-        })();
-    </script>
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.1">
-    <script src="spectra-popup.js?v=2.1"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0A0E14">
+<title>SpectraOps</title>
+<link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
+<link rel="stylesheet" href="assets/css/spectraops.css">
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<!-- Lucide icons (ISC licence). Usage: <svg class="icon"><use href="#i-server"/></svg> -->
+<symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1" /> <rect width="7" height="5" x="14" y="3" rx="1" /> <rect width="7" height="9" x="14" y="12" rx="1" /> <rect width="7" height="5" x="3" y="16" rx="1" /></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2" /> <rect width="20" height="8" x="2" y="14" rx="2" ry="2" /> <line x1="6" x2="6.01" y1="6" y2="6" /> <line x1="6" x2="6.01" y1="18" y2="18" /></symbol>
+<symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" /></symbol>
+<symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path d="M12 22V12" /> <polyline points="3.29 7 12 12 20.71 7" /> <path d="m7.5 4.27 9 5.15" /></symbol>
+<symbol id="i-bug" viewBox="0 0 24 24"><path d="M12 20v-9" /> <path d="M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z" /> <path d="M14.12 3.88 16 2" /> <path d="M21 21a4 4 0 0 0-3.81-4" /> <path d="M21 5a4 4 0 0 1-3.55 3.97" /> <path d="M22 13h-4" /> <path d="M3 21a4 4 0 0 1 3.81-4" /> <path d="M3 5a4 4 0 0 0 3.55 3.97" /> <path d="M6 13H2" /> <path d="m8 2 1.88 1.88" /> <path d="M9 7.13V6a3 3 0 1 1 6 0v1.13" /></symbol>
+<symbol id="i-life-buoy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m4.93 4.93 4.24 4.24" /> <path d="m14.83 9.17 4.24-4.24" /> <path d="m14.83 14.83 4.24 4.24" /> <path d="m9.17 14.83-4.24 4.24" /> <circle cx="12" cy="12" r="4" /></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" /></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol>
+<symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /> <circle cx="12" cy="12" r="3" /></symbol>
+<symbol id="i-external-link" viewBox="0 0 24 24"><path d="M15 3h6v6" /> <path d="M10 14 21 3" /> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></symbol>
+<symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6" /> <path d="M14 11v6" /> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path d="M3 6h18" /> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+<symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
+<symbol id="i-log-out" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5" /> <path d="M21 12H9" /> <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 3v12" /> <path d="m17 8-5-5-5 5" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3" /> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /> <path d="m7 10 5 5 5-5" /></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+<symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m16 9-5.5 5.5L8 12" /></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 6v6l4 2" /></symbol>
+<symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 7h10v10" /> <path d="M7 17 17 7" /></symbol>
+<symbol id="i-terminal" viewBox="0 0 24 24"><path d="M12 19h8" /> <path d="m4 17 6-6-6-6" /></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path d="m9 12 2 2 4-4" /></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><path d="M12 20v2" /> <path d="M12 2v2" /> <path d="M17 20v2" /> <path d="M17 2v2" /> <path d="M2 12h2" /> <path d="M2 17h2" /> <path d="M2 7h2" /> <path d="M20 12h2" /> <path d="M20 17h2" /> <path d="M20 7h2" /> <path d="M7 20v2" /> <path d="M7 2v2" /> <rect x="4" y="4" width="16" height="16" rx="2" /> <rect x="8" y="8" width="8" height="8" rx="1" /></symbol>
+<symbol id="i-hard-drive" viewBox="0 0 24 24"><path d="M10 16h.01" /> <path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /> <path d="M21.946 12.013H2.054" /> <path d="M6 16h.01" /></symbol>
+<symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 5V19A9 3 0 0 0 21 19V5" /> <path d="M3 12A9 3 0 0 0 21 12" /></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4" /> <path d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol>
+<symbol id="i-key-round" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect x="2" y="4" width="20" height="16" rx="2" /></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16" /> <path d="M4 12h16" /> <path d="M4 19h16" /></symbol>
+<symbol id="i-funnel" viewBox="0 0 24 24"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" /></symbol>
+<symbol id="i-circle-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /></symbol>
+<symbol id="i-rotate-cw" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M4.929 4.929 19.07 19.071" /></symbol>
+<symbol id="i-user-plus" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <circle cx="9" cy="7" r="4" /> <line x1="19" x2="19" y1="8" y2="14" /> <line x1="22" x2="16" y1="11" y2="11" /></symbol>
+<symbol id="i-file-archive" viewBox="0 0 24 24"><path d="M13.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v11.5" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M8 12v-1" /> <path d="M8 18v-2" /> <path d="M8 7V6" /> <circle cx="8" cy="20" r="2" /></symbol>
+</svg>
 
-<div class="shell">
-
-    <!-- ================= RAIL ================= -->
-    <nav class="rail">
-        <a href="#" class="brand" onclick="switchView('fleet'); return false;">
-            <svg width="22" height="22" viewBox="0 0 54 54">
-                <polygon points="6,46 22,10 31,10 15,46" fill="#4FA8E0"/>
-                <rect x="23" y="28" width="4.2" height="18" rx="1" fill="#2D5A78"/>
-                <rect x="31" y="20" width="4.2" height="26" rx="1" fill="#4FA8E0"/>
-                <rect x="39" y="12" width="4.2" height="34" rx="1" fill="#7FC4EE"/>
-            </svg>
-            <div class="brand-name">Spectra<span>Ops</span></div>
-        </a>
-
-        <div class="nav-group-label">Monitor</div>
-        <div class="nav-item active" id="nav-fleet-btn" onclick="switchView('fleet')">
-            <div class="nav-left">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
-                Fleet
-            </div>
-            <span class="nav-count" id="sidebar-fleet-count">0</span>
-        </div>
-        <div class="nav-item" id="nav-errors-btn" onclick="switchView('errors')">
-            <div class="nav-left">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-                Errors
-            </div>
-            <span class="nav-count crit" id="sidebar-error-badge">0</span>
-        </div>
-
-        <div class="nav-group-label">Integration</div>
-        <div class="nav-item" id="nav-sdk-btn" onclick="switchView('sdk')">
-            <div class="nav-left">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                Client SDK
-            </div>
-        </div>
-
-        <div class="rail-footer">
-            <div class="rail-footer-user">
-                <div class="avatar">SO</div>
-                <div class="rail-user">
-                    <strong id="hub-clock">Live Hub Active</strong>
-                    Client Operations
-                </div>
-            </div>
-            <button class="icon-btn" onclick="refreshCurrentView()" title="Refresh telemetry">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
-            </button>
-        </div>
-    </nav>
-
-    <!-- ================= MAIN ================= -->
-    <main class="main">
-
-        <!-- Topbar -->
-        <div class="topbar">
-            <div class="topbar-title">
-                <h1 id="page-title">Fleet</h1>
-                <p id="page-subtitle">Every client deployment reporting to this hub, live.</p>
-            </div>
-            <div class="topbar-actions">
-                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light/Dark mode" aria-label="Switch Theme">
-                    <span class="theme-toggle-track">
-                        <span class="theme-toggle-icon sun-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                        </span>
-                        <span class="theme-toggle-icon moon-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                        </span>
-                        <span class="theme-toggle-thumb"></span>
-                    </span>
-                    <span class="theme-toggle-label">Dark</span>
-                </button>
-                <button class="btn" id="trigger-health-btn" onclick="triggerHealthSweep()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
-                    Sweep stale nodes
-                </button>
-                <button class="btn btn-primary" id="open-register-modal-btn" onclick="openRegisterModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
-                    Register deployment
-                </button>
-            </div>
-        </div>
-
-        <!-- Status Strip / Metrics -->
-        <div class="status-strip" id="status-strip">
-            <div class="strip-item active" onclick="setStatusFilter('all')">
-                <div class="strip-label"><span class="dot dot-accent"></span>All nodes</div>
-                <div class="strip-value" id="kpi-total-val">0</div>
-            </div>
-            <div class="strip-item" onclick="setStatusFilter('healthy')">
-                <div class="strip-label"><span class="dot dot-ok"></span>Healthy</div>
-                <div class="strip-value ok" id="kpi-healthy-val">0</div>
-            </div>
-            <div class="strip-item" onclick="setStatusFilter('warning')">
-                <div class="strip-label"><span class="dot dot-warn"></span>Warning</div>
-                <div class="strip-value warn" id="kpi-warning-val">0</div>
-            </div>
-            <div class="strip-item" onclick="setStatusFilter('critical')">
-                <div class="strip-label"><span class="dot dot-crit"></span>Critical</div>
-                <div class="strip-value crit" id="kpi-critical-val">0</div>
-            </div>
-            <div class="strip-item" onclick="setStatusFilter('unreachable')">
-                <div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div>
-                <div class="strip-value dead" id="kpi-unreachable-sub">0</div>
-            </div>
-            <div class="strip-item" onclick="setStatusFilter('outdated')">
-                <div class="strip-label">Outdated builds</div>
-                <div class="strip-value" id="kpi-outdated-val">0</div>
-            </div>
-        </div>
-
-        <!-- Filter Bar -->
-        <div class="filter-bar" id="filter-bar">
-            <div class="search-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                <input type="text" id="search-input" placeholder="Search client, domain, or IP" oninput="debounceSearch()" />
-            </div>
-            <div class="chip-row" id="product-chips">
-                <div class="chip active" onclick="setProductFilter('')">All products</div>
-            </div>
-            <select id="filter-product" onchange="loadDeployments()" class="hidden" title="Filter by product" aria-label="Filter by product">
-                <option value="">All Products</option>
-            </select>
-            <select id="filter-status" onchange="loadDeployments()" class="hidden" title="Filter by status" aria-label="Filter by status">
-                <option value="all">All Statuses</option>
-                <option value="healthy">Healthy</option>
-                <option value="warning">Warning</option>
-                <option value="critical">Critical</option>
-                <option value="unreachable">Unreachable</option>
-                <option value="outdated">Outdated</option>
-            </select>
-            <div class="filter-spacer"></div>
-            <div class="result-count" id="result-count-label">0 deployments</div>
-        </div>
-
-        <!-- Fleet Table View -->
-        <section id="view-fleet" class="content-view active">
-            <div class="table-wrap">
-                <table id="deployments-table">
-                    <thead>
-                        <tr>
-                            <th class="col-client">Client</th>
-                            <th>Product</th>
-                            <th>Status</th>
-                            <th>Version</th>
-                            <th class="num">DB latency</th>
-                            <th class="num">Disk free</th>
-                            <th class="num">Users 24h</th>
-                            <th>Errors</th>
-                            <th>Last heartbeat</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="deployments-tbody">
-                        <tr>
-                            <td colspan="10" class="table-empty-msg">Loading fleet deployments...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Error Incidents View -->
-        <section id="view-errors" class="content-view">
-            <div class="table-wrap">
-                <table id="errors-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Level</th>
-                            <th>Client / Domain</th>
-                            <th>Error Message &amp; Route</th>
-                            <th>Occurrences</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="errors-tbody">
-                        <tr>
-                            <td colspan="6" class="table-empty-msg">Loading error incidents...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Client SDK Guide View -->
-        <section id="view-sdk" class="content-view">
-            <div class="panel-card">
-                <div class="panel-header">
-                    <div class="panel-title">Integrating TelemetryReporter in Your Applications</div>
-                </div>
-                <p class="sdk-intro">
-                    Connect any client application (e.g. Prism EDU, POS Pro, ClinicCore) to this SpectraOps Central Hub with zero external dependencies.
-                </p>
-
-                <div class="step-card">
-                    <div class="step-num">1</div>
-                    <div class="step-content">
-                        <h3>Include the Telemetry Reporter SDK</h3>
-                        <p>Copy <code>client-sdk/TelemetryReporter.php</code> into your project's service layer:</p>
-                        <pre class="code-block"><code>require_once __DIR__ . '/services/TelemetryReporter.php';
-use App\Services\TelemetryReporter;</code></pre>
-                    </div>
-                </div>
-
-                <div class="step-card">
-                    <div class="step-num">2</div>
-                    <div class="step-content">
-                        <h3>Initialize &amp; Register Global Exception Handlers</h3>
-                        <p>Register during your application bootstrap to catch unhandled errors:</p>
-                        <pre class="code-block"><code>$reporter = TelemetryReporter::init(
-    'http://your-spectraops-hub.com', 
-    'flt_your_secret_token_here', 
-    '2.5.0' // Current software version
-);
-
-// Catches all uncaught exceptions & fatal shutdown errors
-TelemetryReporter::registerGlobalHandlers($reporter);</code></pre>
-                    </div>
-                </div>
-
-                <div class="step-card">
-                    <div class="step-num">3</div>
-                    <div class="step-content">
-                        <h3>Queue Periodic Heartbeats &amp; Metrics</h3>
-                        <p>Send non-blocking background telemetry with system health:</p>
-                        <pre class="code-block"><code>$reporter->queueHeartbeat([
-    'active_users_24h' => 1280,
-    'db_latency_ms'   => $reporter->measureDbLatency($pdo),
-    'storage_free_gb' => 310.5,
-]);</code></pre>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+<nav class="rail" aria-label="Primary">
+<a class="brand" href="#overview" aria-label="SpectraOps home"><svg class="brand-mark" viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs><linearGradient id="wedge-rail" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0DC0E7"/><stop offset="60%" stop-color="#2C88C1"/><stop offset="100%" stop-color="#133F83"/></linearGradient></defs><polygon points="6,46 22,10 31,10 15,46" fill="url(#wedge-rail)"/><rect x="23" y="28" width="4.5" height="18" rx="2" fill="#36527B"/><rect x="31" y="20" width="4.5" height="26" rx="2" fill="#2C88C1"/><rect x="39" y="12" width="4.5" height="34" rx="2" fill="#0DC0E7"/><rect x="47" y="22" width="4.5" height="24" rx="2" fill="#BEF6FD"/></svg><span class="brand-name">Spectra<b>Ops</b></span></a>
+<div class="rail-group">Monitor</div>
+<a class="rail-link" href="#overview" data-view="overview" title="Overview"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-layout-dashboard"/></svg><span class="rail-label">Overview</span></span></a><a class="rail-link" href="#deployments" data-view="deployments" title="Fleet"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-server"/></svg><span class="rail-label">Fleet</span></span><span class="count" id="sidebar-total-badge">0</span></a><a class="rail-link" href="#errors" data-view="errors" title="Errors"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-bug"/></svg><span class="rail-label">Errors</span></span><span class="count count-crit" id="sidebar-error-badge">0</span></a>
+</nav>
+<div class="main">
+<header class="topbar">
+<button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-label="Open menu"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-menu"/></svg></button>
+<div class="topbar-title"><h1 id="view-title">Overview</h1><p id="view-sub"></p></div>
+<div class="topbar-actions"><button type="button" class="btn" id="trigger-health-btn"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-activity"/></svg>Sweep stale nodes</button>
+<button type="button" class="btn btn-primary" data-open="#dlg-register"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>Register deployment</button></div>
+</header>
+<main id="main">
+<section id="view-overview" data-view-panel="overview">
+<div class="strip" role="group" aria-label="Filter by status">
+<a class="strip-item" href="#deployments" data-status=""><div class="strip-label"><span class="dot dot-accent"></span>All systems</div><div class="strip-value " id="kpi-total-val">–</div></a><a class="strip-item" href="#deployments" data-status="healthy"><div class="strip-label"><span class="dot dot-ok"></span>Healthy</div><div class="strip-value is-ok" id="kpi-healthy-val">–</div></a><a class="strip-item" href="#deployments" data-status="warning"><div class="strip-label"><span class="dot dot-warn"></span>Warning</div><div class="strip-value is-warn" id="kpi-warning-val">–</div></a><a class="strip-item" href="#deployments" data-status="critical"><div class="strip-label"><span class="dot dot-crit"></span>Critical</div><div class="strip-value is-crit" id="kpi-critical-val">–</div></a><a class="strip-item" href="#deployments" data-status="unreachable"><div class="strip-label"><span class="dot dot-dead"></span>Unreachable</div><div class="strip-value is-dead" id="kpi-unreachable-val">–</div></a>
 </div>
-
-<!-- ================= MODALS ================= -->
-
-<!-- Register Deployment Modal -->
-<div class="modal-bg" id="register-modal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h3 class="modal-title">Register Deployment</h3>
-            <button class="btn-close" onclick="closeRegisterModal()">&times;</button>
-        </div>
-        <p class="modal-desc">Onboard a new client node to receive telemetric heartbeats and error reports.</p>
-
-        <form id="register-form" onsubmit="handleRegisterSubmit(event)">
-            <div class="form-group">
-                <label for="reg-product">Product *</label>
-                <select id="reg-product" required>
-                    <option value="">Select a Product...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="reg-client">Client / Organization Name *</label>
-                <input type="text" id="reg-client" placeholder="e.g. Grand Central Retail Flagship" required>
-            </div>
-            <div class="form-group">
-                <label for="reg-domain">Deployment Host / Domain *</label>
-                <input type="text" id="reg-domain" placeholder="e.g. pos.grandcentral.store" required>
-            </div>
-            <div class="form-row-grid">
-                <div class="form-group">
-                    <label for="reg-env">Environment</label>
-                    <select id="reg-env">
-                        <option value="production">Production</option>
-                        <option value="staging">Staging</option>
-                        <option value="development">Development</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="reg-version">Initial Version</label>
-                    <input type="text" id="reg-version" value="1.0.0">
-                </div>
-            </div>
-            <div class="form-actions-row">
-                <button type="button" class="btn" onclick="closeRegisterModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="submit-register-btn">Register Node</button>
-            </div>
-        </form>
-
-        <!-- Revealed Ingest Token Box -->
-        <div id="token-reveal-panel" class="hidden token-reveal-panel">
-            <div class="alert-strip success alert-compact">
-                <span>Deployment successfully registered!</span>
-            </div>
-            <p class="token-instructions">
-                Save your <strong>API Ingest Token</strong> now. The token is hashed with SHA-256 and cannot be viewed again:
-            </p>
-            <div class="token-box">
-                <input type="text" id="revealed-token" readonly placeholder="API Ingest Token" title="API Ingest Token" aria-label="API Ingest Token">
-                <button type="button" class="btn" onclick="copyToken()">Copy</button>
-            </div>
-            <button type="button" class="btn btn-primary btn-block-mt" onclick="closeRegisterModal(true)">Done</button>
-        </div>
-    </div>
+<div class="content"><section class="panel" aria-labelledby="att-h"><div class="panel-head"><h2 id="att-h">Needs attention</h2><small id="att-count"></small></div>
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Client</th><th scope="col">Status</th><th scope="col">Why</th><th scope="col">Last heartbeat</th></tr></thead><tbody id="attention-tbody"><tr class="state-row"><td colspan="4"><strong>Loading…</strong></td></tr></tbody></table></div></section></div>
+</section>
+<section id="view-deployments" data-view-panel="deployments" hidden>
+<div class="toolbar">
+<form class="search" role="search"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-search"/></svg><label class="sr-only" for="search-input">Search deployments</label><input class="input" id="search-input" type="search" placeholder="Search client, domain, or IP"></form>
+<div class="field"><label class="sr-only" for="filter-product">Product</label><select class="select" id="filter-product"><option value="">All products</option></select></div>
+<div class="field"><label class="sr-only" for="filter-status">Status</label><select class="select" id="filter-status"><option value="all">All statuses</option><option value="healthy">Healthy</option><option value="warning">Warning</option><option value="critical">Critical</option><option value="unreachable">Unreachable</option></select></div>
+<span class="toolbar-spacer"></span><span class="result-count" id="dep-count"></span></div>
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Client</th><th scope="col">Product</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col" class="num">Database</th><th scope="col" class="num">Free disk</th><th scope="col">Last heartbeat</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="deployments-tbody"><tr class="state-row"><td colspan="8"><strong>Loading…</strong></td></tr></tbody></table></div>
+</section>
+<section id="view-errors" data-view-panel="errors" hidden>
+<div class="toolbar"><div class="field" style="min-width:240px"><label class="sr-only" for="filter-error-deployment">Deployment</label><select class="select" id="filter-error-deployment"><option value="">All deployments</option></select></div><span class="toolbar-spacer"></span><span class="result-count" id="err-count-label"></span></div>
+<div class="table-wrap"><table class="table"><thead><tr><th scope="col">Level</th><th scope="col">Message</th><th scope="col">System</th><th scope="col">Location</th><th scope="col" class="num">Seen</th><th scope="col" class="num">Last seen</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="errors-tbody"><tr class="state-row"><td colspan="7"><strong>Loading…</strong></td></tr></tbody></table></div>
+</section>
+</main>
 </div>
-
-<!-- Error Detail Stack Trace Modal -->
-<div class="modal-bg" id="error-modal">
-    <div class="modal-box modal-lg">
-        <div class="modal-header">
-            <div>
-                <span id="err-modal-level" class="status-pill crit">CRITICAL</span>
-                <h3 id="err-modal-title" class="modal-title modal-title-mt">Error Trace</h3>
-            </div>
-            <button class="btn-close" onclick="closeErrorModal()">&times;</button>
-        </div>
-        <div class="modal-meta-grid">
-            <div><strong>Deployment:</strong> <span id="err-modal-deploy" class="text-accent">-</span></div>
-            <div><strong>Location:</strong> <span id="err-modal-location" class="mono">-</span></div>
-            <div><strong>Occurrences:</strong> <span id="err-modal-occurrences">-</span></div>
-            <div><strong>Last Seen:</strong> <span id="err-modal-time" class="mono">-</span></div>
-        </div>
-        <div class="form-group">
-            <label>Stack Trace</label>
-            <pre class="code-block trace-scroll" id="err-modal-trace">No trace available</pre>
-        </div>
-        <div class="modal-footer-actions">
-            <button type="button" class="btn" onclick="closeErrorModal()">Close</button>
-        </div>
-    </div>
 </div>
-
-<!-- Toast Notification -->
-<div id="toast" class="toast"></div>
-
-<script src="app.js?v=2.1"></script>
+<div class="overlay overlay-end" id="dep-drawer" aria-hidden="true"><div class="drawer" role="dialog" aria-modal="true" aria-labelledby="dep-drawer-t"><div class="overlay-head"><div><h2 id="dep-drawer-t"><span id="dep-title">Deployment</span></h2><p><span id="dep-domain"></span></p></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><div id="dep-status"></div>
+<p class="dim" id="dep-reason"></p>
+<div class="tiles">
+  <div class="tile"><span>Database latency</span><strong id="dep-latency">—</strong></div>
+  <div class="tile"><span>Memory</span><strong id="dep-memory">—</strong></div>
+  <div class="tile"><span>Free disk</span><strong id="dep-disk">—</strong></div>
+  <div class="tile"><span>Active users (24h)</span><strong id="dep-users">—</strong></div>
+</div>
+<div id="dep-spark-wrap"><div class="section-label">Database latency, recent heartbeats</div><div id="dep-spark"></div></div>
+<dl class="kv">
+  <dt>Product</dt><dd id="dep-product"></dd>
+  <dt>Environment</dt><dd id="dep-env"></dd>
+  <dt>Server IP</dt><dd class="mono" id="dep-ip"></dd>
+  <dt>Runtime</dt><dd class="mono" id="dep-stack"></dd>
+  <dt>Operating system</dt><dd id="dep-os"></dd>
+  <dt>Last heartbeat</dt><dd class="mono" id="dep-heartbeat"></dd>
+  <dt>Ingest key</dt><dd class="mono" id="dep-key"></dd>
+</dl></div><div class="overlay-foot"><a class="btn btn-danger is-left" id="dep-remove" href="#" data-confirm="Remove this deployment and all of its telemetry?" hidden><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-trash-2"/></svg>Remove</a><a class="btn" id="dep-visit" href="#" target="_blank" rel="noopener">Open site<svg class="icon icon-sm" aria-hidden="true" focusable="false"><use href="#i-external-link"/></svg></a><button type="button" class="btn" data-close>Close</button></div></div></div>
+<div class="overlay" id="err-dialog" aria-hidden="true"><div class="dialog dialog-wide" role="dialog" aria-modal="true" aria-labelledby="err-dialog-t"><div class="overlay-head"><div><h2 id="err-dialog-t"><span id="err-level"></span> Error incident</h2></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><p id="err-message" style="font-weight:500;overflow-wrap:anywhere"></p>
+<dl class="kv"><dt>System</dt><dd id="err-client"></dd><dt>Location</dt><dd class="mono" id="err-location"></dd><dt>Occurrences</dt><dd class="mono" id="err-count"></dd><dt>First seen</dt><dd class="mono" id="err-first"></dd><dt>Last seen</dt><dd class="mono" id="err-last"></dd></dl>
+<div><div class="section-label">Stack trace</div><pre class="codeblock" id="err-trace"></pre></div></div><div class="overlay-foot"><a class="btn btn-danger is-left" id="err-clear" href="#" data-confirm="Clear this error from the stream?" hidden><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-trash-2"/></svg>Clear error</a><button type="button" class="btn" data-close>Close</button></div></div></div>
+<div class="overlay" id="dlg-register" aria-hidden="true"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-register-t"><div class="overlay-head"><div><h2 id="dlg-register-t">Register a deployment</h2><p>Creates an ingest token for the client app.</p></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><form id="register-form" class="form-grid" novalidate>
+<div class="field"><label for="reg-product">Product</label><select class="select" id="reg-product" required></select></div>
+<div class="field"><label for="reg-env">Environment</label><select class="select" id="reg-env"><option value="production">Production</option><option value="staging">Staging</option><option value="development">Development</option></select></div>
+<div class="field"><label for="reg-client">Client name</label><input class="input" id="reg-client" required placeholder="Oakridge Preparatory School"></div>
+<div class="field"><label for="reg-domain">Deployment domain</label><input class="input" id="reg-domain" required placeholder="prism.oakridge.edu"></div>
+<div class="field"><label for="reg-version">Current version</label><input class="input" id="reg-version" value="1.0.0" required></div>
+</form>
+<div id="token-reveal-panel" hidden><div class="alert alert-warning"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-triangle-alert"/></svg><div>Copy this token now. It is stored as a hash and can't be shown again.</div></div>
+<div class="field" style="margin-top:12px"><label for="revealed-token">Ingest token</label><div class="token-row"><input class="input" id="revealed-token" readonly><button type="button" class="btn" data-copy="#revealed-token"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div></div></div><div class="overlay-foot"><button type="button" class="btn" data-close>Close</button><button type="submit" form="register-form" class="btn btn-primary" id="submit-register-btn">Register deployment</button></div></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="assets/js/spectraops-ui.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

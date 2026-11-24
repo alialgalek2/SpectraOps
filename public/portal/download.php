@@ -213,10 +213,8 @@ $portalTitle = $isAccessDenied
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $portalTitle ?></title>
     <meta name="description" content="Secure self-service deployment portal and license distribution for SpectraOps Fleet products.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="../spectraops-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="../assets/img/spectraops-icon.svg">
+    <link rel="stylesheet" href="../assets/css/spectraops.css">
     <style>
         :root {
             --bg: #090d16;
@@ -766,7 +764,8 @@ $portalTitle = $isAccessDenied
     </style>
 </head>
 <body>
-
+<a class="skip-link" href="#main">Skip to content</a>
+<main id="main">
 <div class="container">
 
     <!-- Brand Header -->
@@ -858,7 +857,7 @@ $portalTitle = $isAccessDenied
                 </div>
 
                 <div class="license-actions">
-                    <button type="button" class="btn btn-outline btn-sm" onclick="copyLicenseBundle()">
+                    <button type="button" class="btn btn-outline btn-sm" data-copy="#licenseKeyText">
                         📋 Copy License Key
                     </button>
                     <a href="?token=<?= urlencode($token) ?>&action=license" class="btn btn-primary btn-sm">
@@ -1040,7 +1039,7 @@ $portalTitle = $isAccessDenied
                 </div>
 
                 <div class="license-actions">
-                    <button type="button" class="btn btn-outline btn-sm" onclick="copyLicenseBundle()">
+                    <button type="button" class="btn btn-outline btn-sm" data-copy="#licenseKeyText">
                         📋 Copy License Data
                     </button>
                     <a href="?token=<?= urlencode($token) ?>&action=license" class="btn btn-primary btn-sm">
@@ -1102,31 +1101,9 @@ $portalTitle = $isAccessDenied
     </footer>
 
 </div>
+</main>
 
-<div id="toastNotice">Copied to clipboard!</div>
-
-<script>
-function copyLicenseBundle() {
-    const raw = document.getElementById('licenseJsonBlock')?.textContent || document.getElementById('licenseKeyText')?.textContent;
-    if (!raw) return;
-
-    navigator.clipboard.writeText(raw).then(() => {
-        showToast("License copied to clipboard!");
-    }).catch(() => {
-        showToast("Failed to copy automatically. Please select text manually.");
-    });
-}
-
-function showToast(msg) {
-    const toast = document.getElementById('toastNotice');
-    if (!toast) return;
-    toast.textContent = msg;
-    toast.classList.add('active');
-    setTimeout(() => {
-        toast.classList.remove('active');
-    }, 3000);
-}
-</script>
-
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="../assets/js/spectraops-ui.js"></script>
 </body>
 </html>
