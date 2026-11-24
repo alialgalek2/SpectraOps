@@ -76,3 +76,4 @@ Thumbs.db
 *.tmp
 *.bak
 test_*.txt
+.design-backup/
