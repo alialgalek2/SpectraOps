@@ -1,5 +1,6 @@
 # SpectraOps Public Directory Configuration
 DirectoryIndex index.php dashboard.php index.html
+Options -MultiViews
 
 # Prevent Apache FastCGI / PHP from dropping Authorization headers
 <IfModule mod_rewrite.c>
@@ -7,8 +8,11 @@ DirectoryIndex index.php dashboard.php index.html
     RewriteCond %{HTTP:Authorization} ^(.*)
     RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-    # Clean URL routing for API v1 Orders Provisioning and Download Portal
+    # Clean URL routing for API v1 Handshake, Heartbeat, Orders Provisioning, and Bundle Download
+    RewriteRule ^api/v1/handshake/?$ api/v1/handshake.php [L,QSA]
+    RewriteRule ^api/v1/heartbeat/?$ api/v1/heartbeat.php [L,QSA]
     RewriteRule ^api/v1/orders/provision/?$ api/v1/orders/provision.php [L,QSA]
+    RewriteRule ^api/deployments/([0-9]+)/download-bundle/?$ api/v1/fleet.php?action=download_bundle&id=$1 [L,QSA]
     RewriteRule ^portal/?$ portal/download.php [L,QSA]
 </IfModule>
 <IfModule mod_setenvif.c>

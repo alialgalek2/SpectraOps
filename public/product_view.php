@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-// If action POST or deletion GET is sent to product_view.php, delegate directly to dashboard.php
+// If action POST, bundle download, or deletion GET is sent to product_view.php, delegate directly to dashboard.php
+$isBundleDownload = (($_GET['action'] ?? '') === 'download_bundle');
 $hasDeleteAction = isset($_GET['delete_deployment']) 
     || isset($_GET['delete_error']) 
     || isset($_GET['purge_resolved_errors']) 
@@ -11,7 +12,7 @@ $hasDeleteAction = isset($_GET['delete_deployment'])
     || isset($_GET['delete_license']) 
     || isset($_GET['delete_admin_user']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' || $hasDeleteAction) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || $hasDeleteAction || $isBundleDownload) {
     require __DIR__ . '/dashboard.php';
     exit;
 }

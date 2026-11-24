@@ -58,6 +58,7 @@ CREATE TABLE central_deployments (
     environment TEXT DEFAULT 'production',
     api_ingest_token_hash TEXT UNIQUE NOT NULL,
     token_preview TEXT NOT NULL,
+    bundle_token_enc TEXT DEFAULT NULL,
     current_version TEXT NOT NULL DEFAULT '1.0.0',
     php_version TEXT,
     mysql_version TEXT,

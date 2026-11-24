@@ -4,6 +4,7 @@
 -- =====================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS central_vendpulse_licenses;
 DROP TABLE IF EXISTS central_error_logs;
 DROP TABLE IF EXISTS central_support_tickets;
 DROP TABLE IF EXISTS central_heartbeats;
@@ -56,16 +57,17 @@ CREATE TABLE central_deployments (
     client_name VARCHAR(191) NOT NULL,             -- e.g. 'Oakridge Academy', 'St. Jude School'
     deployment_domain VARCHAR(191) NOT NULL,       -- e.g. 'prism.oakridge.edu'
     hardware_hash VARCHAR(64) DEFAULT NULL,
-    environment ENUM('production', 'staging', 'development') DEFAULT 'production',
+    environment ENUM('production', 'staging', 'development', 'demo') DEFAULT 'production',
     api_ingest_token_hash VARCHAR(64) UNIQUE NOT NULL, -- SHA-256 hash of secret token or license key
     api_ingest_token VARCHAR(128) DEFAULT NULL,
     token_preview VARCHAR(12) NOT NULL,            -- e.g. 'flt_...4b8e' or 'SPEC...4A81' for safe identification
+    bundle_token_enc VARCHAR(512) DEFAULT NULL,    -- AES-256-CBC encrypted deployment_key for spectraops.json download
     current_version VARCHAR(32) NOT NULL DEFAULT '1.0.0',
     php_version VARCHAR(32) DEFAULT NULL,
     mysql_version VARCHAR(64) DEFAULT NULL,
     os_info VARCHAR(128) DEFAULT NULL,
     server_ip VARCHAR(45) DEFAULT NULL,
-    status ENUM('healthy', 'warning', 'critical', 'unreachable') DEFAULT 'healthy',
+    status ENUM('healthy', 'online', 'warning', 'critical', 'unreachable', 'pending_handshake') DEFAULT 'healthy',
     status_reason VARCHAR(255) DEFAULT 'Awaiting initial heartbeat',
     last_heartbeat_at DATETIME DEFAULT NULL,
     memory_usage_mb FLOAT NOT NULL DEFAULT 0,

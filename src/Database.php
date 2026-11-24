@@ -198,6 +198,13 @@ class Database {
                     }
                 } catch (\Throwable) {}
 
+                try {
+                    $depCols = array_column($pdo->query("PRAGMA table_info(central_deployments)")->fetchAll(), 'name');
+                    if (!empty($depCols) && !in_array('bundle_token_enc', $depCols, true)) {
+                        $pdo->exec("ALTER TABLE central_deployments ADD COLUMN bundle_token_enc TEXT DEFAULT NULL;");
+                    }
+                } catch (\Throwable) {}
+
                 // Ensure central_vendpulse_licenses on SQLite
                 $pdo->exec("
                     CREATE TABLE IF NOT EXISTS central_vendpulse_licenses (
@@ -368,6 +375,17 @@ class Database {
                             $pdo->exec("ALTER TABLE central_licenses ADD COLUMN issued_at DATETIME DEFAULT CURRENT_TIMESTAMP AFTER status;");
                             $pdo->exec("UPDATE central_licenses SET issued_at = created_at WHERE issued_at IS NULL;");
                         }
+                    }
+
+                    $depCols = array_column($pdo->query("SHOW COLUMNS FROM central_deployments")->fetchAll(), 'Field');
+                    if (!empty($depCols)) {
+                        if (!in_array('bundle_token_enc', $depCols, true)) {
+                            $pdo->exec("ALTER TABLE central_deployments ADD COLUMN bundle_token_enc VARCHAR(512) DEFAULT NULL AFTER token_preview;");
+                        }
+                        try {
+                            $pdo->exec("ALTER TABLE central_deployments MODIFY COLUMN status ENUM('healthy', 'online', 'warning', 'critical', 'unreachable', 'pending_handshake') DEFAULT 'healthy';");
+                            $pdo->exec("ALTER TABLE central_deployments MODIFY COLUMN environment ENUM('production', 'staging', 'development', 'demo') DEFAULT 'production';");
+                        } catch (\Throwable) {}
                     }
 
                     // Ensure central_vendpulse_licenses on MySQL

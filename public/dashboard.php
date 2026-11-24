@@ -7,6 +7,7 @@ require_once dirname(__DIR__) . '/src/FleetService.php';
 require_once dirname(__DIR__) . '/src/RateLimiter.php';
 require_once dirname(__DIR__) . '/src/Services/LicenseManager.php';
 require_once dirname(__DIR__) . '/src/Services/VendPulseLicenseService.php';
+require_once dirname(__DIR__) . '/src/Services/QuickLinkService.php';
 if (file_exists(dirname(__DIR__) . '/services/GeminiHotfixAgent.php')) {
     require_once dirname(__DIR__) . '/services/GeminiHotfixAgent.php';
 } elseif (file_exists(dirname(__DIR__) . '/src/Services/GeminiHotfixAgent.php')) {
@@ -16,6 +17,7 @@ if (file_exists(dirname(__DIR__) . '/services/GeminiHotfixAgent.php')) {
 use FleetHub\Database;
 use FleetHub\FleetService;
 use FleetHub\RateLimiter;
+use FleetHub\Services\QuickLinkService;
 use App\Services\LicenseManager;
 use App\Services\VendPulseLicenseService;
 use App\Services\GeminiHotfixAgent;
@@ -607,6 +609,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'appro
             'type' => 'warning'
         ];
         header("Location: dashboard.php?page=errors&status=no_pending_patch");
+        exit;
+    }
+}
+
+// --- DOWNLOADABLE CONNECTION BUNDLE (spectraops.json) ---
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'download_bundle') {
+    $depId = (int)($_GET['id'] ?? ($_GET['deployment_id'] ?? 0));
+    if ($depId <= 0) {
+        http_response_code(400);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error' => 'Valid deployment id is required.']);
+        exit;
+    }
+    try {
+        $quickLink = new QuickLinkService($pdo);
+        $bundle = $quickLink->buildConnectionBundle($depId);
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename="spectraops.json"');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        echo json_encode($bundle, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        exit;
+    } catch (\Throwable $e) {
+        http_response_code(404);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         exit;
     }
 }
@@ -1222,6 +1250,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $uploadErr = $_FILES['package_file']['error'] ?? 'No file chosen';
         $feedbackMsg = "Please specify a product, version, and select a valid .zip archive file (Upload error: {$uploadErr}).";
+        $feedbackType = 'danger';
+    }
+}
+
+// Action: Unified One-Click Deployment Link & Connection Bundle
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'link_deployment') {
+    try {
+        $quickLink = new QuickLinkService($pdo);
+        $linked = $quickLink->linkDeployment([
+            'product_slug' => trim((string)($_POST['product_slug'] ?? '')),
+            'product_id'   => (int)($_POST['product_id'] ?? 0),
+            'client_name'  => trim((string)($_POST['client_name'] ?? '')),
+            'client_email' => trim((string)($_POST['client_email'] ?? '')),
+            'domain'       => trim((string)($_POST['domain'] ?? ($_POST['deployment_domain'] ?? ''))),
+            'environment'  => trim((string)($_POST['environment'] ?? 'production')),
+            'license_tier' => trim((string)($_POST['license_tier'] ?? 'perpetual')),
+            'expiry_days'  => $_POST['expiry_days'] ?? null,
+        ]);
+        $dlUrl = 'dashboard.php?action=download_bundle&id=' . (int)$linked['deployment_id'];
+        $feedbackBundleUrl = $dlUrl;
+        $dlIconBtn = '<a href="' . htmlspecialchars($dlUrl) . '" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:8px;vertical-align:middle;border:1px solid currentColor;border-radius:6px;color:inherit;text-decoration:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
+        $feedbackMsg = 'Deployment linked &amp; active license bound! '
+            . 'License: <code>' . htmlspecialchars($linked['license_key']) . '</code> &nbsp;|&nbsp; '
+            . 'Key: <code>' . htmlspecialchars($linked['deployment_key']) . '</code> '
+            . $dlIconBtn;
+        $feedbackType = 'success';
+    } catch (\Throwable $e) {
+        error_log("[Dashboard] Link deployment error: " . $e->getMessage());
+        $feedbackMsg = "Failed to link deployment: " . htmlspecialchars($e->getMessage());
         $feedbackType = 'danger';
     }
 }
@@ -2386,7 +2443,11 @@ if ($filterStatus !== 'all') {
             New user
           </button>
         <?php else: ?>
-          <button class="btn btn-primary" onclick="openModal('regModal')">
+          <button class="btn btn-primary" onclick="openModal('linkDeployModal')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Link New Deployment
+          </button>
+          <button class="btn" onclick="openModal('regModal')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
             Register deployment
           </button>
@@ -2465,8 +2526,13 @@ if ($filterStatus !== 'all') {
     </div>
 
     <?php if ($feedbackMsg): ?>
-      <div class="alert-strip <?= htmlspecialchars($feedbackType) ?>">
+      <div class="alert-strip <?= htmlspecialchars($feedbackType) ?>" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <span><?= strip_tags($feedbackMsg, '<strong><b><code><span><em>') ?></span>
+        <?php if (!empty($feedbackBundleUrl)): ?>
+          <a href="<?= htmlspecialchars($feedbackBundleUrl) ?>" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="flex-shrink:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </a>
+        <?php endif; ?>
       </div>
       <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -2670,14 +2736,19 @@ if ($filterStatus !== 'all') {
               ?>
                 <tr class="<?= $isCrit ? 'flash-crit' : '' ?>" style="<?= (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']) ? 'background: rgba(13, 192, 231, 0.08); outline: 1px solid rgba(13, 192, 231, 0.35);' : '' ?>">
                   <td>
-                    <div class="client-cell">
-                      <a href="?page=overview&product_id=<?= (int)$row['product_id'] ?>&deployment_id=<?= (int)$row['id'] ?>#deployment-feed" class="client-name" style="text-decoration:none; color:inherit;" title="Inspect Deployment Node Feed">
-                        <?= htmlspecialchars($row['client_name']) ?> &rarr;
-                        <?php if (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']): ?>
-                          <span class="badge badge-medium" style="font-size:10px; margin-left:6px; font-weight:700;">Active Feed</span>
-                        <?php endif; ?>
+                    <div class="client-cell" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                      <div style="min-width:0;">
+                        <a href="?page=overview&product_id=<?= (int)$row['product_id'] ?>&deployment_id=<?= (int)$row['id'] ?>#deployment-feed" class="client-name" style="text-decoration:none; color:inherit;" title="Inspect Deployment Node Feed">
+                          <?= htmlspecialchars($row['client_name']) ?> &rarr;
+                          <?php if (!empty($scopedDeploymentId) && $scopedDeploymentId === (int)$row['id']): ?>
+                            <span class="badge badge-medium" style="font-size:10px; margin-left:6px; font-weight:700;">Active Feed</span>
+                          <?php endif; ?>
+                        </a>
+                        <span class="client-domain" style="display:block;"><?= htmlspecialchars($row['deployment_domain']) ?></span>
+                      </div>
+                      <a href="dashboard.php?action=download_bundle&id=<?= (int)$row['id'] ?>" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="flex-shrink:0;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                       </a>
-                      <span class="client-domain"><?= htmlspecialchars($row['deployment_domain']) ?></span>
                     </div>
                   </td>
                   <td>
@@ -2711,6 +2782,9 @@ if ($filterStatus !== 'all') {
                         <input type="hidden" name="product_id" value="<?= (int)$row['product_id'] ?>">
                         <button type="submit" class="btn btn-sm btn-outline" title="Reset unreachable state">Ping Sync</button>
                       </form>
+                      <a href="dashboard.php?action=download_bundle&id=<?= (int)$row['id'] ?>" download="spectraops.json" class="icon-btn" aria-label="Download spectraops.json" title="Download spectraops.json">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </a>
                       <button class="icon-btn" onclick='openSystemModal(<?= $jsonDep ?>)' aria-label="View diagnostics" title="View diagnostics">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                       </button>
@@ -4879,6 +4953,63 @@ if ($filterStatus !== 'all') {
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
         <button type="button" class="btn" onclick="closeModal('releaseModal')">Cancel</button>
         <button type="submit" class="btn btn-primary">Sign &amp; Distribute</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Link New Deployment (One-Click Bundle) Modal -->
+<div class="modal-bg" id="linkDeployModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Link New Deployment</div>
+      <button type="button" class="icon-btn" onclick="closeModal('linkDeployModal')">✕</button>
+    </div>
+    <div class="modal-desc">Atomically provision a deployment node, bind an active license lease, and generate a downloadable <code>spectraops.json</code> connection bundle.</div>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+      <input type="hidden" name="action" value="link_deployment">
+      <div class="form-group">
+        <label>Software Product</label>
+        <select name="product_slug" required>
+          <?php foreach ($products as $p): ?>
+            <option value="<?= htmlspecialchars($p['product_slug']) ?>"><?= htmlspecialchars($p['product_name']) ?> (<?= htmlspecialchars($p['product_slug']) ?>)</option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Client Name</label>
+        <input type="text" name="client_name" placeholder="e.g. Westminster Demo" required>
+      </div>
+      <div class="form-group">
+        <label>Client Domain URL</label>
+        <input type="text" name="domain" placeholder="e.g. https://demo.prismedu.com" required>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label>Environment</label>
+          <select name="environment">
+            <option value="production">Production</option>
+            <option value="staging">Staging</option>
+            <option value="demo">Demo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>License Tier</label>
+          <select name="license_tier">
+            <option value="perpetual">Perpetual</option>
+            <option value="subscription">Subscription</option>
+            <option value="trial">Trial (30 Days)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Expiry Days <span style="opacity:0.65; font-weight:400;">(optional — leave blank for perpetual)</span></label>
+        <input type="number" name="expiry_days" min="1" placeholder="e.g. 365">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+        <button type="button" class="btn" onclick="closeModal('linkDeployModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Provision &amp; Generate Bundle</button>
       </div>
     </form>
   </div>

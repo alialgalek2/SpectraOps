@@ -9,10 +9,12 @@ header('X-Frame-Options: DENY');
 require_once dirname(__DIR__, 3) . '/src/Database.php';
 require_once dirname(__DIR__, 3) . '/src/FleetService.php';
 require_once dirname(__DIR__, 3) . '/src/OperatorAuth.php';
+require_once dirname(__DIR__, 3) . '/src/Services/QuickLinkService.php';
 
 use FleetHub\Database;
 use FleetHub\FleetService;
 use FleetHub\OperatorAuth;
+use FleetHub\Services\QuickLinkService;
 
 $action = $_GET['action'] ?? 'overview';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -145,6 +147,43 @@ try {
             }
             $report = $service->runFleetMonitorCheck();
             echo json_encode(['status' => 'success', 'data' => $report]);
+            break;
+
+        case 'link_deployment':
+            if ($method !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true) ?? $_POST;
+            $quickLink = new QuickLinkService(Database::getConnection());
+            $linked = $quickLink->linkDeployment($input);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Deployment and active license provisioned in a single transaction.',
+                'data' => $linked
+            ], JSON_UNESCAPED_SLASHES);
+            break;
+
+        case 'download_bundle':
+            if ($method !== 'GET') {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+                exit;
+            }
+            $depId = (int)($_GET['id'] ?? ($_GET['deployment_id'] ?? 0));
+            if ($depId <= 0) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Valid deployment id is required.']);
+                exit;
+            }
+            $quickLink = new QuickLinkService(Database::getConnection());
+            $bundle = $quickLink->buildConnectionBundle($depId);
+            header('Content-Type: application/json; charset=utf-8');
+            header('Content-Disposition: attachment; filename="spectraops.json"');
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+            echo json_encode($bundle, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
             break;
 
         case 'pair':
