@@ -92,6 +92,12 @@ function so_fmt_mb($v): string
     return ($v === null || $v === '' || !is_numeric($v) || (float)$v <= 0) ? '—' : number_format((float)$v, 0) . ' MB';
 }
 
+/** Integer format with fallback. */
+function so_fmt_int($v): string
+{
+    return ($v === null || $v === '' || !is_numeric($v)) ? '—' : number_format((float)$v, 0);
+}
+
 /**
  * Relative heartbeat time.
  * @return array{0:string,1:string} [text, level]  level = never|fresh|stale|dead

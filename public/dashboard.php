@@ -147,6 +147,8 @@ if (empty($_SESSION['fleet_user_id']) && empty($_SESSION['fleet_admin_logged']))
 $isAdmin = ($_SESSION['fleet_user_role'] ?? '') === 'admin';
 $feedbackMsg = null;
 $feedbackType = 'info';
+$regSuccess = null;
+$linkSuccess = null;
 
 if (!empty($_SESSION['flash_feedback'])) {
     $feedbackMsg = (string)($_SESSION['flash_feedback']['msg'] ?? '');
@@ -1011,6 +1013,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'license_tier' => trim((string)($_POST['license_tier'] ?? 'perpetual')),
             'expiry_days'  => $_POST['expiry_days'] ?? null,
         ]);
+        $linkSuccess = $linked;
         $dlUrl = 'dashboard.php?action=download_bundle&id=' . (int)$linked['deployment_id'];
         $feedbackBundleUrl = $dlUrl;
         $dlIconBtn = '<a href="' . htmlspecialchars($dlUrl) . '" download="spectraops.json" class="icon-btn" title="Download spectraops.json" aria-label="Download spectraops.json" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:8px;vertical-align:middle;border:1px solid currentColor;border-radius:6px;color:inherit;text-decoration:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>';
@@ -1039,6 +1042,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } elseif (!empty($clientName) && !empty($domain) && $productId > 0) {
         try {
             $newDep = $service->registerDeployment($productId, $clientName, $domain, $env);
+            $regSuccess = $newDep;
             $feedbackMsg = "Deployment registered! Generated Ingestion Token: <code>" . htmlspecialchars($newDep['token']) . "</code>";
             $feedbackType = 'success';
         } catch (\Throwable $e) {
@@ -2034,7 +2038,7 @@ if ($filterStatus !== 'all') {
 <div class="summary">
   <span>Fleet health<b><?= (int)$fleetHealthPct ?>%</b></span>
   <span>Avg database latency<b><?= so_fmt_ms($avgLatency) ?></b></span>
-  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers24h) ?></b></span>
+  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers) ?></b></span>
   <span>Version adoption<b><?= (int)$versionAdoptionPct ?>%</b></span>
 </div>
 
@@ -2238,7 +2242,7 @@ if ($filterStatus !== 'all') {
 <div class="summary">
   <span>Fleet health<b><?= (int)$fleetHealthPct ?>%</b></span>
   <span>Avg database latency<b><?= so_fmt_ms($avgLatency) ?></b></span>
-  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers24h) ?></b></span>
+  <span>Active users (24h)<b><?= so_fmt_int($totalActiveUsers) ?></b></span>
   <span>Version adoption<b><?= (int)$versionAdoptionPct ?>%</b></span>
 </div>
 
@@ -3217,7 +3221,7 @@ if ($filterStatus !== 'all') {
 
 <!-- 12. Reveal Credentials / Key Modal -->
 <?php if (!empty($regSuccess) || !empty($linkSuccess)): 
-  $tokData = $regSuccess ?: $linkSuccess;
+  $tokData = !empty($regSuccess) ? $regSuccess : $linkSuccess;
   $tokVal = $tokData['token'] ?? ($tokData['deployment_key'] ?? '');
   $tokId = (int)($tokData['id'] ?? ($tokData['deployment_id'] ?? 0));
 ?>
