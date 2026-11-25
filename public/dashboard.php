@@ -121,7 +121,7 @@ if (empty($_SESSION['fleet_user_id']) && empty($_SESSION['fleet_admin_logged']))
         <meta name="theme-color" content="#0A0E14">
         <title>Sign in · SpectraOps</title>
         <link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
-        <link rel="stylesheet" href="assets/css/spectraops.css">
+        <link rel="stylesheet" href="assets/css/spectraops.css?v=<?= (int)@filemtime(__DIR__ . '/assets/css/spectraops.css') ?>">
     </head>
     <body>
     <?php so_icon_sprite(); ?>
@@ -137,7 +137,7 @@ if (empty($_SESSION['fleet_user_id']) && empty($_SESSION['fleet_admin_logged']))
       <?php endif; ?>
       <button type="submit" class="btn btn-primary">Sign in</button>
     </form></div></main>
-    <script src="assets/js/spectraops-ui.js"></script>
+    <script src="assets/js/spectraops-ui.js?v=<?= (int)@filemtime(__DIR__ . '/assets/js/spectraops-ui.js') ?>"></script>
     </body>
     </html>
     <?php
@@ -157,6 +157,14 @@ if (!empty($_SESSION['flash_feedback'])) {
 }
 
 // --- 2. DATABASE ACTIONS ---
+if (!function_exists('so_handle_dashboard_actions')) {
+function so_handle_dashboard_actions(PDO $pdo, FleetService $service, bool $isAdmin): array
+{
+    $feedbackMsg = null;
+    $feedbackType = 'info';
+    $feedbackBundleUrl = null;
+    $regSuccess = null;
+    $linkSuccess = null;
 
 // Enforce CSRF protection on every state-changing POST request (H1)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -1283,6 +1291,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
+    return [
+        'feedbackMsg' => $feedbackMsg,
+        'feedbackType' => $feedbackType,
+        'feedbackBundleUrl' => $feedbackBundleUrl,
+        'regSuccess' => $regSuccess,
+        'linkSuccess' => $linkSuccess,
+    ];
+}
+}
+
+$_soActionState = so_handle_dashboard_actions($pdo, $service, $isAdmin);
+if ($_soActionState['feedbackMsg'] !== null) {
+    $feedbackMsg = $_soActionState['feedbackMsg'];
+    $feedbackType = $_soActionState['feedbackType'];
+}
+$feedbackBundleUrl = $_soActionState['feedbackBundleUrl'];
+$regSuccess = $_soActionState['regSuccess'];
+$linkSuccess = $_soActionState['linkSuccess'];
+unset($_soActionState);
+
 if (!empty($_SESSION['flash_feedback'])) {
     $feedbackMsg = $_SESSION['flash_feedback']['msg'];
     $feedbackType = $_SESSION['flash_feedback']['type'];
@@ -1923,7 +1951,7 @@ if ($filterStatus !== 'all') {
 <meta name="theme-color" content="#0A0E14">
 <title><?= so_e(ucfirst($activePage)) ?> · SpectraOps</title>
 <link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
-<link rel="stylesheet" href="assets/css/spectraops.css">
+<link rel="stylesheet" href="assets/css/spectraops.css?v=<?= (int)@filemtime(__DIR__ . '/assets/css/spectraops.css') ?>">
 </head>
 <body>
 <?php so_icon_sprite(); ?>
@@ -1931,7 +1959,7 @@ if ($filterStatus !== 'all') {
 <div class="app">
 
 <!-- ================= RAIL ================= -->
-<nav class="rail" aria-label="Primary">
+<nav class="rail" id="primary-rail" aria-label="Primary">
 <a class="brand" href="?page=overview" aria-label="SpectraOps home">
   <svg class="brand-mark" viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs><linearGradient id="wedge-rail" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0DC0E7"/><stop offset="60%" stop-color="#2C88C1"/><stop offset="100%" stop-color="#133F83"/></linearGradient></defs><polygon points="6,46 22,10 31,10 15,46" fill="url(#wedge-rail)"/><rect x="23" y="28" width="4.5" height="18" rx="2" fill="#36527B"/><rect x="31" y="20" width="4.5" height="26" rx="2" fill="#2C88C1"/><rect x="39" y="12" width="4.5" height="34" rx="2" fill="#0DC0E7"/><rect x="47" y="22" width="4.5" height="24" rx="2" fill="#BEF6FD"/></svg>
   <span class="brand-name">Spectra<b>Ops</b></span>
@@ -1962,7 +1990,7 @@ if ($filterStatus !== 'all') {
 <!-- ================= MAIN CONTAINER ================= -->
 <div class="main">
 <header class="topbar">
-  <button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-label="Open menu"><?= so_icon('menu') ?></button>
+  <button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-controls="primary-rail" aria-expanded="true" aria-label="Toggle navigation menu"><?= so_icon('menu') ?></button>
   <div class="topbar-title">
     <?php if ($activePage === 'overview'): ?>
       <h1>Overview</h1><p>What needs you right now across every client system.</p>
@@ -2070,7 +2098,7 @@ if ($filterStatus !== 'all') {
             <?php foreach ($attentionItems as $d): 
               $s = strtolower((string)($d['computed_status'] ?? 'unknown'));
               $rCls = so_row_class($s);
-              $rel = so_rel_time($d['last_heartbeat_at'] ?? null);
+              [$relText, $relLevel] = so_rel_time($d['last_heartbeat_at'] ?? null);
               $payload = so_dep_payload($d);
             ?>
               <tr class="<?= $rCls ?>">
@@ -2082,7 +2110,7 @@ if ($filterStatus !== 'all') {
                 </td>
                 <td><?= so_status_pill($s, $d['status_reason'] ?? null) ?></td>
                 <td class="dim"><?= so_e($d['status_reason'] ?? '—') ?></td>
-                <td class="nowrap num <?= so_rel_class($rel['level']) ?>"><?= so_e($rel['text']) ?></td>
+                <td class="nowrap num <?= so_rel_class($relLevel) ?>"><?= so_e($relText) ?></td>
                 <td class="col-actions">
                   <div class="row-actions">
                     <a class="btn btn-icon btn-sm" href="dashboard.php?action=download_bundle&id=<?= (int)$d['id'] ?>" download="spectraops.json" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
@@ -2203,7 +2231,7 @@ if ($filterStatus !== 'all') {
         <?php foreach ($filteredDeployments as $d): 
           $s = strtolower((string)($d['computed_status'] ?? 'unknown'));
           $rCls = so_row_class($s);
-          $rel = so_rel_time($d['last_heartbeat_at'] ?? null);
+          [$relText, $relLevel] = so_rel_time($d['last_heartbeat_at'] ?? null);
           $payload = so_dep_payload($d);
         ?>
           <tr class="<?= $rCls ?>">
@@ -2223,7 +2251,7 @@ if ($filterStatus !== 'all') {
             <td class="num <?= so_metric_class('disk', $d['storage_free_gb']) ?>"><?= so_fmt_gb($d['storage_free_gb']) ?></td>
             <td class="num"><?= so_fmt_int($d['active_users_24h']) ?></td>
             <td><span class="badge-n <?= empty($d['error_count']) ? 'is-zero' : '' ?>"><?= (int)($d['error_count'] ?? 0) ?></span></td>
-            <td class="nowrap num <?= so_rel_class($rel['level']) ?>"><?= so_e($rel['text']) ?></td>
+            <td class="nowrap num <?= so_rel_class($relLevel) ?>"><?= so_e($relText) ?></td>
             <td class="col-actions">
               <div class="row-actions">
                 <button type="button" class="btn btn-icon btn-sm" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments" aria-label="Open diagnostics for <?= so_e($d['client_name']) ?>"><?= so_icon('eye') ?></button>
@@ -2324,9 +2352,9 @@ if ($filterStatus !== 'all') {
       <?php
       $fresh = 0; $stale = 0; $dead = 0;
       foreach ($deployments as $d) {
-        $rt = so_rel_time($d['last_heartbeat_at'] ?? null);
-        if ($rt['level'] === 'dead' || $rt['level'] === 'never') $dead++;
-        elseif ($rt['level'] === 'stale') $stale++;
+        [, $rtLevel] = so_rel_time($d['last_heartbeat_at'] ?? null);
+        if ($rtLevel === 'dead' || $rtLevel === 'never') $dead++;
+        elseif ($rtLevel === 'stale') $stale++;
         else $fresh++;
       }
       $tot = max(1, $totalDeployments);
@@ -3259,6 +3287,6 @@ if ($filterStatus !== 'all') {
 <?php endif; ?>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="assets/js/spectraops-ui.js"></script>
+<script src="assets/js/spectraops-ui.js?v=<?= (int)@filemtime(__DIR__ . '/assets/js/spectraops-ui.js') ?>"></script>
 </body>
 </html>

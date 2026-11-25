@@ -21,7 +21,7 @@ const SO_HB_STALE_SEC    = 1800;   // 30 min  -> "stale"
 const SO_HB_DEAD_SEC     = 7200;   // 2 h     -> "dead"
 
 /** HTML-escape (always use for output). */
-function so_e($v): string
+function so_e(mixed $v): string
 {
     return htmlspecialchars((string)($v ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
@@ -61,7 +61,7 @@ function so_row_class(?string $status): string
 }
 
 /** '' | 'is-hot' | 'is-crit'  for kind = latency | disk */
-function so_metric_class(string $kind, $v): string
+function so_metric_class(string $kind, mixed $v): string
 {
     if ($v === null || $v === '' || !is_numeric($v)) {
         return '';
@@ -76,24 +76,24 @@ function so_metric_class(string $kind, $v): string
     return '';
 }
 
-function so_fmt_ms($v): string
+function so_fmt_ms(mixed $v): string
 {
     if ($v === null || $v === '' || !is_numeric($v)) return '—';
     return (float)$v < 0 ? 'DB down' : number_format((float)$v, 0) . ' ms';
 }
 
-function so_fmt_gb($v): string
+function so_fmt_gb(mixed $v): string
 {
     return ($v === null || $v === '' || !is_numeric($v) || (float)$v <= 0) ? '—' : number_format((float)$v, 1) . ' GB';
 }
 
-function so_fmt_mb($v): string
+function so_fmt_mb(mixed $v): string
 {
     return ($v === null || $v === '' || !is_numeric($v) || (float)$v <= 0) ? '—' : number_format((float)$v, 0) . ' MB';
 }
 
 /** Integer format with fallback. */
-function so_fmt_int($v): string
+function so_fmt_int(mixed $v): string
 {
     return ($v === null || $v === '' || !is_numeric($v)) ? '—' : number_format((float)$v, 0);
 }
@@ -125,9 +125,9 @@ function so_rel_time(?string $datetime, ?DateTimeInterface $now = null): array
 }
 
 /** CSS class for a so_rel_time() level. */
-function so_rel_class(string $level): string
+function so_rel_class(?string $level): string
 {
-    return ['dead' => 'is-dead', 'stale' => 'is-stale', 'never' => 'is-muted'][$level] ?? '';
+    return ['dead' => 'is-dead', 'stale' => 'is-stale', 'never' => 'is-muted'][$level ?? ''] ?? '';
 }
 
 /** true when $current is older than $target. */

@@ -75,7 +75,9 @@
 
 /* ---------- 2. Base ------------------------------------------------------ */
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scrollbar-color: var(--line-strong) transparent; }
+@supports (scrollbar-color: auto) {
+  html { scrollbar-color: var(--line-strong) transparent; }
+}
 body {
   margin: 0; background: var(--ink); color: var(--text);
   font: 400 13px/1.5 var(--font-sans);
@@ -101,6 +103,7 @@ code, pre, .mono { font-family: var(--font-mono); font-feature-settings: "zero" 
 
 .icon { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 .icon-sm { width: 14px; height: 14px; }
+.btn .icon { pointer-events: none; }
 
 /* ---------- 3. App shell ------------------------------------------------- */
 .app { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: 100vh; }
@@ -144,7 +147,7 @@ code, pre, .mono { font-family: var(--font-mono); font-feature-settings: "zero" 
 .topbar h1 { font-size: 16px; font-weight: 600; line-height: 1.3; }
 .topbar p { margin-top: 2px; font-size: 12px; color: var(--text-dim); }
 .topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.nav-toggle { display: none; }
+.nav-toggle { display: inline-flex; }
 .live { display: inline-flex; align-items: center; gap: 6px; font: 400 12px var(--font-mono); color: var(--text-faint); }
 .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
 
@@ -373,6 +376,10 @@ body.has-overlay { overflow: hidden; }
 .pw .btn-icon { position: absolute; right: 2px; top: 2px; width: 28px; min-height: 28px; }
 
 /* ---------- 12. Responsive ----------------------------------------------- */
+@media (min-width: 721px) {
+  body.rail-hidden .app { grid-template-columns: minmax(0, 1fr); }
+  body.rail-hidden .rail { display: none; }
+}
 @media (max-width: 1100px) {
   :root { --rail-w: 56px; }
   .rail { padding: 16px 8px; align-items: stretch; }
@@ -430,3 +437,7 @@ body.has-overlay { overflow: hidden; }
 .panel-foot { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 12px; }
 .inline { display: inline; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.field-min-240 { min-width: 240px; }
+.err-message-text { font-weight: 500; overflow-wrap: anywhere; }
+.mt-12 { margin-top: 12px; }

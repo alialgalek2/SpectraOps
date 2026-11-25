@@ -4,5 +4,13 @@
     ],
     "php.includePaths": [
         "src"
-    ]
+    ],
+    "php.problems.exclude": {
+        "public/dashboard.php": [
+            6613
+        ],
+        "**": [
+            6613
+        ]
+    }
 }

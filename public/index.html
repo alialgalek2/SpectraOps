@@ -4,13 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#0A0E14">
 <title>SpectraOps</title>
 <link rel="icon" type="image/svg+xml" href="assets/img/spectraops-icon.svg">
 <link rel="stylesheet" href="assets/css/spectraops.css">
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<svg xmlns="http://www.w3.org/2000/svg" class="icon-sprite" aria-hidden="true" focusable="false">
 <!-- Lucide icons (ISC licence). Usage: <svg class="icon"><use href="#i-server"/></svg> -->
 <symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1" /> <rect width="7" height="5" x="14" y="3" rx="1" /> <rect width="7" height="9" x="14" y="12" rx="1" /> <rect width="7" height="5" x="3" y="16" rx="1" /></symbol>
 <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2" /> <rect width="20" height="8" x="2" y="14" rx="2" ry="2" /> <line x1="6" x2="6.01" y1="6" y2="6" /> <line x1="6" x2="6.01" y1="18" y2="18" /></symbol>
@@ -56,14 +55,14 @@
 
 <a class="skip-link" href="#main">Skip to content</a>
 <div class="app">
-<nav class="rail" aria-label="Primary">
+<nav class="rail" id="primary-rail" aria-label="Primary">
 <a class="brand" href="#overview" aria-label="SpectraOps home"><svg class="brand-mark" viewBox="0 0 54 54" aria-hidden="true" focusable="false"><defs><linearGradient id="wedge-rail" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0DC0E7"/><stop offset="60%" stop-color="#2C88C1"/><stop offset="100%" stop-color="#133F83"/></linearGradient></defs><polygon points="6,46 22,10 31,10 15,46" fill="url(#wedge-rail)"/><rect x="23" y="28" width="4.5" height="18" rx="2" fill="#36527B"/><rect x="31" y="20" width="4.5" height="26" rx="2" fill="#2C88C1"/><rect x="39" y="12" width="4.5" height="34" rx="2" fill="#0DC0E7"/><rect x="47" y="22" width="4.5" height="24" rx="2" fill="#BEF6FD"/></svg><span class="brand-name">Spectra<b>Ops</b></span></a>
 <div class="rail-group">Monitor</div>
 <a class="rail-link" href="#overview" data-view="overview" title="Overview"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-layout-dashboard"/></svg><span class="rail-label">Overview</span></span></a><a class="rail-link" href="#deployments" data-view="deployments" title="Fleet"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-server"/></svg><span class="rail-label">Fleet</span></span><span class="count" id="sidebar-total-badge">0</span></a><a class="rail-link" href="#errors" data-view="errors" title="Errors"><span class="rail-link-main"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-bug"/></svg><span class="rail-label">Errors</span></span><span class="count count-crit" id="sidebar-error-badge">0</span></a>
 </nav>
 <div class="main">
 <header class="topbar">
-<button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-label="Open menu"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-menu"/></svg></button>
+<button type="button" class="btn btn-icon nav-toggle" data-nav-toggle aria-controls="primary-rail" aria-expanded="true" aria-label="Toggle navigation menu"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-menu"/></svg></button>
 <div class="topbar-title"><h1 id="view-title">Overview</h1><p id="view-sub"></p></div>
 <div class="topbar-actions"><button type="button" class="btn" id="trigger-health-btn"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-activity"/></svg>Sweep stale nodes</button>
 <button type="button" class="btn btn-primary" data-open="#dlg-register"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-plus"/></svg>Register deployment</button></div>
@@ -85,7 +84,7 @@
 <div class="table-wrap"><table class="table"><thead><tr><th scope="col">Client</th><th scope="col">Product</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col" class="num">Database</th><th scope="col" class="num">Free disk</th><th scope="col">Last heartbeat</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="deployments-tbody"><tr class="state-row"><td colspan="8"><strong>Loading…</strong></td></tr></tbody></table></div>
 </section>
 <section id="view-errors" data-view-panel="errors" hidden>
-<div class="toolbar"><div class="field" style="min-width:240px"><label class="sr-only" for="filter-error-deployment">Deployment</label><select class="select" id="filter-error-deployment"><option value="">All deployments</option></select></div><span class="toolbar-spacer"></span><span class="result-count" id="err-count-label"></span></div>
+<div class="toolbar"><div class="field field-min-240"><label class="sr-only" for="filter-error-deployment">Deployment</label><select class="select" id="filter-error-deployment"><option value="">All deployments</option></select></div><span class="toolbar-spacer"></span><span class="result-count" id="err-count-label"></span></div>
 <div class="table-wrap"><table class="table"><thead><tr><th scope="col">Level</th><th scope="col">Message</th><th scope="col">System</th><th scope="col">Location</th><th scope="col" class="num">Seen</th><th scope="col" class="num">Last seen</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody id="errors-tbody"><tr class="state-row"><td colspan="7"><strong>Loading…</strong></td></tr></tbody></table></div>
 </section>
 </main>
@@ -109,7 +108,7 @@
   <dt>Last heartbeat</dt><dd class="mono" id="dep-heartbeat"></dd>
   <dt>Ingest key</dt><dd class="mono" id="dep-key"></dd>
 </dl></div><div class="overlay-foot"><a class="btn btn-danger is-left" id="dep-remove" href="#" data-confirm="Remove this deployment and all of its telemetry?" hidden><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-trash-2"/></svg>Remove</a><a class="btn" id="dep-visit" href="#" target="_blank" rel="noopener">Open site<svg class="icon icon-sm" aria-hidden="true" focusable="false"><use href="#i-external-link"/></svg></a><button type="button" class="btn" data-close>Close</button></div></div></div>
-<div class="overlay" id="err-dialog" aria-hidden="true"><div class="dialog dialog-wide" role="dialog" aria-modal="true" aria-labelledby="err-dialog-t"><div class="overlay-head"><div><h2 id="err-dialog-t"><span id="err-level"></span> Error incident</h2></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><p id="err-message" style="font-weight:500;overflow-wrap:anywhere"></p>
+<div class="overlay" id="err-dialog" aria-hidden="true"><div class="dialog dialog-wide" role="dialog" aria-modal="true" aria-labelledby="err-dialog-t"><div class="overlay-head"><div><h2 id="err-dialog-t"><span id="err-level"></span> Error incident</h2></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><p id="err-message" class="err-message-text"></p>
 <dl class="kv"><dt>System</dt><dd id="err-client"></dd><dt>Location</dt><dd class="mono" id="err-location"></dd><dt>Occurrences</dt><dd class="mono" id="err-count"></dd><dt>First seen</dt><dd class="mono" id="err-first"></dd><dt>Last seen</dt><dd class="mono" id="err-last"></dd></dl>
 <div><div class="section-label">Stack trace</div><pre class="codeblock" id="err-trace"></pre></div></div><div class="overlay-foot"><a class="btn btn-danger is-left" id="err-clear" href="#" data-confirm="Clear this error from the stream?" hidden><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-trash-2"/></svg>Clear error</a><button type="button" class="btn" data-close>Close</button></div></div></div>
 <div class="overlay" id="dlg-register" aria-hidden="true"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-register-t"><div class="overlay-head"><div><h2 id="dlg-register-t">Register a deployment</h2><p>Creates an ingest token for the client app.</p></div><button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-x"/></svg></button></div><div class="overlay-body"><form id="register-form" class="form-grid" novalidate>
@@ -120,7 +119,7 @@
 <div class="field"><label for="reg-version">Current version</label><input class="input" id="reg-version" value="1.0.0" required></div>
 </form>
 <div id="token-reveal-panel" hidden><div class="alert alert-warning"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-triangle-alert"/></svg><div>Copy this token now. It is stored as a hash and can't be shown again.</div></div>
-<div class="field" style="margin-top:12px"><label for="revealed-token">Ingest token</label><div class="token-row"><input class="input" id="revealed-token" readonly><button type="button" class="btn" data-copy="#revealed-token"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div></div></div><div class="overlay-foot"><button type="button" class="btn" data-close>Close</button><button type="submit" form="register-form" class="btn btn-primary" id="submit-register-btn">Register deployment</button></div></div></div>
+<div class="field mt-12"><label for="revealed-token">Ingest token</label><div class="token-row"><input class="input" id="revealed-token" readonly><button type="button" class="btn" data-copy="#revealed-token"><svg class="icon " aria-hidden="true" focusable="false"><use href="#i-copy"/></svg>Copy</button></div></div></div></div><div class="overlay-foot"><button type="button" class="btn" data-close>Close</button><button type="submit" form="register-form" class="btn btn-primary" id="submit-register-btn">Register deployment</button></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="assets/js/spectraops-ui.js"></script>
 <script src="app.js"></script>

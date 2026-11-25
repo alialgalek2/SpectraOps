@@ -198,6 +198,8 @@
   /* ---- delegated behaviour --------------------------------------------- */
   document.addEventListener('click', function (e) {
     var t = e.target;
+    if (t && t.nodeType !== 1) t = t.parentElement;
+    if (!t || !t.closest) return;
     var errEl = t.closest('[data-err-open]');
     if (errEl) {
       e.preventDefault();
@@ -217,8 +219,23 @@
     if (t.closest('[data-close]')) { e.preventDefault(); SO.close(t.closest('.overlay')); return; }
     if (t.classList && t.classList.contains('overlay')) { SO.close(t); return; }
     var nav = t.closest('[data-nav-toggle]');
-    if (nav) { document.body.classList.toggle('rail-open'); return; }
-    if (document.body.classList.contains('rail-open') && !t.closest('.rail')) document.body.classList.remove('rail-open');
+    if (nav) {
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+      if (isMobile) {
+        var openNow = document.body.classList.toggle('rail-open');
+        nav.setAttribute('aria-expanded', openNow ? 'true' : 'false');
+      } else {
+        var hiddenNow = document.body.classList.toggle('rail-hidden');
+        nav.setAttribute('aria-expanded', hiddenNow ? 'false' : 'true');
+        try { localStorage.setItem('so_rail_hidden', hiddenNow ? '1' : '0'); } catch (_) {}
+      }
+      return;
+    }
+    if (document.body.classList.contains('rail-open') && !t.closest('.rail')) {
+      document.body.classList.remove('rail-open');
+      var navBtn = document.querySelector('[data-nav-toggle]');
+      if (navBtn) navBtn.setAttribute('aria-expanded', 'false');
+    }
     var cp = t.closest('[data-copy]');
     if (cp) {
       var src = document.querySelector(cp.getAttribute('data-copy'));
@@ -269,5 +286,15 @@
   document.addEventListener('DOMContentLoaded', function () {
     Array.prototype.forEach.call(document.querySelectorAll('.dialog, .drawer'), function (n) { n.setAttribute('tabindex', '-1'); });
     Array.prototype.forEach.call(document.querySelectorAll('.overlay'), function (n) { n.setAttribute('aria-hidden', 'true'); });
+    try {
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 720px)').matches;
+      var navBtn = document.querySelector('[data-nav-toggle]');
+      if (!isMobile && localStorage.getItem('so_rail_hidden') === '1') {
+        document.body.classList.add('rail-hidden');
+        if (navBtn) navBtn.setAttribute('aria-expanded', 'false');
+      } else if (navBtn) {
+        navBtn.setAttribute('aria-expanded', isMobile ? 'false' : 'true');
+      }
+    } catch (_) {}
   });
 })();
