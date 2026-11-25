@@ -378,4 +378,139 @@ class QuickLinkService {
         $plain = openssl_decrypt($cipher, 'aes-256-cbc', self::getBundleEncryptionKey(), OPENSSL_RAW_DATA, $iv);
         return $plain !== false ? $plain : null;
     }
+
+    public static function getMasterReleaseDir(string $productSlug): string {
+        $safe = preg_replace('/[^a-zA-Z0-9._-]/', '', strtolower(trim($productSlug)));
+        if ($safe === '') {
+            throw new InvalidArgumentException('Invalid product slug.');
+        }
+        return dirname(__DIR__, 2) . '/storage/releases/' . $safe;
+    }
+
+    public static function getMasterReleaseZipPath(string $productSlug): ?string {
+        $path = self::getMasterReleaseDir($productSlug) . '/master.zip';
+        return is_file($path) ? $path : null;
+    }
+
+    public static function saveMasterReleaseZip(string $productSlug, string $uploadedTmpPath): string {
+        if (!is_file($uploadedTmpPath)) {
+            throw new RuntimeException('Uploaded ZIP file not found.');
+        }
+        if (!class_exists(\ZipArchive::class)) {
+            throw new RuntimeException('PHP ZipArchive extension is required.');
+        }
+        $zip = new \ZipArchive();
+        if ($zip->open($uploadedTmpPath) !== true) {
+            throw new RuntimeException('Invalid ZIP archive uploaded.');
+        }
+        $zip->close();
+
+        $dir = self::getMasterReleaseDir($productSlug);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $dest = $dir . '/master.zip';
+        if (!@move_uploaded_file($uploadedTmpPath, $dest)) {
+            if (!@copy($uploadedTmpPath, $dest)) {
+                throw new RuntimeException('Failed to store master release ZIP.');
+            }
+        }
+        return $dest;
+    }
+
+    /**
+     * Build a client-ready Full App Bundle (.zip) by copying the product's master.zip
+     * and injecting the deployment's spectraops.json and canonical client-sdk files.
+     *
+     * @return array{path:string,filename:string}
+     */
+    public function buildFullAppBundleZip(int $deploymentId): array {
+        if (!class_exists(\ZipArchive::class)) {
+            throw new RuntimeException('PHP ZipArchive extension is required.');
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT d.id, d.client_name, p.product_slug
+            FROM central_deployments d
+            JOIN central_products p ON d.product_id = p.id
+            WHERE d.id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$deploymentId]);
+        $dep = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$dep) {
+            throw new RuntimeException("Deployment #{$deploymentId} not found.");
+        }
+
+        $slug = (string)$dep['product_slug'];
+        $masterPath = self::getMasterReleaseZipPath($slug);
+        if ($masterPath === null) {
+            throw new RuntimeException("No master release ZIP uploaded yet for product '{$slug}'. Upload one on the Products page first.");
+        }
+
+        $bundle = $this->buildConnectionBundle($deploymentId);
+        $bundleJson = json_encode($bundle, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+
+        $tmpZip = tempnam(sys_get_temp_dir(), 'so_full_');
+        if ($tmpZip === false || !@copy($masterPath, $tmpZip)) {
+            throw new RuntimeException('Failed to create temporary bundle archive.');
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($tmpZip) !== true) {
+            @unlink($tmpZip);
+            throw new RuntimeException('Failed to open master release ZIP.');
+        }
+
+        // Detect if all entries share a single top-level directory (e.g. "prismedu/")
+        $prefix = '';
+        $topDirs = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = str_replace('\\', '/', (string)$zip->getNameIndex($i));
+            $parts = explode('/', ltrim($name, '/'));
+            if (!empty($parts[0])) {
+                $topDirs[$parts[0]] = true;
+            }
+            if (count($topDirs) > 1) {
+                break;
+            }
+        }
+        if (count($topDirs) === 1) {
+            $only = array_key_first($topDirs);
+            if ($only !== 'client-sdk' && $only !== 'spectraops.json') {
+                // Only use prefix if the single top entry is actually a directory
+                $hasSlash = false;
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    if (str_starts_with(str_replace('\\', '/', (string)$zip->getNameIndex($i)), $only . '/')) {
+                        $hasSlash = true;
+                        break;
+                    }
+                }
+                if ($hasSlash) {
+                    $prefix = $only . '/';
+                }
+            }
+        }
+
+        $zip->addFromString($prefix . 'spectraops.json', $bundleJson);
+
+        $sdkDir = dirname(__DIR__, 2) . '/client-sdk';
+        foreach (['SpectraTelemetryGateway.php', 'SpectraSupportTicket.php'] as $sdkFile) {
+            $fullSdk = $sdkDir . '/' . $sdkFile;
+            if (is_file($fullSdk)) {
+                $zip->addFile($fullSdk, $prefix . 'client-sdk/' . $sdkFile);
+            }
+        }
+
+        $zip->close();
+
+        $safeClient = preg_replace('/[^a-zA-Z0-9._-]+/', '-', strtolower((string)$dep['client_name']));
+        $safeClient = trim((string)$safeClient, '-') ?: ('deployment-' . $deploymentId);
+        $filename = "{$slug}-{$safeClient}-bundle.zip";
+
+        return [
+            'path'     => $tmpZip,
+            'filename' => $filename,
+        ];
+    }
 }

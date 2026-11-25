@@ -8,7 +8,8 @@ Options -MultiViews
     RewriteCond %{HTTP:Authorization} ^(.*)
     RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-    # Clean URL routing for API v1 Handshake, Heartbeat, Orders Provisioning, and Bundle Download
+    # Clean URL routing for API v1 Sync, Handshake, Heartbeat, Orders Provisioning, and Bundle Download
+    RewriteRule ^api/v1/sync/?$ api/v1/sync.php [L,QSA]
     RewriteRule ^api/v1/handshake/?$ api/v1/handshake.php [L,QSA]
     RewriteRule ^api/v1/heartbeat/?$ api/v1/heartbeat.php [L,QSA]
     RewriteRule ^api/v1/orders/provision/?$ api/v1/orders/provision.php [L,QSA]

@@ -392,6 +392,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'downloa
     }
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($_GET['action'] ?? '') === 'download_full_bundle') {
+    $depId = (int)($_GET['id'] ?? ($_GET['deployment_id'] ?? 0));
+    if ($depId <= 0) {
+        $_SESSION['flash_feedback'] = ['msg' => 'Valid deployment ID is required.', 'type' => 'danger'];
+        header('Location: dashboard.php?page=deployments');
+        exit;
+    }
+    try {
+        $quickLink = new QuickLinkService($pdo);
+        $archive = $quickLink->buildFullAppBundleZip($depId);
+        $tmpPath = $archive['path'];
+        $dlName = $archive['filename'];
+        while (ob_get_level()) { ob_end_clean(); }
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $dlName . '"');
+        header('Content-Length: ' . (string)filesize($tmpPath));
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        readfile($tmpPath);
+        @unlink($tmpPath);
+        exit;
+    } catch (\Throwable $e) {
+        $_SESSION['flash_feedback'] = ['msg' => $e->getMessage(), 'type' => 'danger'];
+        header('Location: dashboard.php?page=deployments');
+        exit;
+    }
+}
+
 // --- SPECTRAOPS UNIFIED DELETION SUITE ---
 
 // 1. Delete Fleet Deployment
@@ -1156,9 +1183,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $timeFunc = ($driver === 'sqlite') ? "datetime('now')" : "NOW()";
         $ins = $pdo->prepare("INSERT INTO central_products (product_slug, product_code, product_name, description, repository_url, created_at) VALUES (?, ?, ?, ?, ?, {$timeFunc})");
         $ins->execute([$slug, $code, $name, $desc, $repo]);
-        $feedbackMsg = "Software product '{$name}' (Code: {$code}) registered successfully!";
+        $extra = '';
+        if (isset($_FILES['master_zip']) && $_FILES['master_zip']['error'] === UPLOAD_ERR_OK) {
+            try {
+                QuickLinkService::saveMasterReleaseZip($slug, $_FILES['master_zip']['tmp_name']);
+                $extra = ' Master release ZIP uploaded.';
+            } catch (\Throwable $zEx) {
+                $extra = ' (Master ZIP error: ' . $zEx->getMessage() . ')';
+            }
+        }
+        $feedbackMsg = "Software product '{$name}' (Code: {$code}) registered successfully!{$extra}";
         $feedbackType = 'success';
     }
+}
+
+// Action: Upload Master Release ZIP for an existing Product
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_master_release') {
+    $pid = (int)($_POST['product_id'] ?? 0);
+    $pStmt = $pdo->prepare("SELECT product_slug, product_name FROM central_products WHERE id = ? LIMIT 1");
+    $pStmt->execute([$pid]);
+    $pRow = $pStmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$pRow) {
+        $_SESSION['flash_feedback'] = ['msg' => 'Selected product not found.', 'type' => 'danger'];
+    } elseif (!isset($_FILES['master_zip']) || $_FILES['master_zip']['error'] !== UPLOAD_ERR_OK) {
+        $_SESSION['flash_feedback'] = ['msg' => 'Please select a valid .zip file to upload.', 'type' => 'danger'];
+    } else {
+        try {
+            QuickLinkService::saveMasterReleaseZip((string)$pRow['product_slug'], $_FILES['master_zip']['tmp_name']);
+            $_SESSION['flash_feedback'] = [
+                'msg' => 'Master release ZIP updated for ' . htmlspecialchars((string)$pRow['product_name']) . '.',
+                'type' => 'success'
+            ];
+        } catch (\Throwable $e) {
+            $_SESSION['flash_feedback'] = ['msg' => 'Upload failed: ' . htmlspecialchars($e->getMessage()), 'type' => 'danger'];
+        }
+    }
+    header('Location: dashboard.php?page=products');
+    exit;
 }
 
 // Action: Clear/Delete or Resolve Error Log (Converted from GET to POST for CSRF safety) (H1)
@@ -2114,6 +2176,7 @@ if ($filterStatus !== 'all') {
                 <td class="col-actions">
                   <div class="row-actions">
                     <a class="btn btn-icon btn-sm" href="dashboard.php?action=download_bundle&id=<?= (int)$d['id'] ?>" download="spectraops.json" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
+                    <a class="btn btn-icon btn-sm" href="dashboard.php?action=download_full_bundle&id=<?= (int)$d['id'] ?>" title="Download Full App Bundle (.zip)" aria-label="Download Full App Bundle (.zip)"><?= so_icon('file-archive') ?></a>
                     <button type="button" class="btn btn-icon btn-sm" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments" aria-label="Open diagnostics for <?= so_e($d['client_name']) ?>"><?= so_icon('eye') ?></button>
                     <a class="btn btn-icon btn-sm" href="https://<?= so_e($d['deployment_domain']) ?>" target="_blank" rel="noopener" aria-label="Open <?= so_e($d['client_name']) ?> site"><?= so_icon('external-link') ?></a>
                   </div>
@@ -2240,13 +2303,14 @@ if ($filterStatus !== 'all') {
                 <div style="display:flex; align-items:center; gap:6px;">
                   <button type="button" class="link-btn" data-dep-open data-dep="<?= so_json_attr($payload) ?>" data-remove-href="?delete_deployment=<?= (int)$d['id'] ?>&page=deployments"><?= so_e($d['client_name']) ?></button>
                   <a href="dashboard.php?action=download_bundle&id=<?= (int)$d['id'] ?>" download="spectraops.json" class="btn btn-icon btn-sm" title="Download spectraops.json" aria-label="Download spectraops.json"><?= so_icon('download') ?></a>
+                  <a href="dashboard.php?action=download_full_bundle&id=<?= (int)$d['id'] ?>" class="btn btn-icon btn-sm" title="Download Full App Bundle (.zip)" aria-label="Download Full App Bundle (.zip)"><?= so_icon('file-archive') ?></a>
                 </div>
                 <span class="cell-sub"><?= so_e($d['deployment_domain']) ?></span>
               </div>
             </td>
             <td><span class="tag"><?= so_e($d['product_name']) ?></span></td>
             <td><?= so_status_pill($s, $d['status_reason'] ?? null) ?></td>
-            <td><span class="ver <?= !empty($d['is_outdated']) ? 'is-outdated' : '' ?>" <?= !empty($d['is_outdated']) ? 'title="Latest is v' . so_e($d['latest_version']) . '"' : '' ?>>v<?= so_e($d['current_version'] ?? '—') ?></span></td>
+            <td><span class="ver <?= !empty($d['is_outdated']) ? 'is-outdated' : '' ?>" <?= !empty($d['is_outdated']) && !empty($d['product_latest_version']) ? 'title="Latest is v' . so_e($d['product_latest_version']) . '"' : '' ?>>v<?= so_e($d['current_version'] ?? '—') ?></span></td>
             <td class="num <?= so_metric_class('latency', $d['db_latency_ms']) ?>"><?= so_fmt_ms($d['db_latency_ms']) ?></td>
             <td class="num <?= so_metric_class('disk', $d['storage_free_gb']) ?>"><?= so_fmt_gb($d['storage_free_gb']) ?></td>
             <td class="num"><?= so_fmt_int($d['active_users_24h']) ?></td>
@@ -2622,19 +2686,37 @@ if ($filterStatus !== 'all') {
         <th scope="col">Slug</th>
         <th scope="col">Product Name</th>
         <th scope="col">Description</th>
-        <th scope="col">Repository</th>
+        <th scope="col">Master Release (.zip)</th>
         <th scope="col" class="num">Deployments</th>
       </tr>
     </thead>
     <tbody>
       <?php foreach ($products as $p): 
         $cnt = count(array_filter($deployments, fn($d) => (int)($d['product_id'] ?? 0) === (int)$p['id']));
+        $masterZip = QuickLinkService::getMasterReleaseZipPath((string)$p['product_slug']);
       ?>
         <tr>
           <td class="mono font-semibold"><?= so_e($p['product_slug']) ?></td>
           <td><strong style="font-weight:600"><?= so_e($p['product_name']) ?></strong></td>
-          <td class="dim" style="max-width:320px"><div class="truncate"><?= so_e($p['description'] ?? '—') ?></div></td>
-          <td class="mono dim nowrap"><?= so_e($p['repository_url'] ?? '—') ?></td>
+          <td class="dim" style="max-width:280px"><div class="truncate"><?= so_e($p['description'] ?? '—') ?></div></td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <?php if ($masterZip !== null): ?>
+                <span class="pill pill-ok"><?= so_fmt_mb(filesize($masterZip) / 1048576) ?></span>
+              <?php else: ?>
+                <span class="pill pill-dead">Not uploaded</span>
+              <?php endif; ?>
+              <?php if ($isAdmin): ?>
+                <form method="post" enctype="multipart/form-data" class="inline" style="display:inline-flex; align-items:center; gap:6px;">
+                  <input type="hidden" name="action" value="upload_master_release">
+                  <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
+                  <input type="hidden" name="product_id" value="<?= (int)$p['id'] ?>">
+                  <input type="file" name="master_zip" accept=".zip" class="input" style="max-width:190px; padding:3px 6px; font-size:11.5px;" required aria-label="Master release ZIP for <?= so_e($p['product_name']) ?>">
+                  <button type="submit" class="btn btn-sm"><?= so_icon('upload') ?>Upload</button>
+                </form>
+              <?php endif; ?>
+            </div>
+          </td>
           <td class="num"><?= $cnt ?></td>
         </tr>
       <?php endforeach; ?>
@@ -3081,7 +3163,7 @@ if ($filterStatus !== 'all') {
       <button type="button" class="btn btn-icon btn-sm" data-close aria-label="Close"><?= so_icon('x') ?></button>
     </div>
     <div class="overlay-body">
-      <form id="dlg-product-f" method="post">
+      <form id="dlg-product-f" method="post" enctype="multipart/form-data">
         <input type="hidden" name="action" value="register_product">
         <input type="hidden" name="csrf_token" value="<?= so_e($_SESSION['csrf_token'] ?? '') ?>">
         <div class="form-grid">
@@ -3101,6 +3183,11 @@ if ($filterStatus !== 'all') {
           <div class="field span-2">
             <label for="repository_url">Repository URL</label>
             <input class="input" id="repository_url" name="repository_url" type="url" placeholder="https://github.com/…">
+          </div>
+          <div class="field span-2">
+            <label for="product_master_zip">Master Release (.zip)</label>
+            <input class="input" id="product_master_zip" name="master_zip" type="file" accept=".zip">
+            <div class="field-hint">Optional base application ZIP stored in <code>storage/releases/{slug}/</code> for full app bundle downloads.</div>
           </div>
         </div>
       </form>
@@ -3272,11 +3359,17 @@ if ($filterStatus !== 'all') {
         </div>
       </div>
       <?php if ($tokId > 0): ?>
-      <div style="margin-top:18px;">
+      <div class="btn-row" style="margin-top:18px;">
         <a href="dashboard.php?action=download_bundle&id=<?= $tokId ?>" download="spectraops.json" class="btn btn-primary">
           <?= so_icon('download') ?> Download Connection Bundle (spectraops.json)
         </a>
+        <a href="dashboard.php?action=download_full_bundle&id=<?= $tokId ?>" class="btn">
+          <?= so_icon('file-archive') ?> Download Full App Bundle (.zip)
+        </a>
       </div>
+      <p class="field-hint" style="margin-top:10px;">
+        Drop <code>spectraops.json</code> alongside <code>client-sdk/SpectraTelemetryGateway.php</code> and <code>client-sdk/SpectraSupportTicket.php</code> into your client app root to sync telemetry, license lease state, and support tickets via <code>POST /api/v1/sync</code>.
+      </p>
       <?php endif; ?>
     </div>
     <div class="overlay-foot">
